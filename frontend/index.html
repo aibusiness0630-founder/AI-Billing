@@ -9,12 +9,15 @@
 <body>
 <div class="container">
     <h1>AI Billing System</h1>
+    <p id="date"></p>
+<p id="time"></p>
    <input type="text" id="product" placeholder="Product Name">
 <input type="number" id="price" placeholder="Price">
 <input type="number" id="quantity" placeholder="Quantity">
 <button onclick="addProduct()">Add Product</button>
 <ul id="billList"></ul>
 <h2 id="total">Total : ₹0</h2>
+<button onclick="window.print()">🖨 Print Bill</button>
 </div>
 <script src="script.js"></script>
 </body>

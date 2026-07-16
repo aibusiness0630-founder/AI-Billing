@@ -27,3 +27,12 @@ function deleteItem(button, amount) {
     document.getElementById("total").innerText = "Total : ₹" + total;
     button.parentElement.remove();
 }
+function updateDateTime() {
+    let now = new Date();
+    document.getElementById("date").innerText =
+        "Date : " + now.toLocaleDateString();
+    document.getElementById("time").innerText =
+        "Time : " + now.toLocaleTimeString();
+}
+setInterval(updateDateTime, 1000);
+updateDateTime();

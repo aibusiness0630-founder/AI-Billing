@@ -1,3 +1,4 @@
+let billNumber = 1;
 let total = 0;
 let products =[];
 function addProduct() {
@@ -36,3 +37,18 @@ function updateDateTime() {
 }
 setInterval(updateDateTime, 1000);
 updateDateTime();
+function nextBill() {
+    billNumber++;
+    document.getElementById("billNo").innerText =
+        "Bill No : BILL" + String(billNumber).padStart(3, "0");
+}
+function clearBill() {
+    document.getElementById("billList").innerHTML = "";
+    total = 0;
+    document.getElementById("total").innerText = "Total : ₹0";
+    document.getElementById("customer").value = "";
+    document.getElementById("product").value = "";
+    document.getElementById("price").value = "";
+    document.getElementById("quantity").value = "";
+    nextBill();
+}

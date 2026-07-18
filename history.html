@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bill History</title>
+</head>
+<body>
+
+<h1>Bill History</h1>
+
+<table border="1">
+    <tr>
+        <th>ID</th>
+        <th>Customer</th>
+        <th>Mobile</th>
+        <th>Product</th>
+        <th>Quantity</th>
+        <th>Price</th>
+        <th>Total</th>
+    </tr>
+
+    {% for bill in bills %}
+    <tr>
+        <td>{{ bill.id }}</td>
+        <td>{{ bill.customer_name }}</td>
+        <td>{{ bill.mobile }}</td>
+        <td>{{ bill.product }}</td>
+        <td>{{ bill.quantity }}</td>
+        <td>{{ bill.price }}</td>
+        <td>{{ bill.total }}</td>
+    </tr>
+    {% endfor %}
+
+</table>
+
+</body>
+</html>

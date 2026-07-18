@@ -2,8 +2,10 @@
 <html>
 <head>
     <title>AI Billing System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+    <div class="container">
     <h1>AI Billing System</h1>
     <form method="post" action="/">
         <label>Customer Name:</label><br>
@@ -18,5 +20,10 @@
         <input type="number" name="price" placeholder="Enter Price"><br><br>
         <button type="submit">Generate Bill</button>
     </form>
+    <br>
+<a href="/history">
+    <button type="button">View Bill History</button>
+</a>
+</div>
 </body>
 </html>

@@ -16,6 +16,7 @@
         <th>Quantity</th>
         <th>Price</th>
         <th>Total</th>
+        <th>Action</th>
     </tr>
 
     {% for bill in bills %}
@@ -27,6 +28,11 @@
         <td>{{ bill.quantity }}</td>
         <td>{{ bill.price }}</td>
         <td>{{ bill.total }}</td>
+        <td>
+    <a href="/delete/{{ bill.id }}">
+        <button>Delete</button>
+    </a>
+</td>
     </tr>
     {% endfor %}
 

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -54,6 +54,24 @@ def home():
 def history():
     bills = Bill.query.all()
     return render_template("history.html", bills=bills)
+
+@app.route("/search", methods=["GET", "POST"])
+def search():
+    bills = []
+
+    if request.method == "POST":
+        customer = request.form.get("customer")
+        bills = Bill.query.filter(
+            Bill.customer_name.ilike(f"%{customer}%")
+        ).all()
+
+    return render_template("search.html", bills=bills)
+@app.route("/delete/<int:id>")
+def delete(id):
+    bill = Bill.query.get_or_404(id)
+    db.session.delete(bill)
+    db.session.commit()
+    return redirect("/history")
 
 if __name__ == "__main__":
     with app.app_context():

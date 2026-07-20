@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bill</title>
+</head>
+<body>
+
+<center>
+    <h2>{{ shop.shop_name }}</h2>
+    <p>{{ shop.address }}</p>
+    <p>📞 {{ shop.phone }}</p>
+    <p><b>Date & Time:</b> {{ current_time }}</p>
+    <hr width="50%">
+</center>
+
+<p><b>Customer:</b> {{ customer_name }}</p>
+<p><b>Mobile:</b> {{ mobile }}</p>
+<p><b>Product:</b> {{ product }}</p>
+<p><b>Quantity:</b> {{ quantity }}</p>
+<p><b>Price:</b> ₹{{ price }}</p>
+
+<hr>
+
+<h2>Total: ₹{{ total }}</h2>
+
+<button onclick="window.print()">🖨 Print Bill</button>
+
+</body>
+</html>

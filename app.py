@@ -26,24 +26,37 @@ class Shop(db.Model):
 @app.route("/", methods=["GET", "POST"])
 def home():
     if request.method == "POST":
+
         customer_name = request.form.get("customer_name")
         mobile = request.form.get("mobile")
-        product = request.form.get("product")
 
-        quantity = int(request.form.get("quantity"))
-        price = float(request.form.get("price"))
-        total = quantity * price
+        products = request.form.getlist("product[]")
+        quantities = request.form.getlist("quantity[]")
+        prices = request.form.getlist("price[]")
 
-        new_bill = Bill(
-            customer_name=customer_name,
-            mobile=mobile,
-            product=product,
-            quantity=quantity,
-            price=price,
-            total=total,
-        )
+        grand_total = 0
 
-        db.session.add(new_bill)
+        for product, quantity, price in zip(products, quantities, prices):
+
+            if product.strip() == "" or quantity.strip() == "" or price.strip() == "":
+                continue
+
+            quantity = int(quantity)
+            price = float(price)
+            total = quantity * price
+            grand_total += total
+
+            new_bill = Bill(
+                customer_name=customer_name,
+                mobile=mobile,
+                product=product,
+                quantity=quantity,
+                price=price,
+                total=total
+            )
+
+            db.session.add(new_bill)
+
         db.session.commit()
 
         shop = Shop.query.first()
@@ -52,14 +65,14 @@ def home():
         return render_template(
             "bill.html",
             shop=shop,
-           customer_name=customer_name,
-           mobile=mobile,
-           product=product,
-           quantity=quantity,
-           price=price,
-           total=total,
-           current_time=current_time
-)
+            customer_name=customer_name,
+            mobile=mobile,
+            products=products,
+            quantities=quantities,
+            prices=prices,
+            grand_total=grand_total,
+            current_time=current_time
+        )
 
     return render_template("index.html")
 @app.route("/history")

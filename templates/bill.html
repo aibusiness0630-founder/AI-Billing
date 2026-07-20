@@ -10,18 +10,38 @@
     <p>{{ shop.address }}</p>
     <p>📞 {{ shop.phone }}</p>
     <p><b>Date & Time:</b> {{ current_time }}</p>
-    <hr width="50%">
+    <hr width="70%">
 </center>
 
 <p><b>Customer:</b> {{ customer_name }}</p>
 <p><b>Mobile:</b> {{ mobile }}</p>
-<p><b>Product:</b> {{ product }}</p>
-<p><b>Quantity:</b> {{ quantity }}</p>
-<p><b>Price:</b> ₹{{ price }}</p>
 
-<hr>
+<table border="1" width="100%" cellspacing="0" cellpadding="6">
+    <tr>
+        <th>S.No</th>
+        <th>Product</th>
+        <th>Qty</th>
+        <th>Price</th>
+        <th>Amount</th>
+    </tr>
 
-<h2>Total: ₹{{ total }}</h2>
+    {% for i in range(products|length) %}
+    <tr>
+        <td>{{ i + 1 }}</td>
+        <td>{{ products[i] }}</td>
+        <td>{{ quantities[i] }}</td>
+        <td>₹{{ prices[i] }}</td>
+        <td>₹{{ quantities[i]|int * prices[i]|float }}</td>
+    </tr>
+    {% endfor %}
+
+    <tr>
+        <td colspan="4"><b>Grand Total</b></td>
+        <td><b>₹{{ grand_total }}</b></td>
+    </tr>
+</table>
+
+<br>
 
 <button onclick="window.print()">🖨 Print Bill</button>
 

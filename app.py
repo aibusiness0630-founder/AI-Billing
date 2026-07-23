@@ -74,7 +74,12 @@ def home():
             current_time=current_time
         )
 
-    return render_template("index.html")
+    product_list =Product.query.all()
+
+    return render_template(
+    "index.html",
+    product_list=product_list
+)
 @app.route("/history")
 def history():
     bills = Bill.query.all()

@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
     <title>AI Billing System</title>
@@ -14,7 +14,18 @@
         <input type="text" name="mobile" placeholder="Enter Mobile Number"><br><br>
         <div id="products">
     <label>Product Name:</label><br>
-    <input type="text" name="product[]" placeholder="Enter Product Name"><br><br>
+    <label>Product Name:</label><br>
+
+<select name="product[]" class="product-select">
+    <option value="">Select Product</option>
+
+    {% for product in product_list %}
+    <option value="{{ product.product_name }}"
+            data-id="{{ product.id }}">
+        {{ product.product_name }}
+    </option>
+    {% endfor %}
+</select><br><br>
 
     <label>Quantity:</label><br>
     <input type="number" name="quantity[]" placeholder="Enter Quantity"><br><br>
@@ -51,16 +62,27 @@ document.getElementById("addProduct").addEventListener("click", function () {
     let row = document.createElement("div");
 
     row.innerHTML = `
-        <hr>
-        <label>Product Name:</label><br>
-        <input type="text" name="product[]"><br>
+    <hr>
 
-        <label>Quantity:</label><br>
-        <input type="number" name="quantity[]"><br>
+    <label>Product Name:</label><br>
 
-        <label>Price:</label><br>
-        <input type="number" name="price[]"><br><br>
-    `;
+    <select name="product[]" class="product-select">
+        <option value="">Select Product</option>
+
+        {% for product in product_list %}
+        <option value="{{ product.product_name }}"
+                data-id="{{ product.id }}">
+            {{ product.product_name }}
+        </option>
+        {% endfor %}
+    </select><br><br>
+
+    <label>Quantity:</label><br>
+    <input type="number" name="quantity[]"><br><br>
+
+    <label>Price:</label><br>
+    <input type="number" name="price[]"><br><br>
+`;
 
     products.appendChild(row);
 

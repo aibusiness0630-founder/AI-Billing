@@ -31,62 +31,135 @@
     <input type="number" name="quantity[]" placeholder="Enter Quantity"><br><br>
 
     <label>Price:</label><br>
-    <input type="number" name="price[]" placeholder="Enter Price"><br><br>
+    <input type="number" name="price[]" placeholder="Auto Price" readonly><br><br>
 </div>
+<button type="button" id="addProduct">
+    + Add Product
+</button>
 
-<button type="button" id="addProduct">+ Add Product</button>
 <br><br>
 
-<button type="submit">Generate Bill</button>
-    </form>
-    <br><br>
+<button type="submit">
+    Generate Bill
+</button>
+
+<a href="/add_product">
+    <button type="button">➕ Add Product</button>
+</a>
+<br><br>
+
+<a href="/products">
+    <button type="button">📦 Products</button>
+</a>
+<br><br>
+
+<a href="/dashboard">
+    <button type="button">📊 Dashboard</button>
+</a>
+<br><br>
 
 <a href="/shop">
-    <button type="button">Shop Settings</button>
+    <button type="button">⚙️ Shop Settings</button>
 </a>
-    <br><br>
+<br><br>
 
 <a href="/search">
-    <button type="button">Search Bill</button>
+    <button type="button">🔍 Search Bill</button>
 </a>
-    <br>
+<br><br>
+
 <a href="/history">
-    <button type="button">View Bill History</button>
+    <button type="button">📜 View Bill History</button>
 </a>
 </div>
 <script>
+
+function addPriceEvent(selectElement) {
+
+    selectElement.addEventListener("change", function(){
+
+        let productId = this.options[this.selectedIndex].getAttribute("data-id");
+
+        let priceInput = this.parentElement.querySelector('input[name="price[]"]');
+
+        if(productId){
+
+            fetch("/get_price/" + productId)
+            .then(response => response.json())
+            .then(data => {
+
+                priceInput.value = data.price;
+
+            });
+
+        }
+
+    });
+
+}
+
+
+// First product dropdown
+document.querySelectorAll(".product-select").forEach(function(select){
+
+    addPriceEvent(select);
+
+});
+
+
+// Add Product button
+
 document.getElementById("addProduct").addEventListener("click", function () {
 
     let products = document.getElementById("products");
 
     let row = document.createElement("div");
 
+
     row.innerHTML = `
+
     <hr>
 
     <label>Product Name:</label><br>
 
     <select name="product[]" class="product-select">
+
         <option value="">Select Product</option>
 
         {% for product in product_list %}
+
         <option value="{{ product.product_name }}"
                 data-id="{{ product.id }}">
             {{ product.product_name }}
         </option>
+
         {% endfor %}
+
     </select><br><br>
 
+
     <label>Quantity:</label><br>
+
     <input type="number" name="quantity[]"><br><br>
 
+
     <label>Price:</label><br>
-    <input type="number" name="price[]"><br><br>
-`;
+
+    <input type="number" name="price[]" readonly><br><br>
+
+    `;
+
 
     products.appendChild(row);
 
+
+    let newSelect = row.querySelector(".product-select");
+
+    addPriceEvent(newSelect);
+
+
 });
+
 </script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-from flask import Flask,render_template, request, redirect
+from flask import Flask,render_template, request, redirect,jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 app = Flask(__name__)
@@ -14,6 +14,13 @@ class Bill(db.Model):
     quantity = db.Column(db.Integer)
     price = db.Column(db.Float)
     total = db.Column(db.Float)
+
+class Product(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    product_name = db.Column(db.String(100), nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    stock = db.Column(db.Integer, nullable=False)
+
 
 
 class Shop(db.Model):
@@ -57,6 +64,23 @@ def home():
 
             db.session.add(new_bill)
 
+            product_data = Product.query.filter_by(product_name=product).first()
+
+            if product_data:
+
+                if product_data.stock < quantity:
+                    return f"""
+<h2 style='color:red;'>❌ Not enough stock for {product}</h2>
+<h3>Available Stock: {product_data.stock}</h3>
+<br>
+<a href='/'>
+    <button>⬅ Back to Billing</button>
+</a>
+"""
+
+                # Stock reduce
+                product_data.stock -= quantity
+
         db.session.commit()
 
         shop = Shop.query.first()
@@ -74,33 +98,145 @@ def home():
             current_time=current_time
         )
 
-    product_list =Product.query.all()
+    product_list = Product.query.all()
 
     return render_template(
-    "index.html",
-    product_list=product_list
-)
+        "index.html",
+        product_list=product_list
+    )
+
+         
+@app.route("/dashboard")
+def dashboard():
+
+    bills = Bill.query.all()
+
+    total_bills = len(bills)
+    total_revenue = sum(bill.total for bill in bills)
+    total_customers = len(set(bill.mobile for bill in bills))
+    today_sales = total_revenue
+    low_stock = Product.query.filter(Product.stock <= 5).all()
+
+    return render_template(
+        "dashboard.html",
+        today_sales=today_sales,
+        total_bills=total_bills,
+        total_revenue=total_revenue,
+        total_customers=total_customers,
+        low_stock=low_stock
+    )
+
+@app.route("/add_product", methods=["GET", "POST"])
+def add_product():
+    if request.method == "POST":
+        product_name = request.form.get("product_name")
+        price = float(request.form.get("price"))
+        stock = int(request.form.get("stock"))
+
+        new_product = Product(
+            product_name=product_name,
+            price=price,
+            stock=stock
+        )
+
+        db.session.add(new_product)
+        db.session.commit()
+
+        return redirect("/products")
+
+    return render_template("add_product.html")
+
+@app.route("/products")
+def products():
+    all_products = Product.query.all()
+    return render_template("products.html", products=all_products)
+
+@app.route("/get_price/<int:product_id>")
+def get_price(product_id):
+
+    product = Product.query.get_or_404(product_id)
+
+    return jsonify({
+        "price": product.price
+    })
+@app.route("/search_products")
+def search_products():
+
+    keyword = request.args.get("q", "")
+
+    products = Product.query.filter(
+        Product.product_name.ilike(f"%{keyword}%")
+    ).all()
+
+    return jsonify([
+        {
+            "id": product.id,
+            "name": product.product_name,
+            "price": product.price
+        }
+        for product in products
+    ])
+
 @app.route("/history")
 def history():
     bills = Bill.query.all()
     return render_template("history.html", bills=bills)
 
+@app.route("/shop-settings", methods=["GET", "POST"])
+def shop_settings():
+
+    shop = Shop.query.first()
+
+    if request.method == "POST":
+
+        shop_name = request.form.get("shop_name")
+        address = request.form.get("address")
+        phone = request.form.get("phone")
+        shop_type = request.form.get("shop_type")
+
+        if shop:
+            shop.shop_name = shop_name
+            shop.address = address
+            shop.phone = phone
+            shop.shop_type = shop_type
+
+        else:
+            shop = Shop(
+                shop_name=shop_name,
+                address=address,
+                phone=phone,
+                shop_type=shop_type
+            )
+            db.session.add(shop)
+
+        db.session.commit()
+
+        return redirect("/shop-settings")
+
+    return render_template(
+        "shop_settings.html",
+        shop=shop
+    )
+
 @app.route("/shop", methods=["GET", "POST"])
 def shop():
+    shop = Shop.query.first()
+
     if request.method == "POST":
-        shop = Shop(
-            shop_name=request.form.get("shop_name"),
-            address=request.form.get("address"),
-            phone=request.form.get("phone"),
-            shop_type=request.form.get("shop_type")
-        )
+        if shop is None:
+            shop = Shop()
+
+        shop.shop_name = request.form.get("shop_name")
+        shop.address = request.form.get("address")
+        shop.phone = request.form.get("phone")
+        shop.shop_type = request.form.get("shop_type")
 
         db.session.add(shop)
         db.session.commit()
 
         return redirect("/")
 
-    return render_template("shop.html")
+    return render_template("shop.html", shop=shop)
 
 @app.route("/search", methods=["GET", "POST"])
 def search():
@@ -113,6 +249,22 @@ def search():
         ).all()
 
     return render_template("search.html", bills=bills)
+@app.route("/edit/<int:id>", methods=["GET", "POST"])
+def edit(id):
+    bill = Bill.query.get_or_404(id)
+
+    if request.method == "POST":
+        bill.customer_name = request.form.get("customer_name")
+        bill.mobile = request.form.get("mobile")
+        bill.product = request.form.get("product")
+        bill.quantity = int(request.form.get("quantity"))
+        bill.price = float(request.form.get("price"))
+        bill.total = bill.quantity * bill.price
+
+        db.session.commit()
+        return redirect("/history")
+
+    return render_template("edit.html", bill=bill)
 @app.route("/delete/<int:id>")
 def delete(id):
     bill = Bill.query.get_or_404(id)

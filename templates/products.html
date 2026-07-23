@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Products</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        a, button {
+            text-decoration: none;
+            background: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            background: white;
+            border-collapse: collapse;
+            box-shadow: 0 0 10px #ccc;
+        }
+
+        th {
+            background: #222;
+            color: white;
+            padding: 12px;
+        }
+
+        td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .delete {
+            background: red;
+        }
+
+        .edit {
+            background: green;
+        }
+    </style>
+
+</head>
+
+<body>
+
+<h1>📦 Product Management</h1>
+
+
+<div class="top-bar">
+
+    <a href="/add_product">
+        ➕ Add Product
+    </a>
+
+    <a href="/">
+        🏠 Home
+    </a>
+
+</div>
+
+
+<table>
+
+<tr>
+    <th>ID</th>
+    <th>Product Name</th>
+    <th>Price</th>
+    <th>Stock</th>
+    <th>Action</th>
+</tr>
+
+
+{% for product in products %}
+
+<tr>
+
+    <td>{{ product.id }}</td>
+
+    <td>{{ product.product_name }}</td>
+
+    <td>₹ {{ product.price }}</td>
+
+    <td>{{ product.stock }}</td>
+
+
+    <td>
+
+        <a class="edit" href="/edit_product/{{ product.id }}">
+            Edit
+        </a>
+
+
+        <a class="delete" 
+           href="/delete_product/{{ product.id }}"
+           onclick="return confirm('Delete this product?')">
+            Delete
+        </a>
+
+    </td>
+
+
+</tr>
+
+{% endfor %}
+
+
+</table>
+
+
+</body>
+</html>

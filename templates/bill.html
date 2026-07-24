@@ -2,48 +2,158 @@
 <html>
 <head>
     <title>Bill</title>
+
+    <style>
+
+        body{
+            font-family: Arial, sans-serif;
+            background:#f4f4f4;
+        }
+
+        .bill{
+            width:800px;
+            margin:30px auto;
+            background:white;
+            padding:25px;
+            border:1px solid #ccc;
+            box-shadow:0px 0px 10px #ccc;
+        }
+
+        h2{
+            margin:0;
+        }
+
+        .center{
+            text-align:center;
+        }
+
+        table{
+            width:100%;
+            border-collapse:collapse;
+            margin-top:20px;
+        }
+
+        table,th,td{
+            border:1px solid black;
+        }
+
+        th,td{
+            padding:10px;
+            text-align:center;
+        }
+
+        .left{
+            text-align:left;
+        }
+
+        .total{
+            font-weight:bold;
+            font-size:18px;
+        }
+
+        button{
+            margin-top:20px;
+            padding:10px 20px;
+            background:#007bff;
+            color:white;
+            border:none;
+            border-radius:5px;
+            cursor:pointer;
+        }
+
+        @media print{
+            button{
+                display:none;
+            }
+
+            body{
+                background:white;
+            }
+
+            .bill{
+                box-shadow:none;
+                border:none;
+                width:100%;
+            }
+        }
+
+    </style>
+
 </head>
+
 <body>
 
-<center>
-    <h2>{{ shop.shop_name }}</h2>
-    <p>{{ shop.address }}</p>
-    <p>📞 {{ shop.phone }}</p>
-    <p><b>Date & Time:</b> {{ current_time }}</p>
-    <hr width="70%">
-</center>
+<div class="bill">
 
-<p><b>Customer:</b> {{ customer_name }}</p>
-<p><b>Mobile:</b> {{ mobile }}</p>
+<div class="center">
 
-<table border="1" width="100%" cellspacing="0" cellpadding="6">
-    <tr>
-        <th>S.No</th>
-        <th>Product</th>
-        <th>Qty</th>
-        <th>Price</th>
-        <th>Amount</th>
-    </tr>
+<h2>{{ shop.shop_name }}</h2>
 
-    {% for i in range(products|length) %}
-    <tr>
-        <td>{{ i + 1 }}</td>
-        <td>{{ products[i] }}</td>
-        <td>{{ quantities[i] }}</td>
-        <td>₹{{ prices[i] }}</td>
-        <td>₹{{ quantities[i]|int * prices[i]|float }}</td>
-    </tr>
-    {% endfor %}
+<p>{{ shop.address }}</p>
 
-    <tr>
-        <td colspan="4"><b>Grand Total</b></td>
-        <td><b>₹{{ grand_total }}</b></td>
-    </tr>
+<p>📞 {{ shop.phone }}</p>
+
+<p><b>Date & Time :</b> {{ current_time }}</p>
+
+</div>
+
+<hr>
+
+<p><b>Customer :</b> {{ customer_name }}</p>
+
+<p><b>Mobile :</b> {{ mobile }}</p>
+
+<table>
+
+<tr>
+<th>S.No</th>
+<th>Product</th>
+<th>Qty</th>
+<th>Price</th>
+<th>Amount</th>
+</tr>
+
+{% for i in range(products|length) %}
+
+<tr>
+
+<td>{{ i+1 }}</td>
+
+<td class="left">{{ products[i] }}</td>
+
+<td>{{ quantities[i] }}</td>
+
+<td>₹{{ prices[i] }}</td>
+
+<td>₹{{ quantities[i]|int * prices[i]|float }}</td>
+
+</tr>
+
+{% endfor %}
+
+<tr>
+
+<td colspan="4" class="left total">
+Grand Total
+</td>
+
+<td class="total">
+₹{{ grand_total }}
+</td>
+
+</tr>
+
 </table>
 
-<br>
+<div class="center">
 
-<button onclick="window.print()">🖨 Print Bill</button>
+<button onclick="window.print()">
+🖨 Print Bill
+</button>
+
+</div>
+
+</div>
 
 </body>
 </html>

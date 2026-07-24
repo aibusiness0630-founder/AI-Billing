@@ -249,6 +249,7 @@ def search():
         ).all()
 
     return render_template("search.html", bills=bills)
+
 @app.route("/edit/<int:id>", methods=["GET", "POST"])
 def edit(id):
     bill = Bill.query.get_or_404(id)
@@ -265,12 +266,39 @@ def edit(id):
         return redirect("/history")
 
     return render_template("edit.html", bill=bill)
+
 @app.route("/delete/<int:id>")
 def delete(id):
     bill = Bill.query.get_or_404(id)
     db.session.delete(bill)
     db.session.commit()
     return redirect("/history")
+
+@app.route("/edit_product/<int:id>", methods=["GET", "POST"])
+def edit_product(id):
+
+    product = Product.query.get_or_404(id)
+
+    if request.method == "POST":
+        product.product_name = request.form.get("product_name")
+        product.price = float(request.form.get("price"))
+        product.stock = int(request.form.get("stock"))
+
+        db.session.commit()
+        return redirect("/products")
+
+    return render_template("edit_product.html", product=product)
+
+
+@app.route("/delete_product/<int:id>")
+def delete_product(id):
+
+    product = Product.query.get_or_404(id)
+
+    db.session.delete(product)
+    db.session.commit()
+
+    return redirect("/products")
 
 if __name__ == "__main__":
     with app.app_context():

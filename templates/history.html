@@ -2,18 +2,21 @@
 <html>
 <head>
     <title>Bill History</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 
-<h1>Bill History</h1>
+<div class="container">
 
-<table border="1">
+<h1>📜 Bill History</h1>
+
+<table>
     <tr>
         <th>ID</th>
         <th>Customer</th>
         <th>Mobile</th>
         <th>Product</th>
-        <th>Quantity</th>
+        <th>Qty</th>
         <th>Price</th>
         <th>Total</th>
         <th>Action</th>
@@ -26,17 +29,31 @@
         <td>{{ bill.mobile }}</td>
         <td>{{ bill.product }}</td>
         <td>{{ bill.quantity }}</td>
-        <td>{{ bill.price }}</td>
-        <td>{{ bill.total }}</td>
+        <td>₹{{ bill.price }}</td>
+        <td>₹{{ bill.total }}</td>
+
         <td>
-    <a href="/delete/{{ bill.id }}">
-        <button>Delete</button>
-    </a>
-</td>
+            <a href="/edit/{{ bill.id }}">
+                <button type="button">✏️ Edit</button>
+            </a>
+
+            <a href="/delete/{{ bill.id }}"
+               onclick="return confirm('Are you sure you want to delete this bill?');">
+                <button type="button">🗑 Delete</button>
+            </a>
+        </td>
     </tr>
     {% endfor %}
 
 </table>
+
+<br>
+
+<a href="/">
+    <button type="button">⬅ Back to Billing</button>
+</a>
+
+</div>
 
 </body>
 </html>

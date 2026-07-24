@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Bill</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container">
+
+<h1>Edit Bill</h1>
+
+<form method="POST">
+
+    <label>Customer Name:</label>
+    <input type="text" name="customer_name" value="{{ bill.customer_name }}" required>
+
+    <label>Mobile:</label>
+    <input type="text" name="mobile" value="{{ bill.mobile }}" required>
+
+    <label>Product:</label>
+    <input type="text" name="product" value="{{ bill.product }}" required>
+
+    <label>Quantity:</label>
+    <input type="number" name="quantity" value="{{ bill.quantity }}" required>
+
+    <label>Price:</label>
+    <input type="number" step="0.01" name="price" value="{{ bill.price }}" required>
+
+    <br><br>
+
+    <button type="submit">💾 Update Bill</button>
+
+</form>
+
+<br>
+
+<a href="/history">
+    <button type="button">⬅ Back</button>
+</a>
+
+</div>
+
+</body>
+</html>

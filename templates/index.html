@@ -9,7 +9,7 @@
     <h1>AI Billing System</h1>
     <form method="post" action="/">
         <label>Customer Name:</label><br>
-        <input type="text" name="customer_name" placeholder="Enter Customer Name"><br><br>
+        <input type="text" name="customer_name" placeholder="walk-in-customer"><br><br>
         <label>Mobile Number:</label><br>
         <input type="text" name="mobile" placeholder="Enter Mobile Number"><br><br>
         <div id="products">
@@ -156,6 +156,28 @@ document.getElementById("addProduct").addEventListener("click", function () {
 
     addPriceEvent(newSelect);
 
+
+});
+const mobileInput = document.querySelector('input[name="mobile"]');
+const customerInput = document.querySelector('input[name="customer_name"]');
+
+mobileInput.addEventListener("keyup", function(){
+
+    let mobile = this.value;
+
+    if(mobile.length >= 10){
+
+        fetch("/get_customer/" + mobile)
+        .then(response => response.json())
+        .then(data => {
+
+            if(data.customer_name){
+                customerInput.value = data.customer_name;
+            }
+
+        });
+
+    }
 
 });
 

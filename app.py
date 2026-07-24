@@ -26,6 +26,19 @@ class Product(db.Model):
     stock = db.Column(db.Integer, nullable=False)
 
 
+@app.route("/get_customer/<mobile>")
+def get_customer(mobile):
+
+    bill = Bill.query.filter_by(mobile=mobile).first()
+
+    if bill and bill.customer_name != "Walk-in Customer":
+        return jsonify({
+            "customer_name": bill.customer_name
+        })
+
+    return jsonify({
+        "customer_name": ""
+    })
 
 class Shop(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -39,6 +52,10 @@ def home():
     if request.method == "POST":
 
         customer_name = request.form.get("customer_name")
+
+        if not customer_name.strip():
+          customer_name = "Walk-in Customer"
+
         mobile = request.form.get("mobile")
 
         products = request.form.getlist("product[]")

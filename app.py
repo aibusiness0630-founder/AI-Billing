@@ -308,9 +308,11 @@ def search():
     bills = []
 
     if request.method == "POST":
-        customer = request.form.get("customer")
+        search_value = request.form.get("search")
+
         bills = Bill.query.filter(
-            Bill.customer_name.ilike(f"%{customer}%")
+            (Bill.customer_name.ilike("%" + search_value + "%")) |
+            (Bill.mobile.ilike("%" + search_value + "%"))
         ).all()
 
     return render_template("search.html", bills=bills)

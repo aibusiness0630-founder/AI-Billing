@@ -1,6 +1,10 @@
-from flask import Flask,render_template, request, redirect,jsonify
+from flask import Flask, render_template, request, redirect, jsonify, send_file
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from reportlab.pdfgen import canvas
+import os
+import matplotlib.pyplot as plt
+
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///billing.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -105,6 +109,34 @@ def home():
         product_list=product_list
     )
 
+@app.route("/sales_chart")
+def sales_chart():
+
+    bills = Bill.query.all()
+
+    product_names = []
+    quantities = []
+
+    for bill in bills:
+        product_names.append(bill.product)
+        quantities.append(bill.quantity)
+
+    plt.figure(figsize=(8, 5))
+    plt.bar(product_names, quantities)
+    plt.title("Product Sales")
+    plt.xlabel("Products")
+    plt.ylabel("Quantity Sold")
+    plt.xticks(rotation=30)
+
+    os.makedirs("static", exist_ok=True)
+
+    chart_path = "static/sales_chart.png"
+    plt.tight_layout()
+    plt.savefig(chart_path)
+    plt.close()
+
+    return send_file(chart_path, mimetype="image/png")
+
          
 @app.route("/dashboard")
 def dashboard():
@@ -115,7 +147,22 @@ def dashboard():
     total_revenue = sum(bill.total for bill in bills)
     total_customers = len(set(bill.mobile for bill in bills))
     today_sales = total_revenue
-    low_stock = Product.query.filter(Product.stock <= 5).all()
+
+    low_stock = Product.query.filter(Product.stock <= 10).all()
+
+    best_products = {}
+
+    for bill in bills:
+        if bill.product in best_products:
+            best_products[bill.product] += bill.quantity
+        else:
+            best_products[bill.product] = bill.quantity
+
+    best_products = sorted(
+        best_products.items(),
+        key=lambda x: x[1],
+        reverse=True
+    )
 
     return render_template(
         "dashboard.html",
@@ -123,7 +170,8 @@ def dashboard():
         total_bills=total_bills,
         total_revenue=total_revenue,
         total_customers=total_customers,
-        low_stock=low_stock
+        low_stock=low_stock,
+        best_products=best_products
     )
 
 @app.route("/add_product", methods=["GET", "POST"])
@@ -288,6 +336,30 @@ def edit_product(id):
         return redirect("/products")
 
     return render_template("edit_product.html", product=product)
+
+@app.route("/download_bill/<int:id>")
+def download_bill(id):
+
+    bill = Bill.query.get_or_404(id)
+
+    pdf_name = f"bill_{bill.id}.pdf"
+
+    c = canvas.Canvas(pdf_name)
+
+    c.setFont("Helvetica-Bold", 18)
+    c.drawString(200, 800, "AI Billing System")
+
+    c.setFont("Helvetica", 12)
+    c.drawString(50, 760, f"Customer : {bill.customer_name}")
+    c.drawString(50, 740, f"Mobile : {bill.mobile}")
+    c.drawString(50, 720, f"Product : {bill.product}")
+    c.drawString(50, 700, f"Quantity : {bill.quantity}")
+    c.drawString(50, 680, f"Price : Rs.{bill.price}")
+    c.drawString(50, 660, f"Total : Rs.{bill.total}")
+
+    c.save()
+
+    return send_file(pdf_name, as_attachment=True)
 
 
 @app.route("/delete_product/<int:id>")

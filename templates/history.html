@@ -32,16 +32,21 @@
         <td>₹{{ bill.price }}</td>
         <td>₹{{ bill.total }}</td>
 
-        <td>
-            <a href="/edit/{{ bill.id }}">
-                <button type="button">✏️ Edit</button>
-            </a>
+       <td>
+    <a href="/edit/{{ bill.id }}">
+        <button>Edit</button>
+    </a>
 
-            <a href="/delete/{{ bill.id }}"
-               onclick="return confirm('Are you sure you want to delete this bill?');">
-                <button type="button">🗑 Delete</button>
-            </a>
-        </td>
+    <a href="/delete/{{ bill.id }}"
+       onclick="return confirm('Delete this bill?')">
+        <button>Delete</button>
+    </a>
+
+    <a href="/download_bill/{{ bill.id }}">
+        <button>📄 PDF</button>
+    </a>
+</td>
+
     </tr>
     {% endfor %}
 

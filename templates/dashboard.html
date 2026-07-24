@@ -122,5 +122,46 @@
 
 {% endif %}
 
+<br><br>
+
+<h2>🏆 Best Selling Products</h2>
+
+{% if best_products %}
+
+<table border="1" cellpadding="10">
+
+    <tr>
+        <th>Product Name</th>
+        <th>Total Sold</th>
+    </tr>
+
+    {% for product, qty in best_products %}
+
+    <tr>
+        <td>{{ product }}</td>
+        <td>{{ qty }}</td>
+    </tr>
+
+    {% endfor %}
+
+</table>
+
+{% else %}
+
+<p>No sales available.</p>
+
+{% endif %}
+
+<br><br>
+
+<h2>📊 Sales Chart</h2>
+
+<center>
+    <img src="/sales_chart" width="700">
+</center>
+
+</body>
+</html>
+
 </body>
 </html>

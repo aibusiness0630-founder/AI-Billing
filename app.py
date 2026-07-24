@@ -10,6 +10,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///billing.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
+
 class Bill(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     customer_name = db.Column(db.String(100))
@@ -360,26 +361,73 @@ def edit_product(id):
 def download_bill(id):
 
     bill = Bill.query.get_or_404(id)
+    shop = Shop.query.first()
 
     pdf_name = f"bill_{bill.id}.pdf"
 
     c = canvas.Canvas(pdf_name)
 
-    c.setFont("Helvetica-Bold", 18)
-    c.drawString(200, 800, "AI Billing System")
+    # Shop Name
+    c.setFont("Helvetica-Bold", 22)
+    c.drawCentredString(300, 800, shop.shop_name if shop else "My Shop")
 
+    # Address
+    c.setFont("Helvetica", 11)
+    c.drawCentredString(300, 780, shop.address if shop else "")
+
+    # Phone
+    c.drawCentredString(
+        300,
+        765,
+        f"Phone : {shop.phone}" if shop else ""
+    )
+
+    # Line
+    c.line(40, 750, 550, 750)
+
+    # Invoice Details
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(50, 725, f"Invoice No : INV-{bill.id:05d}")
+    c.drawString(350, 725, f"Date & time : {datetime.now().strftime('%d-%m-%Y')}")
+
+    # Customer Details
+    c.drawString(50, 695, f"Customer : {bill.customer_name}")
+    c.drawString(50, 675, f"Mobile : {bill.mobile}")
+
+    # Table Header
+    c.line(40, 655, 550, 655)
+
+    c.drawString(50, 635, "Product")
+    c.drawString(250, 635, "Qty")
+    c.drawString(330, 635, "Price")
+    c.drawString(430, 635, "Amount")
+
+    c.line(40, 625, 550, 625)
+
+    # Product Row
     c.setFont("Helvetica", 12)
-    c.drawString(50, 760, f"Customer : {bill.customer_name}")
-    c.drawString(50, 740, f"Mobile : {bill.mobile}")
-    c.drawString(50, 720, f"Product : {bill.product}")
-    c.drawString(50, 700, f"Quantity : {bill.quantity}")
-    c.drawString(50, 680, f"Price : Rs.{bill.price}")
-    c.drawString(50, 660, f"Total : Rs.{bill.total}")
+
+    c.drawString(50, 600, bill.product)
+    c.drawString(260, 600, str(bill.quantity))
+    c.drawString(330, 600, f"Rs.{bill.price}")
+    c.drawString(430, 600, f"Rs.{bill.total}")
+
+    c.line(40, 580, 550, 580)
+
+    # Grand Total
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(330, 555, "Grand Total :")
+    c.drawString(455, 555, f"Rs.{bill.total}")
+
+    c.line(40, 535, 550, 535)
+
+    # Footer
+    c.setFont("Helvetica", 12)
+    c.drawCentredString(300, 500, "Thank You! Visit Again")
 
     c.save()
 
     return send_file(pdf_name, as_attachment=True)
-
 
 @app.route("/delete_product/<int:id>")
 def delete_product(id):

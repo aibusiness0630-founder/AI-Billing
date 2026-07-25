@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Customer Profile</title>
+
+    <style>
+        body{
+            font-family:Arial,sans-serif;
+            background:#f4f6f9;
+            padding:20px;
+        }
+
+        h1{
+            text-align:center;
+            color:#333;
+        }
+
+        .card{
+            background:white;
+            padding:20px;
+            border-radius:10px;
+            box-shadow:0 0 10px #ccc;
+            margin-bottom:20px;
+        }
+
+        table{
+            width:100%;
+            border-collapse:collapse;
+            background:white;
+            box-shadow:0 0 10px #ccc;
+        }
+
+        th{
+            background:#007bff;
+            color:white;
+            padding:12px;
+        }
+
+        td{
+            padding:10px;
+            text-align:center;
+            border-bottom:1px solid #ddd;
+        }
+
+        .btn{
+            display:inline-block;
+            margin-bottom:20px;
+            background:#007bff;
+            color:white;
+            padding:10px 15px;
+            text-decoration:none;
+            border-radius:5px;
+        }
+    </style>
+
+</head>
+<body>
+
+<a href="/customers" class="btn">⬅ Back</a>
+
+<h1>👤 Customer Profile</h1>
+
+<div class="card">
+
+    <h2>{{ customer_name }}</h2>
+
+    <p><b>📱 Mobile :</b> {{ mobile }}</p>
+
+    <p><b>🧾 Total Bills :</b> {{ total_bills }}</p>
+
+    <p><b>💰 Total Purchase :</b> ₹{{ total_purchase }}</p>
+
+    <p><b>📅 Last Bill ID :</b> {{ last_purchase.id }}</p>
+
+    <p><b>💵 Average Bill :</b> ₹{{ average_bill }}</p>
+
+    <p><b>🏆 Most Purchased Product :</b> {{ most_product }}</p>
+
+    <p><b>📦 Total Items Purchased :</b> {{ total_items }}</p>
+
+</div>
+
+<h2>📋 Purchase History</h2>
+
+<table>
+
+<tr>
+    <th>Bill ID</th>
+    <th>Product</th>
+    <th>Quantity</th>
+    <th>Amount</th>
+</tr>
+
+{% for bill in bills %}
+
+<tr>
+
+    <td>{{ bill.id }}</td>
+    <td>{{ bill.product }}</td>
+    <td>{{ bill.quantity }}</td>
+    <td>₹{{ bill.total }}</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</body>
+</html>

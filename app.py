@@ -248,6 +248,64 @@ def history():
     bills = Bill.query.all()
     return render_template("history.html", bills=bills)
 
+@app.route("/customers")
+def customers():
+
+    customers = (
+        db.session.query(Bill.customer_name, Bill.mobile)
+        .distinct(Bill.mobile)
+        .all()
+    )
+
+    return render_template(
+        "customers.html",
+        customers=customers
+    )
+
+@app.route("/customer/<mobile>")
+def customer_profile(mobile):
+
+    bills = Bill.query.filter_by(mobile=mobile).all()
+
+    if not bills:
+        return "Customer Not Found"
+
+    customer_name = bills[0].customer_name
+
+    total_bills = len(bills)
+    total_purchase = sum(bill.total for bill in bills)
+
+    last_purchase = max(bills, key=lambda x: x.id)
+
+    average_bill = round(total_purchase / total_bills, 2) if total_bills else 0
+
+    product_count = {}
+    total_items = 0
+
+    for bill in bills:
+        total_items += bill.quantity
+
+        if bill.product in product_count:
+            product_count[bill.product] += bill.quantity
+        else:
+            product_count[bill.product] = bill.quantity
+
+    most_product = max(product_count, key=product_count.get)
+
+    return render_template(
+        "customer_profile.html",
+        customer_name=customer_name,
+        mobile=mobile,
+        bills=bills,
+        total_bills=total_bills,
+        total_purchase=total_purchase,
+        last_purchase=last_purchase,
+        average_bill=average_bill,
+        most_product=most_product,
+        total_items=total_items
+    )
+
+
 @app.route("/shop-settings", methods=["GET", "POST"])
 def shop_settings():
 

@@ -4,6 +4,7 @@ from datetime import datetime
 from reportlab.pdfgen import canvas
 import os
 import matplotlib.pyplot as plt
+import shutil
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///billing.db"
@@ -304,6 +305,26 @@ def customer_profile(mobile):
         most_product=most_product,
         total_items=total_items
     )
+@app.route("/backup")
+def backup_database():
+
+    source = "instance/billing.db"
+    destination = "instance/billing_backup.db"
+
+    shutil.copy(source, destination)
+
+    return "✅ Database Backup Created Successfully" 
+    
+@app.route("/restore")
+def restore_database():
+
+    source = "instance/billing_backup.db"
+    destination = "instance/billing.db"
+
+    shutil.copy(source, destination)
+
+    return "✅ Database Restored Successfully"       
+
 
 
 @app.route("/shop-settings", methods=["GET", "POST"])

@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, redirect, jsonify, send_file
+from flask import Flask, render_template, request, redirect, jsonify, send_file,session
+from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from reportlab.pdfgen import canvas
@@ -7,19 +8,26 @@ import matplotlib.pyplot as plt
 import shutil
 
 app = Flask(__name__)
+app.secret_key = "AI_BILLING_SECRET_2026"
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///billing.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 
-class Bill(db.Model):
+from datetime import datetime
+
+class Shop(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    customer_name = db.Column(db.String(100))
-    mobile = db.Column(db.String(20))
-    product = db.Column(db.String(100))
-    quantity = db.Column(db.Integer)
-    price = db.Column(db.Float)
-    total = db.Column(db.Float)
+
+    shop_name = db.Column(db.String(100), nullable=False)
+    address = db.Column(db.String(200))
+    phone = db.Column(db.String(20))
+    shop_type = db.Column(db.String(50))
+
+    username = db.Column(db.String(100), unique=True, nullable=False)
+    password = db.Column(db.String(255), nullable=False)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -27,6 +35,24 @@ class Product(db.Model):
     price = db.Column(db.Float, nullable=False)
     stock = db.Column(db.Integer, nullable=False)
 
+@app.route("/login", methods=["GET", "POST"])
+def login():
+
+    if request.method == "POST":
+
+        username = request.form.get("username")
+        password = request.form.get("password")
+
+        shop = Shop.query.filter_by(username=username).first()
+
+        if shop and check_password_hash(shop.password, password):
+
+            session["shop_id"] = shop.id
+            return redirect("/")
+
+        return "❌ Invalid Username or Password"
+
+    return render_template("login.html")
 
 @app.route("/get_customer/<mobile>")
 def get_customer(mobile):
@@ -42,19 +68,17 @@ def get_customer(mobile):
         "customer_name": ""
     })
 
-class Shop(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    shop_name = db.Column(db.String(100))
-    address = db.Column(db.String(200))
-    phone = db.Column(db.String(20))
-    shop_type = db.Column(db.String(50))
 
 @app.route("/", methods=["GET", "POST"])
 def home():
+
+    if "shop_id" not in session:
+        return redirect("/login")
+
     if request.method == "POST":
 
         customer_name = request.form.get("customer_name")
-
+        ...
         if not customer_name.strip():
           customer_name = "Walk-in Customer"
 
@@ -127,6 +151,13 @@ def home():
         "index.html",
         product_list=product_list
     )
+
+@app.route("/logout")
+def logout():
+
+    session.clear()
+
+    return redirect("/login")
 
 @app.route("/sales_chart")
 def sales_chart():
@@ -368,6 +399,7 @@ def shop():
     shop = Shop.query.first()
 
     if request.method == "POST":
+
         if shop is None:
             shop = Shop()
 
@@ -375,6 +407,14 @@ def shop():
         shop.address = request.form.get("address")
         shop.phone = request.form.get("phone")
         shop.shop_type = request.form.get("shop_type")
+
+        # New Login Fields
+        shop.username = request.form.get("username")
+
+        password = request.form.get("password")
+
+        if password:
+            shop.password = generate_password_hash(password)
 
         db.session.add(shop)
         db.session.commit()

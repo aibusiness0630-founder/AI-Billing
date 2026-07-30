@@ -21,6 +21,17 @@
     <label>Shop Type:</label><br>
     <input type="text" name="shop_type"><br><br>
 
+    <label>Username:</label><br>
+<input type="text" name="username"
+       value="{{ shop.username if shop else '' }}"
+       placeholder="Create Username" required>
+<br><br>
+
+<label>Password:</label><br>
+<input type="password" name="password"
+       placeholder="Create Password" required>
+<br><br>
+
     <button type="submit">Save Shop</button>
 
 </form>

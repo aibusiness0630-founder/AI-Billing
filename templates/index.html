@@ -1,205 +1,499 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>AI Billing System</title>
+
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
+
 <body>
-    <div class="container">
-    <h1>AI Billing System</h1>
-    <form method="post" action="/">
-        <label>Customer Name:</label><br>
-        <input type="text" name="customer_name" placeholder="walk-in-customer"><br><br>
-        <label>Mobile Number:</label><br>
-        <input type="text" name="mobile" placeholder="Enter Mobile Number"><br><br>
-        <div id="products">
-    <label>Product Name:</label><br>
+
+<div class="container">
+
+<h1>AI Billing System</h1>
+
+
+<form method="post" action="/" id="billForm">
+
+
+<label>Customer Name:</label><br>
+<input type="text"
+name="customer_name"
+placeholder="Walk-in Customer">
+
+<br><br>
+
+
+<label>Mobile Number:</label><br>
+
+<input type="text"
+name="mobile"
+maxlength="10"
+pattern="[0-9]{10}"
+placeholder="Enter Mobile Number">
+
+<br><br>
+
+
+
+<div id="products">
+
+
+<div class="product-row">
+
+
+<label>Product Name:</label><br>
 
 <select name="product[]" class="product-select">
-    <option value="">Select Product</option>
 
-    {% for product in product_list %}
-    <option value="{{ product.product_name }}"
-            data-id="{{ product.id }}">
-        {{ product.product_name }}
-    </option>
-    {% endfor %}
-</select><br><br>
+<option value="">Select Product</option>
 
-    <label>Quantity:</label><br>
-    <input type="number" name="quantity[]" placeholder="Enter Quantity"><br><br>
 
-    <label>Price:</label><br>
-    <input type="number" name="price[]" placeholder="Auto Price" readonly><br><br>
-</div>
-<button type="button" id="addProduct">
-    + Add Product
-</button>
+{% for product in product_list %}
+
+<option value="{{ product.product_name }}"
+data-id="{{ product.id }}">
+
+{{ product.product_name }}
+
+</option>
+
+{% endfor %}
+
+
+</select>
+
 
 <br><br>
 
-<button type="submit">
-    Generate Bill
+
+
+<label>Quantity:</label><br>
+
+<input type="number"
+name="quantity[]"
+min="1"
+required>
+
+
+<br><br>
+
+
+
+<label>Price:</label><br>
+
+<input type="number"
+name="price[]"
+readonly>
+
+
+<br><br>
+
+
+
+<button type="button" class="remove-btn">
+❌ Remove
 </button>
-    </form>
+
+
+</div>
+
+
+</div>
+
+
+
+<button type="button" id="addProduct">
+➕ Add Product
+</button>
+
+
+<br><br>
+
+
+<button type="submit" id="submitBtn">
+🧾 Generate Bill
+</button>
+
+
+</form>
+
+
+<hr>
+
+
 
 <a href="/add_product">
-    <button type="button">➕ Add Product</button>
+<button type="button">
+➕ Add Product
+</button>
 </a>
-<br><br>
+
 
 <a href="/products">
-    <button type="button">📦 Products</button>
+<button type="button">
+📦 Products
+</button>
 </a>
-<br><br>
+
 
 <a href="/dashboard">
-    <button type="button">📊 Dashboard</button>
+<button type="button">
+📊 Dashboard
+</button>
 </a>
-<br><br>
+
+
 
 <a href="/backup">
-    <button>💾 Backup Database</button>
+<button type="button">
+💾 Backup
+</button>
 </a>
+
 
 <a href="/restore">
-    <button type="button">🔄 Restore Database</button>
+<button type="button">
+🔄 Restore
+</button>
 </a>
+
+
 
 <a href="/customers">
-    <button type="button">👥 Customers</button>
+<button type="button">
+👥 Customers
+</button>
 </a>
 
-<br><br>
-
-<a href="/logout">
-    <button type="button">🚪 Logout</button>
-</a>
-
-<a href="/shop">
-    <button type="button">⚙️ Shop Settings</button>
-</a>
-<br><br>
 
 <a href="/search">
-    <button type="button">🔍 Search Bill</button>
+<button type="button">
+🔍 Search Bill
+</button>
 </a>
-<br><br>
+
 
 <a href="/history">
-    <button type="button">📜 View Bill History</button>
+<button type="button">
+📜 History
+</button>
 </a>
+
+
+<a href="/shop">
+<button type="button">
+⚙️ Shop Settings
+</button>
+</a>
+
+
+
+<a href="/logout">
+<button type="button">
+🚪 Logout
+</button>
+</a>
+
+
+
 </div>
+
+
+
 <script>
 
-function addPriceEvent(selectElement) {
 
-    selectElement.addEventListener("change", function(){
+function addPriceEvent(selectElement){
 
-        let productId = this.options[this.selectedIndex].getAttribute("data-id");
 
-        let priceInput = this.parentElement.querySelector('input[name="price[]"]');
+selectElement.addEventListener(
+"change",
+function(){
 
-        if(productId){
 
-            fetch("/get_price/" + productId)
-            .then(response => response.json())
-            .then(data => {
+let productId =
+this.options[this.selectedIndex]
+.getAttribute("data-id");
 
-                priceInput.value = data.price;
 
-            });
+let priceInput =
+this.closest(".product-row")
+.querySelector(
+'input[name="price[]"]'
+);
 
-        }
 
-    });
+
+if(productId){
+
+
+fetch("/get_price/" + productId)
+
+.then(response=>response.json())
+
+.then(data=>{
+
+priceInput.value=data.price;
+
+});
+
 
 }
 
 
-// First product dropdown
-document.querySelectorAll(".product-select").forEach(function(select){
+});
 
-    addPriceEvent(select);
+
+}
+
+
+
+
+
+document.querySelectorAll(".product-select")
+.forEach(function(select){
+
+addPriceEvent(select);
 
 });
 
 
-// Add Product button
-
-document.getElementById("addProduct").addEventListener("click", function () {
-
-    let products = document.getElementById("products");
-
-    let row = document.createElement("div");
 
 
-    row.innerHTML = `
 
-    <hr>
-
-    <label>Product Name:</label><br>
-
-    <select name="product[]" class="product-select">
-
-        <option value="">Select Product</option>
-
-        {% for product in product_list %}
-
-        <option value="{{ product.product_name }}"
-                data-id="{{ product.id }}">
-            {{ product.product_name }}
-        </option>
-
-        {% endfor %}
-
-    </select><br><br>
+document.getElementById("addProduct")
+.addEventListener(
+"click",
+function(){
 
 
-    <label>Quantity:</label><br>
-
-    <input type="number" name="quantity[]"><br><br>
-
-
-    <label>Price:</label><br>
-
-    <input type="number" name="price[]" readonly><br><br>
-
-    `;
+let products =
+document.getElementById("products");
 
 
-    products.appendChild(row);
+
+let row =
+document.createElement("div");
 
 
-    let newSelect = row.querySelector(".product-select");
 
-    addPriceEvent(newSelect);
+row.className="product-row";
+
+
+
+row.innerHTML = `
+
+
+<hr>
+
+
+<label>Product Name:</label><br>
+
+
+<select name="product[]" class="product-select">
+
+
+<option value="">
+Select Product
+</option>
+
+
+
+{% for product in product_list %}
+
+
+<option value="{{ product.product_name }}"
+data-id="{{ product.id }}">
+
+
+{{ product.product_name }}
+
+
+</option>
+
+
+{% endfor %}
+
+
+</select>
+
+
+
+<br><br>
+
+
+<label>Quantity:</label><br>
+
+
+<input type="number"
+name="quantity[]"
+min="1"
+required>
+
+
+
+<br><br>
+
+
+<label>Price:</label><br>
+
+
+<input type="number"
+name="price[]"
+readonly>
+
+
+
+<br><br>
+
+
+<button type="button"
+class="remove-btn">
+
+❌ Remove
+
+</button>
+
+
+`;
+
+
+
+products.appendChild(row);
+
+
+
+addPriceEvent(
+row.querySelector(".product-select")
+);
 
 
 });
-const mobileInput = document.querySelector('input[name="mobile"]');
-const customerInput = document.querySelector('input[name="customer_name"]');
 
-mobileInput.addEventListener("keyup", function(){
 
-    let mobile = this.value;
 
-    if(mobile.length >= 10){
 
-        fetch("/get_customer/" + mobile)
-        .then(response => response.json())
-        .then(data => {
 
-            if(data.customer_name){
-                customerInput.value = data.customer_name;
-            }
 
-        });
 
-    }
+document.addEventListener(
+"click",
+function(e){
+
+
+if(
+e.target.classList.contains(
+"remove-btn"
+)
+){
+
+
+let rows =
+document.querySelectorAll(
+".product-row"
+);
+
+
+if(rows.length > 1){
+
+e.target.parentElement.remove();
+
+}
+
+
+}
+
 
 });
+
+
+
+
+
+
+const mobileInput =
+document.querySelector(
+'input[name="mobile"]'
+);
+
+
+const customerInput =
+document.querySelector(
+'input[name="customer_name"]'
+);
+
+
+
+
+mobileInput.addEventListener(
+"keyup",
+function(){
+
+
+let mobile=this.value;
+
+
+
+if(mobile.length>=10){
+
+
+fetch(
+"/get_customer/" + mobile
+)
+
+.then(response=>response.json())
+
+.then(data=>{
+
+
+if(data.customer_name){
+
+customerInput.value =
+data.customer_name;
+
+}
+
+
+});
+
+
+}
+
+
+});
+
+
+
+
+
+
+document.getElementById("billForm")
+.addEventListener(
+"submit",
+function(){
+
+
+let btn =
+document.getElementById(
+"submitBtn"
+);
+
+
+btn.disabled=true;
+
+btn.innerHTML="Generating...";
+
+
+});
+
+
 
 </script>
+
+
 </body>
+
 </html>

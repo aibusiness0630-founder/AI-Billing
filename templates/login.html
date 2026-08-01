@@ -9,23 +9,59 @@
 
 <div class="container">
 
-    <h1>🔐 AI Billing Login</h1>
+<h1>🔐 AI Billing Login</h1>
 
-    <form method="POST">
+{% if error %}
+<p style="color:red;text-align:center;">
+    {{ error }}
+</p>
+{% endif %}
 
-        <label>Username</label><br>
-        <input type="text" name="username" required><br><br>
+<form method="POST">
 
-        <label>Password</label><br>
-        <input type="password" name="password" required><br><br>
+<label>Username</label><br>
 
-        <button type="submit">
-            Login
-        </button>
+<input
+type="text"
+name="username"
+placeholder="Enter Username"
+required
+autofocus>
 
-    </form>
+<br><br>
+
+<label>Password</label><br>
+
+<input
+type="password"
+id="password"
+name="password"
+placeholder="Enter Password"
+required>
+
+<br>
+
+<label>
+<input type="checkbox" onclick="togglePassword()">
+Show Password
+</label>
+
+<br><br>
+
+<button type="submit">
+🔓 Login
+</button>
+
+</form>
 
 </div>
+
+<script>
+function togglePassword(){
+    let x = document.getElementById("password");
+    x.type = (x.type === "password") ? "text" : "password";
+}
+</script>
 
 </body>
 </html>

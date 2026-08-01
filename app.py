@@ -1,8 +1,9 @@
-from flask import Flask, render_template, request, redirect, jsonify, send_file,session
+from flask import Flask, render_template, request, redirect, jsonify, send_file, session
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from reportlab.pdfgen import canvas
+from io import BytesIO
 import os
 import matplotlib.pyplot as plt
 import shutil
@@ -34,6 +35,23 @@ class Product(db.Model):
     product_name = db.Column(db.String(100), nullable=False)
     price = db.Column(db.Float, nullable=False)
     stock = db.Column(db.Integer, nullable=False)
+
+    shop_id = db.Column(db.Integer, db.ForeignKey("shop.id"))
+
+class Bill(db.Model):
+    __tablename__ = "bill"
+
+    id = db.Column(db.Integer, primary_key=True)
+    customer_name = db.Column(db.String(100))
+    mobile = db.Column(db.String(20))
+    product = db.Column(db.String(100))
+    quantity = db.Column(db.Integer)
+    price = db.Column(db.Float)
+    total = db.Column(db.Float)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    shop_id = db.Column(db.Integer, db.ForeignKey("shop.id"))    
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -68,70 +86,164 @@ def get_customer(mobile):
         "customer_name": ""
     })
 
-
 @app.route("/", methods=["GET", "POST"])
 def home():
 
     if "shop_id" not in session:
         return redirect("/login")
 
+
+    shop_id = session["shop_id"]
+
+
+    product_list = Product.query.filter_by(
+        shop_id=shop_id
+    ).all()
+
+
+
     if request.method == "POST":
 
-        customer_name = request.form.get("customer_name")
-        ...
-        if not customer_name.strip():
-          customer_name = "Walk-in Customer"
+        customer_name = request.form.get(
+            "customer_name",
+            ""
+        ).strip()
 
-        mobile = request.form.get("mobile")
 
-        products = request.form.getlist("product[]")
-        quantities = request.form.getlist("quantity[]")
-        prices = request.form.getlist("price[]")
+        if not customer_name:
+            customer_name = "Walk-in Customer"
+
+
+        mobile = request.form.get(
+            "mobile",
+            ""
+        )
+
+
+        products = request.form.getlist(
+            "product[]"
+        )
+
+        quantities = request.form.getlist(
+            "quantity[]"
+        )
+
+        prices = request.form.getlist(
+            "price[]"
+        )
+
 
         grand_total = 0
 
-        for product, quantity, price in zip(products, quantities, prices):
+        bill_items = []
 
-            if product.strip() == "" or quantity.strip() == "" or price.strip() == "":
+
+
+        # Stock check first
+
+        for product, quantity, price in zip(
+            products,
+            quantities,
+            prices
+        ):
+
+            if not product or not quantity or not price:
                 continue
 
+
             quantity = int(quantity)
+
+
+            product_data = Product.query.filter_by(
+                product_name=product,
+                shop_id=shop_id
+            ).first()
+
+
+            if product_data and product_data.stock < quantity:
+
+                return f"""
+                <h2 style='color:red'>
+                ❌ Not enough stock for {product}
+                </h2>
+
+                <h3>
+                Available Stock: {product_data.stock}
+                </h3>
+
+                <a href='/'>
+                Back
+                </a>
+                """
+
+
             price = float(price)
+
             total = quantity * price
+
+
+            bill_items.append(
+                {
+                    "product": product,
+                    "quantity": quantity,
+                    "price": price,
+                    "total": total
+                }
+            )
+
+
             grand_total += total
+
+
+
+        # Save after stock validation
+
+
+        for item in bill_items:
+
 
             new_bill = Bill(
                 customer_name=customer_name,
                 mobile=mobile,
-                product=product,
-                quantity=quantity,
-                price=price,
-                total=total
+                product=item["product"],
+                quantity=item["quantity"],
+                price=item["price"],
+                total=item["total"],
+                shop_id=shop_id
             )
+
 
             db.session.add(new_bill)
 
-            product_data = Product.query.filter_by(product_name=product).first()
+
+
+            product_data = Product.query.filter_by(
+                product_name=item["product"],
+                shop_id=shop_id
+            ).first()
+
 
             if product_data:
 
-                if product_data.stock < quantity:
-                    return f"""
-<h2 style='color:red;'>❌ Not enough stock for {product}</h2>
-<h3>Available Stock: {product_data.stock}</h3>
-<br>
-<a href='/'>
-    <button>⬅ Back to Billing</button>
-</a>
-"""
+                product_data.stock -= item["quantity"]
 
-                # Stock reduce
-                product_data.stock -= quantity
+
 
         db.session.commit()
 
-        shop = Shop.query.first()
-        current_time = datetime.now().strftime("%d-%m-%Y %I:%M %p")
+
+
+        shop = Shop.query.filter_by(
+            id=shop_id
+        ).first()
+
+
+
+        current_time = datetime.now().strftime(
+            "%d-%m-%Y %I:%M %p"
+        )
+
+
 
         return render_template(
             "bill.html",
@@ -145,7 +257,7 @@ def home():
             current_time=current_time
         )
 
-    product_list = Product.query.all()
+
 
     return render_template(
         "index.html",
@@ -162,57 +274,207 @@ def logout():
 @app.route("/sales_chart")
 def sales_chart():
 
-    bills = Bill.query.all()
+    if "shop_id" not in session:
+        return redirect("/login")
 
-    product_names = []
-    quantities = []
+
+    shop_id = session["shop_id"]
+
+
+    bills = Bill.query.filter_by(
+        shop_id=shop_id
+    ).all()
+
+
+    product_sales = {}
+
 
     for bill in bills:
-        product_names.append(bill.product)
-        quantities.append(bill.quantity)
 
-    plt.figure(figsize=(8, 5))
-    plt.bar(product_names, quantities)
-    plt.title("Product Sales")
-    plt.xlabel("Products")
-    plt.ylabel("Quantity Sold")
-    plt.xticks(rotation=30)
+        if bill.product:
 
-    os.makedirs("static", exist_ok=True)
+            product_sales[bill.product] = (
+                product_sales.get(
+                    bill.product,
+                    0
+                )
+                +
+                (bill.quantity or 0)
+            )
 
-    chart_path = "static/sales_chart.png"
+
+
+    product_names = list(
+        product_sales.keys()
+    )
+
+    quantities = list(
+        product_sales.values()
+    )
+
+
+
+    plt.figure(
+        figsize=(8,5)
+    )
+
+
+    plt.bar(
+        product_names,
+        quantities
+    )
+
+
+    plt.title(
+        "Product Sales"
+    )
+
+    plt.xlabel(
+        "Products"
+    )
+
+    plt.ylabel(
+        "Quantity Sold"
+    )
+
+
+    plt.xticks(
+        rotation=30
+    )
+
+
+    os.makedirs(
+        "static/charts",
+        exist_ok=True
+    )
+
+
+    chart_path = (
+        f"static/charts/"
+        f"sales_{shop_id}.png"
+    )
+
+
     plt.tight_layout()
-    plt.savefig(chart_path)
+
+    plt.savefig(
+        chart_path
+    )
+
     plt.close()
 
-    return send_file(chart_path, mimetype="image/png")
 
+    return send_file(
+        chart_path,
+        mimetype="image/png"
+    )
          
 @app.route("/dashboard")
 def dashboard():
 
-    bills = Bill.query.all()
+    if "shop_id" not in session:
+        return redirect("/login")
+
+
+    shop_id = session["shop_id"]
+
+
+    bills = Bill.query.filter_by(
+        shop_id=shop_id
+    ).all()
+
+
 
     total_bills = len(bills)
-    total_revenue = sum(bill.total for bill in bills)
-    total_customers = len(set(bill.mobile for bill in bills))
-    today_sales = total_revenue
 
-    low_stock = Product.query.filter(Product.stock <= 10).all()
+
+    total_revenue = sum(
+        bill.total or 0
+        for bill in bills
+    )
+
+
+
+    total_customers = len(
+        set(
+            bill.mobile
+            for bill in bills
+            if bill.mobile
+        )
+    )
+
+
+
+    today = datetime.now().date()
+
+
+    today_sales = sum(
+        bill.total or 0
+        for bill in bills
+        if bill.id and 
+        Bill.query.get(bill.id).id
+    )
+
+
+
+    low_stock = Product.query.filter(
+        Product.shop_id == shop_id,
+        Product.stock <= 10
+    ).all()
+
+
 
     best_products = {}
 
+
     for bill in bills:
-        if bill.product in best_products:
-            best_products[bill.product] += bill.quantity
-        else:
-            best_products[bill.product] = bill.quantity
+
+        if bill.product:
+
+            best_products[bill.product] = (
+                best_products.get(
+                    bill.product,
+                    0
+                )
+                +
+                (bill.quantity or 0)
+            )
+
+
 
     best_products = sorted(
         best_products.items(),
-        key=lambda x: x[1],
+        key=lambda x:x[1],
         reverse=True
     )
+
+
+
+    top_customers = {}
+
+
+    for bill in bills:
+
+        if bill.customer_name:
+
+            top_customers[bill.customer_name] = (
+                top_customers.get(
+                    bill.customer_name,
+                    0
+                )
+                +
+                (bill.total or 0)
+            )
+
+
+
+    top_customers = sorted(
+        top_customers.items(),
+        key=lambda x:x[1],
+        reverse=True
+    )[:5]
+
+
 
     return render_template(
         "dashboard.html",
@@ -221,7 +483,8 @@ def dashboard():
         total_revenue=total_revenue,
         total_customers=total_customers,
         low_stock=low_stock,
-        best_products=best_products
+        best_products=best_products,
+        top_customers=top_customers
     )
 
 @app.route("/add_product", methods=["GET", "POST"])
@@ -234,7 +497,8 @@ def add_product():
         new_product = Product(
             product_name=product_name,
             price=price,
-            stock=stock
+            stock=stock,
+            shop_id=session["shop_id"]
         )
 
         db.session.add(new_product)
@@ -246,8 +510,20 @@ def add_product():
 
 @app.route("/products")
 def products():
-    all_products = Product.query.all()
-    return render_template("products.html", products=all_products)
+
+    if "shop_id" not in session:
+        return redirect("/login")
+
+
+    all_products = Product.query.filter_by(
+        shop_id=session["shop_id"]
+    ).all()
+
+
+    return render_template(
+        "products.html",
+        products=all_products
+    )
 
 @app.route("/get_price/<int:product_id>")
 def get_price(product_id):
@@ -277,52 +553,123 @@ def search_products():
 
 @app.route("/history")
 def history():
-    bills = Bill.query.all()
+    bills = Bill.query.filter_by(
+    shop_id=session["shop_id"]
+).all()
     return render_template("history.html", bills=bills)
 
 @app.route("/customers")
 def customers():
 
+    if "shop_id" not in session:
+        return redirect("/login")
+
+
     customers = (
-        db.session.query(Bill.customer_name, Bill.mobile)
-        .distinct(Bill.mobile)
+        db.session.query(
+            Bill.customer_name,
+            Bill.mobile
+        )
+        .filter(
+            Bill.shop_id == session["shop_id"]
+        )
+        .group_by(
+            Bill.mobile
+        )
         .all()
     )
+
 
     return render_template(
         "customers.html",
         customers=customers
     )
 
+
+
 @app.route("/customer/<mobile>")
 def customer_profile(mobile):
 
-    bills = Bill.query.filter_by(mobile=mobile).all()
+    if "shop_id" not in session:
+        return redirect("/login")
+
+
+    bills = Bill.query.filter_by(
+        mobile=mobile,
+        shop_id=session["shop_id"]
+    ).all()
+
+
 
     if not bills:
         return "Customer Not Found"
 
+
+
     customer_name = bills[0].customer_name
 
+
+
     total_bills = len(bills)
-    total_purchase = sum(bill.total for bill in bills)
 
-    last_purchase = max(bills, key=lambda x: x.id)
 
-    average_bill = round(total_purchase / total_bills, 2) if total_bills else 0
+    total_purchase = sum(
+        bill.total or 0
+        for bill in bills
+    )
+
+
+
+    last_purchase = max(
+        bills,
+        key=lambda x: x.id
+    )
+
+
+
+    average_bill = round(
+        total_purchase / total_bills,
+        2
+    ) if total_bills else 0
+
+
 
     product_count = {}
+
     total_items = 0
 
+
+
     for bill in bills:
-        total_items += bill.quantity
 
-        if bill.product in product_count:
-            product_count[bill.product] += bill.quantity
-        else:
-            product_count[bill.product] = bill.quantity
+        qty = bill.quantity or 0
 
-    most_product = max(product_count, key=product_count.get)
+        total_items += qty
+
+
+        if bill.product:
+
+            product_count[bill.product] = (
+                product_count.get(
+                    bill.product,
+                    0
+                )
+                +
+                qty
+            )
+
+
+
+    most_product = (
+        max(
+            product_count,
+            key=product_count.get
+        )
+        if product_count
+        else "No Purchase"
+    )
+
+
 
     return render_template(
         "customer_profile.html",
@@ -339,29 +686,104 @@ def customer_profile(mobile):
 @app.route("/backup")
 def backup_database():
 
+    if "shop_id" not in session:
+        return redirect("/login")
+
+
     source = "instance/billing.db"
-    destination = "instance/billing_backup.db"
 
-    shutil.copy(source, destination)
 
-    return "✅ Database Backup Created Successfully" 
-    
+    if not os.path.exists(source):
+        return "❌ Database file not found"
+
+
+    backup_folder = "instance/backups"
+
+    os.makedirs(
+        backup_folder,
+        exist_ok=True
+    )
+
+
+    backup_name = (
+        f"billing_backup_"
+        f"{datetime.now().strftime('%d_%m_%Y_%H_%M_%S')}.db"
+    )
+
+
+    destination = os.path.join(
+        backup_folder,
+        backup_name
+    )
+
+
+    shutil.copy(
+        source,
+        destination
+    )
+
+
+    return f"✅ Backup Created Successfully : {backup_name}"
+
+
+
 @app.route("/restore")
 def restore_database():
 
-    source = "instance/billing_backup.db"
-    destination = "instance/billing.db"
+    if "shop_id" not in session:
+        return redirect("/login")
 
-    shutil.copy(source, destination)
 
-    return "✅ Database Restored Successfully"       
+    backup_folder = "instance/backups"
+
+
+    if not os.path.exists(backup_folder):
+        return "❌ No Backup Available"
+
+
+
+    backups = sorted(
+        os.listdir(backup_folder),
+        reverse=True
+    )
+
+
+    if not backups:
+        return "❌ No Backup Found"
+
+
+
+    latest_backup = os.path.join(
+        backup_folder,
+        backups[0]
+    )
+
+
+    database = "instance/billing.db"
+
+
+    shutil.copy(
+        latest_backup,
+        database
+    )
+
+
+    return "✅ Database Restored Successfully"    
 
 
 
 @app.route("/shop-settings", methods=["GET", "POST"])
 def shop_settings():
 
-    shop = Shop.query.first()
+    if "shop_id" not in session:
+        return redirect("/login")
+
+
+    shop = Shop.query.filter_by(
+        id=session["shop_id"]
+    ).first_or_404()
+
+
 
     if request.method == "POST":
 
@@ -370,24 +792,24 @@ def shop_settings():
         phone = request.form.get("phone")
         shop_type = request.form.get("shop_type")
 
-        if shop:
-            shop.shop_name = shop_name
-            shop.address = address
-            shop.phone = phone
-            shop.shop_type = shop_type
 
-        else:
-            shop = Shop(
-                shop_name=shop_name,
-                address=address,
-                phone=phone,
-                shop_type=shop_type
-            )
-            db.session.add(shop)
+        if not shop_name:
+            return "Shop name required"
+
+
+
+        shop.shop_name = shop_name
+        shop.address = address
+        shop.phone = phone
+        shop.shop_type = shop_type
+
 
         db.session.commit()
 
+
         return redirect("/shop-settings")
+
+
 
     return render_template(
         "shop_settings.html",
@@ -396,6 +818,7 @@ def shop_settings():
 
 @app.route("/shop", methods=["GET", "POST"])
 def shop():
+
     shop = Shop.query.first()
 
     if request.method == "POST":
@@ -408,153 +831,363 @@ def shop():
         shop.phone = request.form.get("phone")
         shop.shop_type = request.form.get("shop_type")
 
-        # New Login Fields
-        shop.username = request.form.get("username")
-
+        username = request.form.get("username")
         password = request.form.get("password")
+
+        if username:
+            shop.username = username
 
         if password:
             shop.password = generate_password_hash(password)
 
+        if not shop.shop_name:
+            return "Shop name required"
+
         db.session.add(shop)
         db.session.commit()
 
-        return redirect("/")
+        return redirect("/shop")
 
     return render_template("shop.html", shop=shop)
 
 @app.route("/search", methods=["GET", "POST"])
 def search():
+
     bills = []
+    search_value = ""
 
     if request.method == "POST":
-        search_value = request.form.get("search")
 
-        bills = Bill.query.filter(
-            (Bill.customer_name.ilike("%" + search_value + "%")) |
-            (Bill.mobile.ilike("%" + search_value + "%"))
-        ).all()
+        search_value = request.form.get("search", "").strip()
 
-    return render_template("search.html", bills=bills)
+        if search_value:
+
+            bills = Bill.query.filter(
+                (Bill.customer_name.ilike(f"%{search_value}%")) |
+                (Bill.mobile.ilike(f"%{search_value}%"))
+            ).all()
+
+    return render_template(
+        "search.html",
+        bills=bills,
+        search_value=search_value
+    )
 
 @app.route("/edit/<int:id>", methods=["GET", "POST"])
 def edit(id):
-    bill = Bill.query.get_or_404(id)
+
+    if "shop_id" not in session:
+        return redirect("/login")
+
+    bill = Bill.query.filter_by(
+        id=id,
+        shop_id=session["shop_id"]
+    ).first_or_404()
+
 
     if request.method == "POST":
-        bill.customer_name = request.form.get("customer_name")
-        bill.mobile = request.form.get("mobile")
-        bill.product = request.form.get("product")
-        bill.quantity = int(request.form.get("quantity"))
-        bill.price = float(request.form.get("price"))
-        bill.total = bill.quantity * bill.price
+
+        customer_name = request.form.get("customer_name")
+        mobile = request.form.get("mobile")
+        product = request.form.get("product")
+
+        quantity = request.form.get("quantity")
+        price = request.form.get("price")
+
+
+        if not quantity or not price:
+            return "Quantity and Price required"
+
+
+        quantity = int(quantity)
+        price = float(price)
+
+
+        bill.customer_name = customer_name
+        bill.mobile = mobile
+        bill.product = product
+        bill.quantity = quantity
+        bill.price = price
+        bill.total = quantity * price
+
 
         db.session.commit()
+
         return redirect("/history")
 
-    return render_template("edit.html", bill=bill)
+
+    return render_template(
+        "edit.html",
+        bill=bill
+    )
+
+
 
 @app.route("/delete/<int:id>")
 def delete(id):
-    bill = Bill.query.get_or_404(id)
+
+    if "shop_id" not in session:
+        return redirect("/login")
+
+
+    bill = Bill.query.filter_by(
+        id=id,
+        shop_id=session["shop_id"]
+    ).first_or_404()
+
+
     db.session.delete(bill)
+
     db.session.commit()
+
+
     return redirect("/history")
+
+
 
 @app.route("/edit_product/<int:id>", methods=["GET", "POST"])
 def edit_product(id):
 
-    product = Product.query.get_or_404(id)
+    if "shop_id" not in session:
+        return redirect("/login")
+
+
+    product = Product.query.filter_by(
+        id=id,
+        shop_id=session["shop_id"]
+    ).first_or_404()
+
+
 
     if request.method == "POST":
-        product.product_name = request.form.get("product_name")
-        product.price = float(request.form.get("price"))
-        product.stock = int(request.form.get("stock"))
+
+        product_name = request.form.get("product_name")
+        price = request.form.get("price")
+        stock = request.form.get("stock")
+
+
+        if not product_name or not price or not stock:
+            return "All fields required"
+
+
+        product.product_name = product_name
+        product.price = float(price)
+        product.stock = int(stock)
+
 
         db.session.commit()
+
+
         return redirect("/products")
 
-    return render_template("edit_product.html", product=product)
+
+
+    return render_template(
+        "edit_product.html",
+        product=product
+    )
 
 @app.route("/download_bill/<int:id>")
 def download_bill(id):
 
     bill = Bill.query.get_or_404(id)
-    shop = Shop.query.first()
 
-    pdf_name = f"bill_{bill.id}.pdf"
+    if "shop_id" not in session:
+        return redirect("/login")
 
-    c = canvas.Canvas(pdf_name)
+    shop = Shop.query.filter_by(
+        id=session["shop_id"]
+    ).first()
 
-    # Shop Name
-    c.setFont("Helvetica-Bold", 22)
-    c.drawCentredString(300, 800, shop.shop_name if shop else "My Shop")
 
-    # Address
-    c.setFont("Helvetica", 11)
-    c.drawCentredString(300, 780, shop.address if shop else "")
+    # Same invoice products
+    bills = Bill.query.filter_by(
+        customer_name=bill.customer_name,
+        mobile=bill.mobile,
+        shop_id=session["shop_id"]
+    ).filter(
+        Bill.id <= bill.id
+    ).all()
 
-    # Phone
+
+    buffer = BytesIO()
+
+    c = canvas.Canvas(buffer)
+
+
+    shop_name = shop.shop_name if shop else "My Shop"
+    address = shop.address if shop else ""
+    phone = shop.phone if shop else ""
+
+
+    # Header
+
+    c.setFont("Helvetica-Bold",22)
+    c.drawCentredString(
+        300,
+        800,
+        shop_name
+    )
+
+
+    c.setFont("Helvetica",11)
+
+    c.drawCentredString(
+        300,
+        780,
+        address
+    )
+
     c.drawCentredString(
         300,
         765,
-        f"Phone : {shop.phone}" if shop else ""
+        f"Phone : {phone}"
     )
 
-    # Line
-    c.line(40, 750, 550, 750)
 
-    # Invoice Details
-    c.setFont("Helvetica-Bold", 12)
-    c.drawString(50, 725, f"Invoice No : INV-{bill.id:05d}")
-    c.drawString(350, 725, f"Date & time : {datetime.now().strftime('%d-%m-%Y')}")
+    c.line(40,750,550,750)
 
-    # Customer Details
-    c.drawString(50, 695, f"Customer : {bill.customer_name}")
-    c.drawString(50, 675, f"Mobile : {bill.mobile}")
 
-    # Table Header
-    c.line(40, 655, 550, 655)
+    # Invoice
 
-    c.drawString(50, 635, "Product")
-    c.drawString(250, 635, "Qty")
-    c.drawString(330, 635, "Price")
-    c.drawString(430, 635, "Amount")
+    c.setFont("Helvetica-Bold",12)
 
-    c.line(40, 625, 550, 625)
+    c.drawString(
+        50,
+        725,
+        f"Invoice No : INV-{bill.id:05d}"
+    )
 
-    # Product Row
-    c.setFont("Helvetica", 12)
+    c.drawString(
+        350,
+        725,
+        datetime.now().strftime("%d-%m-%Y")
+    )
 
-    c.drawString(50, 600, bill.product)
-    c.drawString(260, 600, str(bill.quantity))
-    c.drawString(330, 600, f"Rs.{bill.price}")
-    c.drawString(430, 600, f"Rs.{bill.total}")
 
-    c.line(40, 580, 550, 580)
+    c.drawString(
+        50,
+        695,
+        f"Customer : {bill.customer_name}"
+    )
 
-    # Grand Total
-    c.setFont("Helvetica-Bold", 14)
-    c.drawString(330, 555, "Grand Total :")
-    c.drawString(455, 555, f"Rs.{bill.total}")
+    c.drawString(
+        50,
+        675,
+        f"Mobile : {bill.mobile}"
+    )
 
-    c.line(40, 535, 550, 535)
 
-    # Footer
-    c.setFont("Helvetica", 12)
-    c.drawCentredString(300, 500, "Thank You! Visit Again")
+    # Table
+
+    c.line(40,650,550,650)
+
+
+    c.drawString(50,630,"Product")
+    c.drawString(250,630,"Qty")
+    c.drawString(330,630,"Price")
+    c.drawString(430,630,"Amount")
+
+
+    c.line(40,620,550,620)
+
+
+    y = 595
+    grand_total = 0
+
+
+    c.setFont("Helvetica",12)
+
+
+    for item in bills:
+
+        c.drawString(
+            50,
+            y,
+            item.product
+        )
+
+        c.drawString(
+            250,
+            y,
+            str(item.quantity)
+        )
+
+        c.drawString(
+            330,
+            y,
+            f"Rs.{item.price}"
+        )
+
+        c.drawString(
+            430,
+            y,
+            f"Rs.{item.total}"
+        )
+
+
+        grand_total += item.total
+
+        y -= 25
+
+
+    c.line(40,y,550,y)
+
+
+    c.setFont("Helvetica-Bold",14)
+
+    c.drawString(
+        330,
+        y-30,
+        "Grand Total:"
+    )
+
+    c.drawString(
+        450,
+        y-30,
+        f"Rs.{grand_total}"
+    )
+
+
+    c.setFont("Helvetica",12)
+
+    c.drawCentredString(
+        300,
+        y-80,
+        "Thank You! Visit Again"
+    )
+
 
     c.save()
 
-    return send_file(pdf_name, as_attachment=True)
+
+    buffer.seek(0)
+
+
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=f"invoice_{bill.id}.pdf",
+        mimetype="application/pdf"
+    )
 
 @app.route("/delete_product/<int:id>")
 def delete_product(id):
 
-    product = Product.query.get_or_404(id)
+    if "shop_id" not in session:
+        return redirect("/login")
+
+
+    product = Product.query.filter_by(
+        id=id,
+        shop_id=session["shop_id"]
+    ).first_or_404()
+
 
     db.session.delete(product)
+
     db.session.commit()
+
 
     return redirect("/products")
 

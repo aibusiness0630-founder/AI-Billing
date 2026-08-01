@@ -23,6 +23,20 @@
             margin-bottom:20px;
         }
 
+        .btn{
+            display:inline-block;
+            margin-bottom:20px;
+            background:#007bff;
+            color:white;
+            padding:10px 15px;
+            text-decoration:none;
+            border-radius:5px;
+        }
+
+        .table-box{
+            overflow-x:auto;
+        }
+
         table{
             width:100%;
             border-collapse:collapse;
@@ -41,19 +55,9 @@
             text-align:center;
             border-bottom:1px solid #ddd;
         }
-
-        .btn{
-            display:inline-block;
-            margin-bottom:20px;
-            background:#007bff;
-            color:white;
-            padding:10px 15px;
-            text-decoration:none;
-            border-radius:5px;
-        }
     </style>
-
 </head>
+
 <body>
 
 <a href="/customers" class="btn">⬅ Back</a>
@@ -62,25 +66,27 @@
 
 <div class="card">
 
-    <h2>{{ customer_name }}</h2>
+<h2>{{ customer_name }}</h2>
 
-    <p><b>📱 Mobile :</b> {{ mobile }}</p>
+<p><b>📱 Mobile:</b> {{ mobile }}</p>
 
-    <p><b>🧾 Total Bills :</b> {{ total_bills }}</p>
+<p><b>🧾 Total Bills:</b> {{ total_bills }}</p>
 
-    <p><b>💰 Total Purchase :</b> ₹{{ total_purchase }}</p>
+<p><b>💰 Total Purchase:</b> ₹{{ "%.2f"|format(total_purchase) }}</p>
 
-    <p><b>📅 Last Bill ID :</b> {{ last_purchase.id }}</p>
+<p><b>📅 Last Bill ID:</b> {{ last_purchase.id }}</p>
 
-    <p><b>💵 Average Bill :</b> ₹{{ average_bill }}</p>
+<p><b>💵 Average Bill:</b> ₹{{ "%.2f"|format(average_bill) }}</p>
 
-    <p><b>🏆 Most Purchased Product :</b> {{ most_product }}</p>
+<p><b>🏆 Most Purchased Product:</b> {{ most_product }}</p>
 
-    <p><b>📦 Total Items Purchased :</b> {{ total_items }}</p>
+<p><b>📦 Total Items Purchased:</b> {{ total_items }}</p>
 
 </div>
 
 <h2>📋 Purchase History</h2>
+
+<div class="table-box">
 
 <table>
 
@@ -94,17 +100,23 @@
 {% for bill in bills %}
 
 <tr>
-
     <td>{{ bill.id }}</td>
     <td>{{ bill.product }}</td>
     <td>{{ bill.quantity }}</td>
-    <td>₹{{ bill.total }}</td>
+    <td>₹{{ "%.2f"|format(bill.total) }}</td>
+</tr>
 
+{% else %}
+
+<tr>
+    <td colspan="4">No Purchase History</td>
 </tr>
 
 {% endfor %}
 
 </table>
+
+</div>
 
 </body>
 </html>

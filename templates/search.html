@@ -2,36 +2,118 @@
 <html>
 <head>
     <title>Search Bill</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        .table-box{
+            overflow-x:auto;
+        }
+
+        table{
+            width:100%;
+            border-collapse:collapse;
+        }
+
+        th,td{
+            border:1px solid #ddd;
+            padding:10px;
+            text-align:center;
+        }
+
+        th{
+            background:#007bff;
+            color:white;
+        }
+
+        .btn{
+            padding:6px 10px;
+            text-decoration:none;
+            background:#007bff;
+            color:white;
+            border-radius:5px;
+        }
+    </style>
 </head>
+
 <body>
 
-<h1>Search Customer Bill</h1>
+<div class="container">
+
+<h1>🔍 Search Customer Bill</h1>
 
 <form method="POST">
-   <input type="text" name="search" placeholder="Search customer name or mobile">
-    <button type="submit">Search</button>
+
+<input
+    type="text"
+    name="search"
+    value="{{ search_value }}"
+    placeholder="Customer Name or Mobile"
+    required>
+
+<button type="submit">
+🔍 Search
+</button>
+
 </form>
 
 <br>
 
-<table border="1">
+{% if search_value %}
+
+    {% if bills %}
+
+    <div class="table-box">
+
+    <table>
+
     <tr>
         <th>ID</th>
         <th>Customer</th>
+        <th>Mobile</th>
         <th>Product</th>
         <th>Total</th>
+        <th>Action</th>
     </tr>
 
     {% for bill in bills %}
+
     <tr>
+
         <td>{{ bill.id }}</td>
         <td>{{ bill.customer_name }}</td>
+        <td>{{ bill.mobile }}</td>
         <td>{{ bill.product }}</td>
-        <td>₹{{ bill.total }}</td>
+        <td>₹{{ "%.2f"|format(bill.total) }}</td>
+
+        <td>
+            <a class="btn" href="/download_bill/{{ bill.id }}">
+                📄 PDF
+            </a>
+        </td>
+
     </tr>
+
     {% endfor %}
 
-</table>
+    </table>
+
+    </div>
+
+    {% else %}
+
+    <p><b>No bills found.</b></p>
+
+    {% endif %}
+
+{% endif %}
+
+<br>
+
+<a href="/">
+    <button type="button">🏠 Back to Billing</button>
+</a>
+
+</div>
 
 </body>
 </html>

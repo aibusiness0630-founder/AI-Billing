@@ -194,6 +194,18 @@ th{
 
 </div>
 
+<div class="card">
+
+    <h2>📅 Subscription</h2>
+
+    <p><b>Plan:</b> {{ plan }}</p>
+
+    <p><b>Status:</b> {{ status }}</p>
+
+    <p><b>Remaining:</b> {{ remaining_days }} Days</p>
+
+</div>
+
 
 
 
@@ -411,7 +423,51 @@ No Customer Data
 
 </div>
 
+{% if subscription_warning %}
 
+<div style="
+background:#fff3cd;
+color:#856404;
+padding:15px;
+border-radius:10px;
+border:2px solid orange;
+margin-bottom:20px;
+font-size:18px;
+font-weight:bold;
+text-align:center;
+">
+
+🔔 {{ subscription_warning }}
+
+<br><br>
+
+📅 Remaining Days :
+{{ remaining_days }}
+
+</div>
+
+{% endif %}
+
+{% if subscription_warning %}
+
+<div style="text-align:center; margin:20px;">
+
+    <a href="/renew_subscription"
+       style="
+       background:green;
+       color:white;
+       padding:12px 25px;
+       text-decoration:none;
+       border-radius:8px;
+       font-weight:bold;">
+
+       🔄 Renew Subscription
+
+    </a>
+
+</div>
+
+{% endif %}
 
 </body>
 

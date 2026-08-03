@@ -5,6 +5,8 @@ from datetime import datetime
 from reportlab.pdfgen import canvas
 from io import BytesIO
 import os
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import shutil
 
@@ -53,6 +55,55 @@ class Bill(db.Model):
 
     shop_id = db.Column(db.Integer, db.ForeignKey("shop.id"))    
 
+class Subscription(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+
+    shop_id = db.Column(
+        db.Integer,
+        db.ForeignKey("shop.id"),
+        nullable=False
+    )
+
+    plan = db.Column(db.String(50), default="Monthly")
+
+    start_date = db.Column(
+        db.Date,
+        default=datetime.utcnow().date
+    )
+
+    expiry_date = db.Column(db.Date)
+
+    status = db.Column(
+        db.String(20),
+        default="Active"
+    )
+
+    reminder_sent = db.Column(
+        db.Boolean,
+        default=False
+    )    
+
+from datetime import datetime
+
+def check_subscription(shop_id):
+
+    subscription = Subscription.query.filter_by(shop_id=shop_id).first()
+
+    if not subscription:
+        return False, "Subscription Not Found"
+
+    today = datetime.now().date()
+
+    if subscription.expiry_date < today:
+        subscription.status = "Expired"
+        db.session.commit()
+        return False, "Expired"
+
+    subscription.status = "Active"
+    db.session.commit()
+
+    return True, "Active"
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
 
@@ -65,12 +116,43 @@ def login():
 
         if shop and check_password_hash(shop.password, password):
 
+            # Subscription Check
+            ok, status = check_subscription(shop.id)
+
+            if not ok:
+                return "❌ Your subscription has expired. Please renew."
+
             session["shop_id"] = shop.id
             return redirect("/")
 
         return "❌ Invalid Username or Password"
 
     return render_template("login.html")
+
+@app.route("/renew_subscription")
+def renew_subscription():
+
+    if "shop_id" not in session:
+        return redirect("/login")
+
+    sub = Subscription.query.filter_by(
+        shop_id=session["shop_id"]
+    ).first()
+
+    if not sub:
+        return "❌ Subscription not found"
+
+    from datetime import timedelta
+
+    today = datetime.now().date()
+
+    sub.start_date = today
+    sub.expiry_date = today + timedelta(days=30)
+    sub.status = "Active"
+
+    db.session.commit()
+
+    return redirect("/dashboard")
 
 @app.route("/get_customer/<mobile>")
 def get_customer(mobile):
@@ -264,6 +346,22 @@ def home():
         product_list=product_list
     )
 
+@app.route("/view_subscriptions")
+def view_subscriptions():
+
+    data = Subscription.query.all()
+
+    for s in data:
+        print(
+            s.shop_id,
+            s.plan,
+            s.start_date,
+            s.expiry_date,
+            s.status
+        )
+
+    return f"Total Subscription : {len(data)}"
+
 @app.route("/logout")
 def logout():
 
@@ -375,25 +473,46 @@ def dashboard():
     if "shop_id" not in session:
         return redirect("/login")
 
-
     shop_id = session["shop_id"]
 
+    # ---------------- Subscription ----------------
+    subscription = Subscription.query.filter_by(
+        shop_id=shop_id
+    ).first()
 
+    remaining_days = None
+    subscription_warning = None
+
+    if subscription:
+        today = datetime.now().date()
+
+        remaining_days = (
+            subscription.expiry_date - today
+        ).days
+
+        if remaining_days == 2:
+            subscription_warning = "⚠ Your subscription expires in 2 days."
+
+        elif remaining_days == 1:
+            subscription_warning = "⚠ Your subscription expires tomorrow."
+
+        elif remaining_days == 0:
+            subscription_warning = "⚠ Your subscription expires today."
+
+        elif remaining_days < 0:
+            subscription_warning = "❌ Your subscription has expired. Please renew."
+
+    # ---------------- Bills ----------------
     bills = Bill.query.filter_by(
         shop_id=shop_id
     ).all()
 
-
-
     total_bills = len(bills)
-
 
     total_revenue = sum(
         bill.total or 0
         for bill in bills
     )
-
-
 
     total_customers = len(
         set(
@@ -403,29 +522,17 @@ def dashboard():
         )
     )
 
+    # Today's Sales (temporary)
+    today_sales = total_revenue
 
-
-    today = datetime.now().date()
-
-
-    today_sales = sum(
-        bill.total or 0
-        for bill in bills
-        if bill.id and 
-        Bill.query.get(bill.id).id
-    )
-
-
-
+    # ---------------- Low Stock ----------------
     low_stock = Product.query.filter(
         Product.shop_id == shop_id,
         Product.stock <= 10
     ).all()
 
-
-
+    # ---------------- Best Products ----------------
     best_products = {}
-
 
     for bill in bills:
 
@@ -440,18 +547,14 @@ def dashboard():
                 (bill.quantity or 0)
             )
 
-
-
     best_products = sorted(
         best_products.items(),
-        key=lambda x:x[1],
+        key=lambda x: x[1],
         reverse=True
     )
 
-
-
+    # ---------------- Top Customers ----------------
     top_customers = {}
-
 
     for bill in bills:
 
@@ -466,27 +569,33 @@ def dashboard():
                 (bill.total or 0)
             )
 
-
-
     top_customers = sorted(
         top_customers.items(),
-        key=lambda x:x[1],
+        key=lambda x: x[1],
         reverse=True
     )[:5]
 
-
-
     return render_template(
-        "dashboard.html",
-        today_sales=today_sales,
-        total_bills=total_bills,
-        total_revenue=total_revenue,
-        total_customers=total_customers,
-        low_stock=low_stock,
-        best_products=best_products,
-        top_customers=top_customers
-    )
 
+    "dashboard.html",
+
+    today_sales=today_sales,
+    total_bills=total_bills,
+    total_revenue=total_revenue,
+    total_customers=total_customers,
+
+    low_stock=low_stock,
+    best_products=best_products,
+    top_customers=top_customers,
+
+    remaining_days=remaining_days,
+    subscription_warning=subscription_warning,
+
+    plan=subscription.plan if subscription else None,
+    status=subscription.status if subscription else None
+
+)
+ 
 @app.route("/add_product", methods=["GET", "POST"])
 def add_product():
     if request.method == "POST":
@@ -846,6 +955,24 @@ def shop():
         db.session.add(shop)
         db.session.commit()
 
+        from datetime import timedelta
+
+        subscription = Subscription.query.filter_by(shop_id=shop.id).first()
+
+        if not subscription:
+            subscription = Subscription(
+                shop_id=shop.id,
+                plan="Monthly",
+                start_date=datetime.now().date(),
+                expiry_date=(datetime.now() + timedelta(days=30)).date(),
+                status="Active"
+            )
+
+            db.session.add(subscription)
+            db.session.commit()
+
+            print("✅ Subscription Created")
+
         return redirect("/shop")
 
     return render_template("shop.html", shop=shop)
@@ -1190,6 +1317,9 @@ def delete_product(id):
 
 
     return redirect("/products")
+
+    with app.app_context():
+       print("Subscriptions:", Subscription.query.all())
 
 if __name__ == "__main__":
     with app.app_context():

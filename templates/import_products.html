@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Import Products</title>
+
+    <style>
+
+        body{
+            font-family:Arial,sans-serif;
+            background:#f4f6f9;
+            padding:30px;
+        }
+
+        .box{
+            max-width:600px;
+            margin:auto;
+            background:white;
+            padding:30px;
+            border-radius:12px;
+            box-shadow:0 0 10px #ccc;
+            text-align:center;
+        }
+
+        h1{
+            margin-bottom:20px;
+        }
+
+        input[type=file]{
+            margin:20px;
+        }
+
+        button{
+            background:#28a745;
+            color:white;
+            border:none;
+            padding:12px 20px;
+            border-radius:8px;
+            cursor:pointer;
+            font-size:16px;
+        }
+
+        button:hover{
+            background:#218838;
+        }
+
+        a{
+            display:inline-block;
+            margin-top:20px;
+            text-decoration:none;
+            background:#007bff;
+            color:white;
+            padding:10px 20px;
+            border-radius:8px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="box">
+
+<h1>📥 Import Old Products</h1>
+
+<p>
+
+Upload your old Product Excel / CSV file.
+
+</p>
+
+<form
+method="POST"
+enctype="multipart/form-data">
+
+<input
+type="file"
+name="file"
+required>
+
+<br>
+
+<button type="submit">
+
+📤 Import Products
+
+</button>
+
+</form>
+
+<a href="/products">
+
+⬅ Back
+
+</a>
+
+</div>
+
+</body>
+</html>

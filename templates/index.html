@@ -1,494 +1,713 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
     <title>AI Billing System</title>
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
 
+</head>
 
 <body>
 
-<div class="container">
+<div class="dashboard">
 
-<h1>AI Billing System</h1>
+    <!-- ================= SIDEBAR ================= -->
 
+    <aside class="sidebar">
 
-<form method="post" action="/" id="billForm">
+        <div class="logo">
 
+            <h2>AI Billing</h2>
 
-<label>Customer Name:</label><br>
-<input type="text"
-name="customer_name"
-placeholder="Walk-in Customer">
+            <span>Business Suite</span>
 
-<br><br>
+        </div>
 
+        <ul>
 
-<label>Mobile Number:</label><br>
+            <li class="active">
+                <a href="/">🧾 Billing</a>
+            </li>
 
-<input type="text"
-name="mobile"
-maxlength="10"
-pattern="[0-9]{10}"
-placeholder="Enter Mobile Number">
+            <li>
+                <a href="/dashboard">📊 Dashboard</a>
+            </li>
 
-<br><br>
+            <li>
+                <a href="/products">📦 Products</a>
+            </li>
 
+            <li>
+                <a href="/customers">👥 Customers</a>
+            </li>
 
+            <li>
+                <a href="/history">📜 History</a>
+            </li>
 
-<div id="products">
+            <li>
+                <a href="/subscription">💳 Subscription</a>
+            </li>
 
+            <li>
+                <a href="/shop">⚙ Shop Settings</a>
+            </li>
 
-<div class="product-row">
+            <li>
+                <a href="/logout">🚪 Logout</a>
+            </li>
 
+        </ul>
 
-<label>Product Name:</label><br>
-
-<select name="product[]" class="product-select">
-
-<option value="">Select Product</option>
-
-
-{% for product in product_list %}
-
-<option value="{{ product.product_name }}"
-data-id="{{ product.id }}">
-
-{{ product.product_name }}
-
-</option>
-
-{% endfor %}
-
-
-</select>
+    </aside>
 
 
-<br><br>
+    <!-- ================= MAIN CONTENT ================= -->
+
+    <main class="main-content">
 
 
+        <!-- HEADER -->
 
-<label>Quantity:</label><br>
+        <div class="top-header">
 
-<input type="number"
-name="quantity[]"
-min="1"
-required>
+            <div class="header-left">
 
+                <h1>🧾 AI Billing System</h1>
 
-<br><br>
+                <p>Professional Smart Billing Solution</p>
 
-
-
-<label>Price:</label><br>
-
-<input type="number"
-name="price[]"
-readonly>
+            </div>
 
 
-<br><br>
+            <div class="header-right">
+
+                <div class="profile-box">
+
+                    <div class="profile-icon">
+                        👤
+                    </div>
+
+                    <div>
+
+                        <h4>Administrator</h4>
+
+                        <small>
+                            {{ shop.shop_name if shop else "My Shop" }}
+                        </small>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
 
 
+        <!-- ================= BILLING AREA ================= -->
 
-<button type="button" class="remove-btn">
-❌ Remove
-</button>
+        <div class="billing-layout">
 
+
+            <!-- ================= LEFT BILLING ================= -->
+
+            <div class="billing-main">
+
+
+                <div class="dashboard-box">
+
+                    <h2>🧾 Customer Information</h2>
+
+
+                    <form method="POST"
+                          action="/"
+                          id="billForm">
+
+
+                        <!-- CUSTOMER -->
+
+                        <div class="form-grid">
+
+                            <div>
+
+                                <label>
+                                    Customer Name
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="customer_name"
+                                    placeholder="Walk-in Customer">
+
+                            </div>
+
+
+                            <div>
+
+                                <label>
+                                    Mobile Number
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="mobile"
+                                    maxlength="10"
+                                    pattern="[0-9]{10}"
+                                    placeholder="Enter Mobile Number">
+
+                            </div>
+
+                        </div>
+
+
+                        <br>
+
+
+                        <!-- PRODUCTS -->
+
+                        <h2>📦 Products</h2>
+
+
+                        <div id="products">
+
+
+                            <!-- FIRST PRODUCT -->
+
+                            <div class="product-card">
+
+
+                                <h3>
+                                    🛒 Product Details
+                                </h3>
+
+
+                                <div class="form-grid">
+
+
+                                    <!-- PRODUCT -->
+
+                                    <div>
+
+                                        <label>
+                                            📦 Product
+                                        </label>
+
+                                        <select
+                                            name="product[]"
+                                            class="product-select">
+
+                                            <option value="">
+                                                Select Product
+                                            </option>
+
+                                            {% for product in product_list %}
+
+                                            <option
+                                                value="{{ product.product_name }}"
+                                                data-id="{{ product.id }}">
+
+                                                {{ product.product_name }}
+
+                                            </option>
+
+                                            {% endfor %}
+
+                                        </select>
+
+                                    </div>
+
+
+                                    <!-- QUANTITY -->
+
+                                    <div>
+
+                                        <label>
+                                            🔢 Quantity
+                                        </label>
+
+                                        <input
+                                            type="number"
+                                            name="quantity[]"
+                                            min="1"
+                                            value="1"
+                                            required>
+
+                                    </div>
+
+
+                                    <!-- PRICE -->
+
+                                    <div>
+
+                                        <label>
+                                            💰 Price
+                                        </label>
+
+                                        <input
+                                            type="number"
+                                            name="price[]"
+                                            readonly>
+
+                                    </div>
+
+
+                                </div>
+
+
+                                <br>
+
+
+                                <button
+                                    type="button"
+                                    class="remove-btn">
+
+                                    ❌ Remove Product
+
+                                </button>
+
+
+                            </div>
+
+                        </div>
+
+
+                        <br>
+
+
+                        <!-- BUTTONS -->
+
+                        <div class="action-buttons">
+
+
+                            <button
+                                type="button"
+                                id="addProduct"
+                                class="btn btn-success">
+
+                                ➕ Add Product
+
+                            </button>
+
+
+                            <button
+                                type="submit"
+                                id="submitBtn"
+                                class="btn btn-primary">
+
+                                🧾 Generate Bill
+
+                            </button>
+
+
+                        </div>
+
+
+                    </form>
+
+                </div>
+
+
+            </div>
+
+
+            <!-- ================= RIGHT QUICK MENU ================= -->
+
+            <div class="billing-side">
+
+
+                <div class="dashboard-box">
+
+                    <h2>⚡ Quick Menu</h2>
+
+
+                    <div class="quick-grid">
+
+
+                        <a href="/products"
+                           class="quick-card">
+
+                            📦
+
+                            <span>
+                                Products
+                            </span>
+
+                        </a>
+
+
+                        <a href="/customers"
+                           class="quick-card">
+
+                            👥
+
+                            <span>
+                                Customers
+                            </span>
+
+                        </a>
+
+
+                        <a href="/history"
+                           class="quick-card">
+
+                            📜
+
+                            <span>
+                                History
+                            </span>
+
+                        </a>
+
+
+                        <a href="/search"
+                           class="quick-card">
+
+                            🔍
+
+                            <span>
+                                Search Bill
+                            </span>
+
+                        </a>
+
+
+                        <a href="/backup"
+                           class="quick-card">
+
+                            💾
+
+                            <span>
+                                Backup
+                            </span>
+
+                        </a>
+
+
+                        <a href="/restore"
+                           class="quick-card">
+
+                            🔄
+
+                            <span>
+                                Restore
+                            </span>
+
+                        </a>
+
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+    </main>
 
 </div>
 
 
-</div>
-
-
-
-<button type="button" id="addProduct">
-➕ Add Product
-</button>
-
-
-<br><br>
-
-
-<button type="submit" id="submitBtn">
-🧾 Generate Bill
-</button>
-
-
-</form>
-
-
-<hr>
-
-
-
-<a href="/add_product">
-<button type="button">
-➕ Add Product
-</button>
-</a>
-
-
-<a href="/products">
-<button type="button">
-📦 Products
-</button>
-</a>
-
-
-<a href="/dashboard">
-<button type="button">
-📊 Dashboard
-</button>
-</a>
-
-
-
-<a href="/backup">
-<button type="button">
-💾 Backup
-</button>
-</a>
-
-
-<a href="/restore">
-<button type="button">
-🔄 Restore
-</button>
-</a>
-
-
-
-<a href="/customers">
-<button type="button">
-👥 Customers
-</button>
-</a>
-
-
-<a href="/search">
-<button type="button">
-🔍 Search Bill
-</button>
-</a>
-
-
-<a href="/history">
-<button type="button">
-📜 History
-</button>
-</a>
-
-
-<a href="/shop">
-<button type="button">
-⚙️ Shop Settings
-</button>
-</a>
-
-
-
-<a href="/logout">
-<button type="button">
-🚪 Logout
-</button>
-</a>
-
-
-
-</div>
-
-
+<!-- ================= JAVASCRIPT ================= -->
 
 <script>
 
 
-function addPriceEvent(selectElement){
+/* =========================================
+   PRODUCT PRICE
+========================================= */
+
+function addPriceEvent(selectElement) {
+
+    selectElement.addEventListener("change", function () {
+
+        let productId =
+            this.options[this.selectedIndex]
+            .getAttribute("data-id");
 
 
-selectElement.addEventListener(
-"change",
-function(){
+        let priceInput =
+            this.closest(".product-card")
+            .querySelector('input[name="price[]"]');
 
 
-let productId =
-this.options[this.selectedIndex]
-.getAttribute("data-id");
+        if (productId) {
 
+            fetch("/get_price/" + productId)
 
-let priceInput =
-this.closest(".product-row")
-.querySelector(
-'input[name="price[]"]'
-);
+                .then(response => response.json())
 
+                .then(data => {
 
+                    priceInput.value = data.price;
 
-if(productId){
+                });
 
+        }
 
-fetch("/get_price/" + productId)
-
-.then(response=>response.json())
-
-.then(data=>{
-
-priceInput.value=data.price;
-
-});
-
-
-}
-
-
-});
-
+    });
 
 }
 
 
+/* =========================================
+   EXISTING PRODUCT SELECT
+========================================= */
+
+document
+    .querySelectorAll(".product-select")
+    .forEach(function (select) {
+
+        addPriceEvent(select);
+
+    });
 
 
+/* =========================================
+   ADD PRODUCT
+========================================= */
 
-document.querySelectorAll(".product-select")
-.forEach(function(select){
+document
+    .getElementById("addProduct")
+    .addEventListener("click", function () {
 
-addPriceEvent(select);
+
+        let products =
+            document.getElementById("products");
+
+
+        let row =
+            document.createElement("div");
+
+
+        row.className = "product-card";
+
+
+        row.innerHTML = `
+
+            <h3>
+                🛒 Product Details
+            </h3>
+
+
+            <div class="form-grid">
+
+
+                <div>
+
+                    <label>
+                        📦 Product
+                    </label>
+
+                    <select
+                        name="product[]"
+                        class="product-select">
+
+                        <option value="">
+                            Select Product
+                        </option>
+
+                        {% for product in product_list %}
+
+                        <option
+                            value="{{ product.product_name }}"
+                            data-id="{{ product.id }}">
+
+                            {{ product.product_name }}
+
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <div>
+
+                    <label>
+                        🔢 Quantity
+                    </label>
+
+                    <input
+                        type="number"
+                        name="quantity[]"
+                        min="1"
+                        value="1"
+                        required>
+
+                </div>
+
+
+                <div>
+
+                    <label>
+                        💰 Price
+                    </label>
+
+                    <input
+                        type="number"
+                        name="price[]"
+                        readonly>
+
+                </div>
+
+
+            </div>
+
+
+            <br>
+
+
+            <button
+                type="button"
+                class="remove-btn">
+
+                ❌ Remove Product
+
+            </button>
+
+        `;
+
+
+        products.appendChild(row);
+
+
+        addPriceEvent(
+            row.querySelector(".product-select")
+        );
+
+    });
+
+
+/* =========================================
+   REMOVE PRODUCT
+========================================= */
+
+document.addEventListener("click", function (e) {
+
+
+    if (
+        e.target.classList.contains("remove-btn")
+    ) {
+
+
+        let rows =
+            document.querySelectorAll(
+                ".product-card"
+            );
+
+
+        if (rows.length > 1) {
+
+            e.target
+              .closest(".product-card")
+              .remove();
+
+        }
+
+    }
 
 });
 
 
-
-
-
-document.getElementById("addProduct")
-.addEventListener(
-"click",
-function(){
-
-
-let products =
-document.getElementById("products");
-
-
-
-let row =
-document.createElement("div");
-
-
-
-row.className="product-row";
-
-
-
-row.innerHTML = `
-
-
-<hr>
-
-
-<label>Product Name:</label><br>
-
-
-<select name="product[]" class="product-select">
-
-
-<option value="">
-Select Product
-</option>
-
-
-
-{% for product in product_list %}
-
-
-<option value="{{ product.product_name }}"
-data-id="{{ product.id }}">
-
-
-{{ product.product_name }}
-
-
-</option>
-
-
-{% endfor %}
-
-
-</select>
-
-
-
-<br><br>
-
-
-<label>Quantity:</label><br>
-
-
-<input type="number"
-name="quantity[]"
-min="1"
-required>
-
-
-
-<br><br>
-
-
-<label>Price:</label><br>
-
-
-<input type="number"
-name="price[]"
-readonly>
-
-
-
-<br><br>
-
-
-<button type="button"
-class="remove-btn">
-
-❌ Remove
-
-</button>
-
-
-`;
-
-
-
-products.appendChild(row);
-
-
-
-addPriceEvent(
-row.querySelector(".product-select")
-);
-
-
-});
-
-
-
-
-
-
-
-document.addEventListener(
-"click",
-function(e){
-
-
-if(
-e.target.classList.contains(
-"remove-btn"
-)
-){
-
-
-let rows =
-document.querySelectorAll(
-".product-row"
-);
-
-
-if(rows.length > 1){
-
-e.target.parentElement.remove();
-
-}
-
-
-}
-
-
-});
-
-
-
-
-
+/* =========================================
+   CUSTOMER AUTO FILL
+========================================= */
 
 const mobileInput =
-document.querySelector(
-'input[name="mobile"]'
-);
+    document.querySelector(
+        'input[name="mobile"]'
+    );
 
 
 const customerInput =
-document.querySelector(
-'input[name="customer_name"]'
-);
+    document.querySelector(
+        'input[name="customer_name"]'
+    );
 
 
+if (mobileInput && customerInput) {
 
 
-mobileInput.addEventListener(
-"keyup",
-function(){
+    mobileInput.addEventListener(
+        "keyup",
+        function () {
 
 
-let mobile=this.value;
+            let mobile =
+                this.value;
 
 
-
-if(mobile.length>=10){
-
-
-fetch(
-"/get_customer/" + mobile
-)
-
-.then(response=>response.json())
-
-.then(data=>{
+            if (mobile.length >= 10) {
 
 
-if(data.customer_name){
+                fetch(
+                    "/get_customer/" + mobile
+                )
 
-customerInput.value =
-data.customer_name;
+                .then(
+                    response => response.json()
+                )
+
+                .then(data => {
+
+
+                    if (data.customer_name) {
+
+                        customerInput.value =
+                            data.customer_name;
+
+                    }
+
+                });
+
+            }
+
+        }
+    );
 
 }
 
 
-});
+/* =========================================
+   GENERATE BILL BUTTON
+========================================= */
+
+document
+    .getElementById("billForm")
+    .addEventListener(
+        "submit",
+        function () {
 
 
-}
+            let btn =
+                document.getElementById(
+                    "submitBtn"
+                );
 
 
-});
+            btn.disabled = true;
 
 
+            btn.innerHTML =
+                "Generating Bill...";
 
-
-
-
-document.getElementById("billForm")
-.addEventListener(
-"submit",
-function(){
-
-
-let btn =
-document.getElementById(
-"submitBtn"
-);
-
-
-btn.disabled=true;
-
-btn.innerHTML="Generating...";
-
-
-});
-
+        }
+    );
 
 
 </script>

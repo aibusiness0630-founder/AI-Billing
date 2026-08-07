@@ -9,6 +9,8 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import shutil
+import pandas as pd
+import os
 
 app = Flask(__name__)
 app.secret_key = "AI_BILLING_SECRET_2026"
@@ -623,16 +625,106 @@ def products():
     if "shop_id" not in session:
         return redirect("/login")
 
-
     all_products = Product.query.filter_by(
         shop_id=session["shop_id"]
-    ).all()
-
+    ).order_by(Product.product_name).all()
 
     return render_template(
         "products.html",
         products=all_products
     )
+
+@app.route("/import_products", methods=["GET", "POST"])
+def import_products():
+
+    if request.method == "POST":
+
+        file = request.files.get("file")
+
+        if not file or file.filename == "":
+            return "❌ No File Selected"
+
+        try:
+
+            if file.filename.endswith(".csv"):
+                df = pd.read_csv(file)
+
+            elif file.filename.endswith(".xlsx"):
+                df = pd.read_excel(file)
+
+            else:
+                return "❌ Only CSV or Excel Files Supported"
+
+            # Clean column names
+            df.columns = df.columns.str.strip()
+
+            # Remove Unnamed columns
+            df = df.loc[:, ~df.columns.str.contains("^Unnamed")]
+
+            # Rename if needed
+            df.rename(columns={
+                "product Name": "Product Name",
+                "product name": "Product Name",
+                "PRODUCT NAME": "Product Name"
+            }, inplace=True)
+
+            print(df.columns.tolist())
+
+            required_columns = [
+                "Product Name",
+                "Price",
+                "Stock"
+            ]
+
+            for column in required_columns:
+                if column not in df.columns:
+                    return f"❌ Missing Column : {column}"
+
+            # Keep only required columns
+            df = df[required_columns]
+
+            # Remove empty rows
+            df = df.dropna(subset=required_columns)
+
+            print(df)
+
+            imported_count = 0
+            skipped_count = 0
+
+            for _, row in df.iterrows():
+
+                product_name = str(row["Product Name"]).strip()
+
+                existing = Product.query.filter_by(
+                    product_name=product_name
+                ).first()
+
+                if existing:
+                    skipped_count += 1
+                    continue
+
+                product = Product(
+                    shop_id=session["shop_id"],
+                    product_name=product_name,
+                    price=float(row["Price"]),
+                    stock=int(row["Stock"])
+                )
+
+                db.session.add(product)
+                imported_count += 1
+
+            db.session.commit()
+
+            return f"""
+            ✅ Imported : {imported_count}<br>
+            ⚠️ Skipped : {skipped_count}<br><br>
+            <a href='/products'>⬅ Back to Products</a>
+            """
+
+        except Exception as e:
+            return f"❌ Import Error : {str(e)}"
+
+    return render_template("import_products.html")
 
 @app.route("/get_price/<int:product_id>")
 def get_price(product_id):

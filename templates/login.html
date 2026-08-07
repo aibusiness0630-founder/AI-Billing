@@ -1,67 +1,110 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-    <title>Shop Login</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AI Billing Login</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
 </head>
 
 <body>
 
-<div class="container">
+<div class="login-wrapper">
 
-<h1>🔐 AI Billing Login</h1>
+    <div class="login-card">
 
-{% if error %}
-<p style="color:red;text-align:center;">
-    {{ error }}
-</p>
-{% endif %}
+        <div class="logo">
 
-<form method="POST">
+            <h1>AI Billing</h1>
 
-<label>Username</label><br>
+            <p>Smart Billing Management System</p>
 
-<input
-type="text"
-name="username"
-placeholder="Enter Username"
-required
-autofocus>
+        </div>
 
-<br><br>
+        {% if error %}
 
-<label>Password</label><br>
+        <div class="error-box">
 
-<input
-type="password"
-id="password"
-name="password"
-placeholder="Enter Password"
-required>
+            {{ error }}
 
-<br>
+        </div>
 
-<label>
-<input type="checkbox" onclick="togglePassword()">
-Show Password
-</label>
+        {% endif %}
 
-<br><br>
+        <form method="POST">
 
-<button type="submit">
-🔓 Login
-</button>
+            <label>Username</label>
 
-</form>
+            <input
+            type="text"
+            name="username"
+            placeholder="Enter Username"
+            required
+            autofocus>
+
+            <label>Password</label>
+
+            <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Enter Password"
+            required>
+
+            <div class="show-password">
+
+                <input
+                type="checkbox"
+                onclick="togglePassword()">
+
+                Show Password
+
+            </div>
+
+            <button type="submit">
+
+                🔐 Login
+
+            </button>
+
+        </form>
+
+        <div class="footer">
+
+            © 2026 AI Billing System
+
+        </div>
+
+    </div>
 
 </div>
 
 <script>
+
 function togglePassword(){
-    let x = document.getElementById("password");
-    x.type = (x.type === "password") ? "text" : "password";
+
+    let x=document.getElementById("password");
+
+    if(x.type==="password"){
+
+        x.type="text";
+
+    }else{
+
+        x.type="password";
+
+    }
+
 }
+
 </script>
 
 </body>
+
 </html>

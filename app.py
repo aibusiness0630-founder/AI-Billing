@@ -105,6 +105,73 @@ def check_subscription(shop_id):
     db.session.commit()
 
     return True, "Active"
+    
+@app.route("/subscription")
+def subscription():
+
+    shop_id = session.get("shop_id")
+
+    if not shop_id:
+        return redirect("/login")
+
+    subscription = Subscription.query.filter_by(
+        shop_id=shop_id
+    ).first()
+
+    if not subscription:
+        return "Subscription not found"
+
+    today = datetime.now().date()
+
+    # Calculate remaining days
+    if subscription.expiry_date:
+        remaining_days = (
+            subscription.expiry_date - today
+        ).days
+    else:
+        remaining_days = 0
+
+    # Automatically expire subscription
+    if remaining_days < 0:
+        subscription.status = "Expired"
+        db.session.commit()
+
+    return render_template(
+        "subscription.html",
+        subscription=subscription,
+        remaining_days=max(remaining_days, 0)
+    )
+
+@app.route("/select_plan", methods=["POST"])
+def select_plan():
+
+    shop_id = session.get("shop_id")
+
+    if not shop_id:
+        return redirect("/login")
+
+    selected_plan = request.form.get("plan")
+
+    plan_prices = {
+        "Basic": 499,
+        "Premium": 999
+    }
+
+    if selected_plan not in plan_prices:
+        return redirect("/subscription")
+
+    subscription = Subscription.query.filter_by(
+        shop_id=shop_id
+    ).first()
+
+    if not subscription:
+        return "Subscription not found"
+
+    subscription.plan = selected_plan
+
+    db.session.commit()
+
+    return redirect("/subscription")    
 
 @app.route("/login", methods=["GET", "POST"])
 def login():

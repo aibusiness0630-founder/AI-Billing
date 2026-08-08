@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Subscription - AI Billing</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+
+<div class="dashboard">
+
+    <!-- ================= SIDEBAR ================= -->
+
+    <aside class="sidebar">
+
+        <div class="logo">
+
+            <h2>AI Billing</h2>
+
+            <span>Business Suite</span>
+
+        </div>
+
+        <ul>
+
+            <li>
+                <a href="/">🧾 Billing</a>
+            </li>
+
+            <li>
+                <a href="/dashboard">📊 Dashboard</a>
+            </li>
+
+            <li>
+                <a href="/products">📦 Products</a>
+            </li>
+
+            <li>
+                <a href="/customers">👥 Customers</a>
+            </li>
+
+            <li>
+                <a href="/history">📜 History</a>
+            </li>
+
+            <li class="active">
+                <a href="/subscription">💳 Subscription</a>
+            </li>
+
+            <li>
+                <a href="/shop">⚙️ Shop Settings</a>
+            </li>
+
+            <li>
+                <a href="/logout">🚪 Logout</a>
+            </li>
+
+        </ul>
+
+    </aside>
+
+
+    <!-- ================= MAIN ================= -->
+
+    <main class="main-content">
+
+
+        <!-- HEADER -->
+
+        <div class="top-header">
+
+            <div class="header-left">
+
+                <h1>💳 Subscription</h1>
+
+                <p>
+                    Choose the right plan for your business
+                </p>
+
+            </div>
+
+            <div class="header-right">
+
+                <div class="profile-box">
+
+                    <div class="profile-icon">
+                        👤
+                    </div>
+
+                    <div>
+
+                        <h4>Administrator</h4>
+
+                        <small>
+                            Subscription Management
+                        </small>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ================= CURRENT SUBSCRIPTION ================= -->
+
+        <div class="subscription-page-card">
+
+            <div class="subscription-header">
+
+                <div>
+
+                    <span class="subscription-label">
+                        CURRENT PLAN
+                    </span>
+
+                    <h2>
+                        {{ subscription.plan }}
+                    </h2>
+
+                </div>
+
+
+                {% if subscription.status == "Active" %}
+
+                    <span class="subscription-status active-status">
+                        ● Active
+                    </span>
+
+                {% elif subscription.status == "Expired" %}
+
+                    <span class="subscription-status expired-status">
+                        ● Expired
+                    </span>
+
+                {% else %}
+
+                    <span class="subscription-status pending-status">
+                        ● {{ subscription.status }}
+                    </span>
+
+                {% endif %}
+
+            </div>
+
+
+            <!-- CURRENT PRICE -->
+
+            <div class="subscription-price">
+
+                {% if subscription.plan == "Premium" %}
+
+                    <span>₹</span>999
+
+                {% else %}
+
+                    <span>₹</span>499
+
+                {% endif %}
+
+                <small>
+                    / month
+                </small>
+
+            </div>
+
+
+            <!-- DETAILS -->
+
+            <div class="subscription-details">
+
+                <div class="subscription-detail-item">
+
+                    <span>
+                        📅 Start Date
+                    </span>
+
+                    <strong>
+                        {{ subscription.start_date }}
+                    </strong>
+
+                </div>
+
+
+                <div class="subscription-detail-item">
+
+                    <span>
+                        📅 Expiry Date
+                    </span>
+
+                    <strong>
+
+                        {% if subscription.expiry_date %}
+
+                            {{ subscription.expiry_date }}
+
+                        {% else %}
+
+                            Not Set
+
+                        {% endif %}
+
+                    </strong>
+
+                </div>
+
+
+                <div class="subscription-detail-item">
+
+                    <span>
+                        ⏳ Remaining
+                    </span>
+
+                    <strong>
+                        {{ remaining_days }} Days
+                    </strong>
+
+                </div>
+
+
+                <div class="subscription-detail-item">
+
+                    <span>
+                        💰 Plan Price
+                    </span>
+
+                    <strong>
+
+                        {% if subscription.plan == "Premium" %}
+
+                            ₹999 / Month
+
+                        {% else %}
+
+                            ₹499 / Month
+
+                        {% endif %}
+
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- ================= PROGRESS ================= -->
+
+            {% if subscription.status == "Active" %}
+
+                {% set progress = (remaining_days * 100 / 30) %}
+
+                {% if progress > 100 %}
+
+                    {% set progress = 100 %}
+
+                {% endif %}
+
+                {% if progress < 0 %}
+
+                    {% set progress = 0 %}
+
+                {% endif %}
+
+
+                <div class="subscription-progress-box">
+
+                    <div class="progress-header">
+
+                        <span>
+                            Subscription Status
+                        </span>
+
+                        <strong>
+                            {{ remaining_days }} Days Remaining
+                        </strong>
+
+                    </div>
+
+
+                    <!-- FIXED PROGRESS BAR -->
+
+                    <div class="progress-bar">
+
+                        <div
+                            class="progress-fill"
+                            data-progress="{{ progress }}">
+                        </div>
+
+                    </div>
+
+                </div>
+
+            {% endif %}
+
+
+        </div>
+
+
+        <!-- ================= SELECT PLAN ================= -->
+
+        <div class="dashboard-box plan-selection-box">
+
+            <div class="box-header">
+
+                <div>
+
+                    <h2>
+                        🚀 Choose Your Plan
+                    </h2>
+
+                    <p>
+                        Select a plan that fits your business
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <form
+                method="POST"
+                action="/select_plan"
+                id="planForm">
+
+
+                <div class="plan-grid">
+
+
+                    <!-- ================= BASIC ================= -->
+
+                    <label class="plan-card">
+
+                        <input
+                            type="radio"
+                            name="plan"
+                            value="Basic"
+                            {% if subscription.plan != "Premium" %}
+                                checked
+                            {% endif %}
+                        >
+
+                        <div class="plan-card-content">
+
+                            <div class="plan-top">
+
+                                <div>
+
+                                    <span class="plan-badge basic-badge">
+                                        BASIC
+                                    </span>
+
+                                    <h3>
+                                        Essential
+                                    </h3>
+
+                                </div>
+
+                                <div class="plan-check">
+                                    ✓
+                                </div>
+
+                            </div>
+
+
+                            <div class="plan-price">
+
+                                <span>₹</span>499
+
+                                <small>
+                                    / month
+                                </small>
+
+                            </div>
+
+
+                            <p class="plan-description">
+
+                                Essential billing tools
+                                for small businesses.
+
+                            </p>
+
+
+                            <ul class="plan-features">
+
+                                <li>✅ Smart Billing</li>
+
+                                <li>✅ Product & Stock Management</li>
+
+                                <li>✅ Customer Management</li>
+
+                                <li>✅ Bill History</li>
+
+                                <li>✅ Basic Dashboard</li>
+
+                                <li>❌ Advanced Reports</li>
+
+                                <li>❌ WhatsApp / SMS</li>
+
+                                <li>❌ Owner Android App</li>
+
+                            </ul>
+
+
+                            <div class="plan-select-text">
+                                Select Basic
+                            </div>
+
+                        </div>
+
+                    </label>
+
+
+                    <!-- ================= PREMIUM ================= -->
+
+                    <label class="plan-card premium-plan">
+
+                        <input
+                            type="radio"
+                            name="plan"
+                            value="Premium"
+                            {% if subscription.plan == "Premium" %}
+                                checked
+                            {% endif %}
+                        >
+
+                        <div class="plan-card-content">
+
+                            <div class="plan-top">
+
+                                <div>
+
+                                    <span class="plan-badge premium-badge">
+                                        PREMIUM
+                                    </span>
+
+                                    <h3>
+                                        Business Suite
+                                    </h3>
+
+                                </div>
+
+                                <div class="plan-check">
+                                    ✓
+                                </div>
+
+                            </div>
+
+
+                            <div class="plan-price premium-price">
+
+                                <span>₹</span>999
+
+                                <small>
+                                    / month
+                                </small>
+
+                            </div>
+
+
+                            <p class="plan-description">
+
+                                Complete business management
+                                solution with advanced features.
+
+                            </p>
+
+
+                            <ul class="plan-features">
+
+                                <li>✅ Everything in Basic</li>
+
+                                <li>✅ Advanced Dashboard</li>
+
+                                <li>✅ Sales Reports</li>
+
+                                <li>✅ WhatsApp / SMS</li>
+
+                                <li>✅ AI Business Insights</li>
+
+                                <li>✅ Advanced Alerts</li>
+
+                                <li>✅ Backup & Restore</li>
+
+                                <li>✅ Owner Android App</li>
+
+                            </ul>
+
+
+                            <div class="plan-select-text">
+                                Select Premium
+                            </div>
+
+                        </div>
+
+                    </label>
+
+
+                </div>
+
+
+                <!-- SAVE -->
+
+                <div class="plan-action">
+
+                    <button
+                        type="submit"
+                        class="subscription-btn plan-save-btn">
+
+                        💾 Save Selected Plan
+
+                    </button>
+
+                </div>
+
+
+            </form>
+
+        </div>
+
+
+        <!-- ================= FEATURES ================= -->
+
+        <div class="dashboard-box subscription-features">
+
+            <div class="box-header">
+
+                <h2>
+                    ✨ Included Features
+                </h2>
+
+            </div>
+
+
+            <div class="feature-grid">
+
+
+                <div class="feature-item">
+
+                    <span>🧾</span>
+
+                    <div>
+
+                        <strong>
+                            Smart Billing
+                        </strong>
+
+                        <p>
+                            Create professional bills quickly.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="feature-item">
+
+                    <span>📦</span>
+
+                    <div>
+
+                        <strong>
+                            Inventory Management
+                        </strong>
+
+                        <p>
+                            Track products and stock levels.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="feature-item">
+
+                    <span>👥</span>
+
+                    <div>
+
+                        <strong>
+                            Customer Management
+                        </strong>
+
+                        <p>
+                            Manage customer billing history.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="feature-item">
+
+                    <span>📊</span>
+
+                    <div>
+
+                        <strong>
+                            Business Dashboard
+                        </strong>
+
+                        <p>
+                            Monitor sales and business activity.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="feature-item">
+
+                    <span>📱</span>
+
+                    <div>
+
+                        <strong>
+                            Business Notifications
+                        </strong>
+
+                        <p>
+                            Available with Premium plan.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="feature-item">
+
+                    <span>🔐</span>
+
+                    <div>
+
+                        <strong>
+                            Secure Business Data
+                        </strong>
+
+                        <p>
+                            Protected shop and billing data.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+
+        <!-- SECURITY NOTE -->
+
+        <div class="subscription-note">
+
+            <strong>
+                🔒 Secure Subscription
+            </strong>
+
+            <p>
+                Payment processing will be securely
+                integrated with Razorpay.
+            </p>
+
+        </div>
+
+
+        <!-- FOOTER -->
+
+        <footer class="dashboard-footer">
+
+            <p>
+                © 2026 AI Billing System
+            </p>
+
+        </footer>
+
+
+    </main>
+
+</div>
+
+
+<!-- ================= PROGRESS BAR SCRIPT ================= -->
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const progressBars =
+        document.querySelectorAll(".progress-fill");
+
+    progressBars.forEach(function (bar) {
+
+        const progress =
+            parseFloat(bar.dataset.progress);
+
+        if (!isNaN(progress)) {
+
+            const safeProgress =
+                Math.max(0, Math.min(progress, 100));
+
+            bar.style.width =
+                safeProgress + "%";
+
+        }
+
+    });
+
+});
+
+</script>
+
+
+</body>
+
+</html>

@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, jsonify, send_file, session
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime, timedelta
+from datetime import datetime
 from reportlab.pdfgen import canvas
 from io import BytesIO
 import os
@@ -18,18 +18,6 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///billing.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
-
-
-def get_current_shop_id():
-    """Return the logged-in shop id or None."""
-    return session.get("shop_id")
-
-
-def require_login():
-    """Return a redirect response when no shop is logged in."""
-    if "shop_id" not in session:
-        return redirect("/login")
-    return None
 
 from datetime import datetime
 
@@ -108,7 +96,7 @@ def check_subscription(shop_id):
 
     today = datetime.now().date()
 
-    if subscription.expiry_date and subscription.expiry_date < today:
+    if subscription.expiry_date < today:
         subscription.status = "Expired"
         db.session.commit()
         return False, "Expired"
@@ -185,72 +173,6 @@ def select_plan():
 
     return redirect("/subscription")    
 
-@app.route("/register", methods=["GET", "POST"])
-def register():
-    """Create a completely separate shop account for multi-shop SaaS use."""
-
-    if request.method == "POST":
-        shop_name = request.form.get("shop_name", "").strip()
-        username = request.form.get("username", "").strip()
-        password = request.form.get("password", "").strip()
-        address = request.form.get("address", "").strip()
-        phone = request.form.get("phone", "").strip()
-        shop_type = request.form.get("shop_type", "IT & Software").strip()
-
-        if not shop_name or not username or not password:
-            return "❌ Shop name, username and password are required"
-
-        if Shop.query.filter_by(username=username).first():
-            return "❌ Username already exists"
-
-        new_shop = Shop(
-            shop_name=shop_name,
-            address=address,
-            phone=phone,
-            shop_type=shop_type,
-            username=username,
-            password=generate_password_hash(password)
-        )
-
-        db.session.add(new_shop)
-        db.session.flush()
-
-        subscription = Subscription(
-            shop_id=new_shop.id,
-            plan="Basic",
-            start_date=datetime.now().date(),
-            expiry_date=datetime.now().date() + timedelta(days=30),
-            status="Active"
-        )
-        db.session.add(subscription)
-        db.session.commit()
-
-        return redirect("/login")
-
-    return """
-    <!DOCTYPE html>
-    <html><head><title>AI Billing - Create Shop</title>
-    <meta name='viewport' content='width=device-width, initial-scale=1'>
-    <style>
-    body{font-family:Arial,sans-serif;background:#f4f7fb;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0}
-    .card{background:#fff;width:420px;max-width:90%;padding:30px;border-radius:18px;box-shadow:0 10px 35px rgba(0,0,0,.10)}
-    h2{margin-top:0}.field{margin-bottom:14px}label{display:block;margin-bottom:6px;font-weight:600}
-    input{width:100%;box-sizing:border-box;padding:12px;border:1px solid #ddd;border-radius:10px}
-    button{width:100%;padding:13px;border:0;border-radius:10px;background:#2563eb;color:white;font-weight:700;cursor:pointer}
-    small{color:#667085}
-    </style></head><body>
-    <div class='card'><h2>🚀 Create Shop Account</h2>
-    <p><small>Create a separate shop account. Each shop gets isolated products, bills, customers and subscription data.</small></p>
-    <form method='POST'>
-    <div class='field'><label>Shop Name</label><input name='shop_name' required></div>
-    <div class='field'><label>Username / Email</label><input name='username' required></div>
-    <div class='field'><label>Password</label><input type='password' name='password' required></div>
-    <div class='field'><label>Address</label><input name='address'></div>
-    <div class='field'><label>Phone</label><input name='phone'></div>
-    <div class='field'><label>Category</label><input name='shop_type' value='IT & Software'></div>
-    <button type='submit'>Create Shop</button></form></div></body></html>
-    """
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
 
@@ -304,14 +226,7 @@ def renew_subscription():
 @app.route("/get_customer/<mobile>")
 def get_customer(mobile):
 
-    shop_id = session.get("shop_id")
-    if not shop_id:
-        return redirect("/login")
-
-    bill = Bill.query.filter_by(
-        mobile=mobile,
-        shop_id=shop_id
-    ).first()
+    bill = Bill.query.filter_by(mobile=mobile).first()
 
     if bill and bill.customer_name != "Walk-in Customer":
         return jsonify({
@@ -503,12 +418,7 @@ def home():
 @app.route("/view_subscriptions")
 def view_subscriptions():
 
-    if "shop_id" not in session:
-        return redirect("/login")
-
-    data = Subscription.query.filter_by(
-        shop_id=session["shop_id"]
-    ).all()
+    data = Subscription.query.all()
 
     for s in data:
         print(
@@ -519,7 +429,7 @@ def view_subscriptions():
             s.status
         )
 
-    return f"Your Subscriptions : {len(data)}"
+    return f"Total Subscription : {len(data)}"
 
 @app.route("/logout")
 def logout():
@@ -757,9 +667,6 @@ def dashboard():
  
 @app.route("/add_product", methods=["GET", "POST"])
 def add_product():
-    if "shop_id" not in session:
-        return redirect("/login")
-
     if request.method == "POST":
         product_name = request.form.get("product_name")
         price = float(request.form.get("price"))
@@ -796,11 +703,6 @@ def products():
 
 @app.route("/import_products", methods=["GET", "POST"])
 def import_products():
-
-    if "shop_id" not in session:
-        return redirect("/login")
-
-    shop_id = session["shop_id"]
 
     if request.method == "POST":
 
@@ -861,8 +763,7 @@ def import_products():
                 product_name = str(row["Product Name"]).strip()
 
                 existing = Product.query.filter_by(
-                    product_name=product_name,
-                    shop_id=shop_id
+                    product_name=product_name
                 ).first()
 
                 if existing:
@@ -895,13 +796,7 @@ def import_products():
 @app.route("/get_price/<int:product_id>")
 def get_price(product_id):
 
-    if "shop_id" not in session:
-        return jsonify({"error": "Login required"}), 401
-
-    product = Product.query.filter_by(
-        id=product_id,
-        shop_id=session["shop_id"]
-    ).first_or_404()
+    product = Product.query.get_or_404(product_id)
 
     return jsonify({
         "price": product.price
@@ -909,13 +804,9 @@ def get_price(product_id):
 @app.route("/search_products")
 def search_products():
 
-    if "shop_id" not in session:
-        return jsonify({"error": "Login required"}), 401
-
     keyword = request.args.get("q", "")
 
     products = Product.query.filter(
-        Product.shop_id == session["shop_id"],
         Product.product_name.ilike(f"%{keyword}%")
     ).all()
 
@@ -930,9 +821,6 @@ def search_products():
 
 @app.route("/history")
 def history():
-    if "shop_id" not in session:
-        return redirect("/login")
-
     bills = Bill.query.filter_by(
     shop_id=session["shop_id"]
 ).all()
@@ -1199,70 +1087,57 @@ def shop_settings():
 @app.route("/shop", methods=["GET", "POST"])
 def shop():
 
-    if "shop_id" not in session:
-        return redirect("/login")
-
-    shop = Shop.query.filter_by(
-        id=session["shop_id"]
-    ).first_or_404()
+    shop = Shop.query.first()
 
     if request.method == "POST":
 
-        shop_name = request.form.get("shop_name", "").strip()
-        address = request.form.get("address", "").strip()
-        phone = request.form.get("phone", "").strip()
-        shop_type = request.form.get("shop_type", "").strip()
+        if shop is None:
+            shop = Shop()
 
-        username = request.form.get("username", "").strip()
-        password = request.form.get("password", "").strip()
+        shop.shop_name = request.form.get("shop_name")
+        shop.address = request.form.get("address")
+        shop.phone = request.form.get("phone")
+        shop.shop_type = request.form.get("shop_type")
 
-        if not shop_name:
-            return "Shop name required"
+        username = request.form.get("username")
+        password = request.form.get("password")
 
-        if username and username != shop.username:
-            existing_user = Shop.query.filter(
-                Shop.username == username,
-                Shop.id != shop.id
-            ).first()
-            if existing_user:
-                return "❌ Username already exists"
+        if username:
             shop.username = username
 
         if password:
             shop.password = generate_password_hash(password)
 
-        shop.shop_name = shop_name
-        shop.address = address
-        shop.phone = phone
-        shop.shop_type = shop_type
+        if not shop.shop_name:
+            return "Shop name required"
 
+        db.session.add(shop)
         db.session.commit()
 
-        subscription = Subscription.query.filter_by(
-            shop_id=shop.id
-        ).first()
+        from datetime import timedelta
+
+        subscription = Subscription.query.filter_by(shop_id=shop.id).first()
 
         if not subscription:
             subscription = Subscription(
                 shop_id=shop.id,
-                plan="Basic",
+                plan="Monthly",
                 start_date=datetime.now().date(),
-                expiry_date=datetime.now().date() + timedelta(days=30),
+                expiry_date=(datetime.now() + timedelta(days=30)).date(),
                 status="Active"
             )
+
             db.session.add(subscription)
             db.session.commit()
+
+            print("✅ Subscription Created")
 
         return redirect("/shop")
 
     return render_template("shop.html", shop=shop)
 
-
 @app.route("/search", methods=["GET", "POST"])
 def search():
-
-    if "shop_id" not in session:
-        return redirect("/login")
 
     bills = []
     search_value = ""
@@ -1274,7 +1149,6 @@ def search():
         if search_value:
 
             bills = Bill.query.filter(
-                Bill.shop_id == session["shop_id"],
                 (Bill.customer_name.ilike(f"%{search_value}%")) |
                 (Bill.mobile.ilike(f"%{search_value}%"))
             ).all()
@@ -1402,13 +1276,10 @@ def edit_product(id):
 @app.route("/download_bill/<int:id>")
 def download_bill(id):
 
+    bill = Bill.query.get_or_404(id)
+
     if "shop_id" not in session:
         return redirect("/login")
-
-    bill = Bill.query.filter_by(
-        id=id,
-        shop_id=session["shop_id"]
-    ).first_or_404()
 
     shop = Shop.query.filter_by(
         id=session["shop_id"]

@@ -2,102 +2,407 @@
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>AI Billing Login</title>
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>AI Billing | Login</title>
 
     <link rel="stylesheet"
           href="{{ url_for('static', filename='style.css') }}">
-
 </head>
 
-<body>
+<body class="auth-page">
 
-<div class="login-wrapper">
+<div class="auth-container">
 
-    <div class="login-card">
+    <!-- ================= LEFT BRAND PANEL ================= -->
 
-        <div class="logo">
+    <section class="auth-brand">
 
-            <h1>AI Billing</h1>
+        <div class="brand-content">
 
-            <p>Smart Billing Management System</p>
+            <div class="brand-logo">
+                <div class="brand-logo-icon">AI</div>
 
-        </div>
+                <div>
+                    <h1>AI Billing</h1>
+                    <span>Business Suite</span>
+                </div>
+            </div>
 
-        {% if error %}
 
-        <div class="error-box">
+            <div class="brand-main">
 
-            {{ error }}
+                <span class="brand-tag">
+                    SMART BUSINESS MANAGEMENT
+                </span>
 
-        </div>
+                <h2>
+                    Manage your business
+                    <strong>smarter.</strong>
+                </h2>
 
-        {% endif %}
-
-        <form method="POST">
-
-            <label>Username</label>
-
-            <input
-            type="text"
-            name="username"
-            placeholder="Enter Username"
-            required
-            autofocus>
-
-            <label>Password</label>
-
-            <input
-            type="password"
-            id="password"
-            name="password"
-            placeholder="Enter Password"
-            required>
-
-            <div class="show-password">
-
-                <input
-                type="checkbox"
-                onclick="togglePassword()">
-
-                Show Password
+                <p>
+                    Billing, products, customers, inventory
+                    and business insights — all in one place.
+                </p>
 
             </div>
 
-            <button type="submit">
 
-                🔐 Login
+            <!-- ================= FEATURES ================= -->
 
-            </button>
+            <div class="brand-features">
 
-        </form>
+                <div class="brand-feature">
 
-        <div class="footer">
+                    <div class="feature-icon">
+                        🧾
+                    </div>
 
-            © 2026 AI Billing System
+                    <div>
+                        <strong>Smart Billing</strong>
+
+                        <span>
+                            Create professional bills instantly
+                        </span>
+                    </div>
+
+                </div>
+
+
+                <div class="brand-feature">
+
+                    <div class="feature-icon">
+                        📦
+                    </div>
+
+                    <div>
+                        <strong>Inventory Control</strong>
+
+                        <span>
+                            Track products and stock easily
+                        </span>
+                    </div>
+
+                </div>
+
+
+                <div class="brand-feature">
+
+                    <div class="feature-icon">
+                        📊
+                    </div>
+
+                    <div>
+                        <strong>Business Insights</strong>
+
+                        <span>
+                            Understand your sales and growth
+                        </span>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="brand-footer">
+
+                <span>© 2026 AI Billing</span>
+
+                <span>•</span>
+
+                <span>Business Suite</span>
+
+            </div>
 
         </div>
 
-    </div>
+    </section>
+
+
+    <!-- ================= RIGHT LOGIN PANEL ================= -->
+
+    <section class="auth-login">
+
+        <div class="login-box">
+
+
+            <!-- MOBILE LOGO -->
+
+            <div class="mobile-logo">
+
+                <div class="brand-logo-icon">
+                    AI
+                </div>
+
+                <div>
+                    <h1>AI Billing</h1>
+                    <span>Business Suite</span>
+                </div>
+
+            </div>
+
+
+            <!-- ================= LOGIN HEADER ================= -->
+
+            <div class="login-header">
+
+                <span class="welcome-label">
+                    WELCOME BACK
+                </span>
+
+                <h2>
+                    Sign in to your account
+                </h2>
+
+                <p>
+                    Enter your credentials to continue
+                    managing your business.
+                </p>
+
+            </div>
+
+
+            <!-- ================= ERROR ================= -->
+
+            {% if error %}
+
+            <div class="login-error">
+
+                <span>⚠️</span>
+
+                <div>
+                    {{ error }}
+                </div>
+
+            </div>
+
+            {% endif %}
+
+
+            <!-- ================= FORM ================= -->
+
+            <form method="POST"
+                  class="login-form">
+
+
+                <!-- USERNAME -->
+
+                <div class="form-group">
+
+                    <label for="username">
+                        Username
+                    </label>
+
+                    <div class="input-wrapper">
+
+                        <span class="input-icon">
+                            👤
+                        </span>
+
+                        <input
+                            id="username"
+                            type="text"
+                            name="username"
+                            placeholder="Enter your username"
+                            autocomplete="username"
+                            required
+                            autofocus>
+
+                    </div>
+
+                </div>
+
+
+                <!-- PASSWORD -->
+
+                <div class="form-group">
+
+                    <div class="password-label-row">
+
+                        <label for="password">
+                            Password
+                        </label>
+
+                    </div>
+
+
+                    <div class="input-wrapper">
+
+                        <span class="input-icon">
+                            🔒
+                        </span>
+
+                        <input
+                            id="password"
+                            type="password"
+                            name="password"
+                            placeholder="Enter your password"
+                            autocomplete="current-password"
+                            required>
+
+                        <button
+                            type="button"
+                            class="password-toggle"
+                            onclick="togglePassword()"
+                            aria-label="Show password">
+
+                            👁
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- SHOW PASSWORD -->
+
+                <label class="remember-row">
+
+                    <input
+                        type="checkbox"
+                        id="showPassword"
+                        onclick="togglePassword()">
+
+                    <span>
+                        Show password
+                    </span>
+
+                </label>
+
+
+                <!-- LOGIN -->
+
+                <button
+                    type="submit"
+                    class="login-button">
+
+                    <span>
+                        Sign In
+                    </span>
+
+                    <span class="button-arrow">
+                        →
+                    </span>
+
+                </button>
+
+
+            </form>
+
+
+            <!-- ================= REGISTER ================= -->
+
+            <div class="register-box">
+
+                <div class="register-line">
+
+                    <span></span>
+
+                    <small>
+                        NEW TO AI BILLING?
+                    </small>
+
+                    <span></span>
+
+                </div>
+
+
+                <p>
+                    Create your shop account and
+                    start managing your business.
+                </p>
+
+
+                <a
+                    href="{{ url_for('register') }}"
+                    class="register-button">
+
+                    <span>
+                        🏪
+                    </span>
+
+                    <span>
+                        Create Shop Account
+                    </span>
+
+                </a>
+
+            </div>
+
+
+            <!-- ================= SECURITY ================= -->
+
+            <div class="security-note">
+
+                <span class="security-icon">
+                    🔐
+                </span>
+
+                <div>
+
+                    <strong>
+                        Secure Business Access
+                    </strong>
+
+                    <small>
+                        Your shop data is protected
+                        and isolated securely.
+                    </small>
+
+                </div>
+
+            </div>
+
+
+            <!-- ================= FOOTER ================= -->
+
+            <div class="login-footer">
+
+                <span>
+                    © 2026 AI Billing System
+                </span>
+
+                <span>
+                    Secure • Reliable • Smart
+                </span>
+
+            </div>
+
+
+        </div>
+
+    </section>
 
 </div>
 
+
 <script>
 
-function togglePassword(){
+function togglePassword() {
 
-    let x=document.getElementById("password");
+    const password =
+        document.getElementById("password");
 
-    if(x.type==="password"){
+    const checkbox =
+        document.getElementById("showPassword");
 
-        x.type="text";
+    if (password.type === "password") {
 
-    }else{
+        password.type = "text";
 
-        x.type="password";
+        checkbox.checked = true;
+
+    } else {
+
+        password.type = "password";
+
+        checkbox.checked = false;
 
     }
 

@@ -1,318 +1,273 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Invoice</title>
 
 <style>
+*{box-sizing:border-box}
 
 body{
     font-family:Arial,sans-serif;
     background:#f4f4f4;
+    margin:0;
+    padding:20px;
+    color:#111827;
 }
-
 
 .bill{
-
     width:800px;
-    margin:30px auto;
-    background:white;
-    padding:25px;
-    border-radius:10px;
-    box-shadow:0 0 10px #ccc;
-
+    max-width:100%;
+    margin:20px auto;
+    background:#fff;
+    padding:30px;
+    border-radius:12px;
+    box-shadow:0 4px 18px rgba(0,0,0,.12);
 }
 
-
-.center{
-    text-align:center;
-}
-
+.center{text-align:center}
 
 h2{
-    margin-bottom:5px;
+    margin:0 0 6px;
+    font-size:28px;
 }
 
+.shop-address,
+.shop-phone{
+    margin:4px 0;
+    color:#4b5563;
+}
+
+.invoice-title{
+    margin:18px 0 0;
+    letter-spacing:2px;
+}
 
 .info{
-
     display:flex;
     justify-content:space-between;
-    margin-top:20px;
-
+    gap:30px;
+    margin-top:25px;
+    padding:15px 0;
+    border-top:1px solid #ddd;
+    border-bottom:1px solid #ddd;
 }
 
+.info div{
+    line-height:1.8;
+}
 
 table{
-
     width:100%;
     border-collapse:collapse;
-    margin-top:20px;
-
+    margin-top:25px;
 }
 
-
 th,td{
-
     border:1px solid #333;
     padding:10px;
     text-align:center;
-
 }
 
-
-.left{
-
-    text-align:left;
-
+th{
+    background:#f3f4f6;
 }
 
+.left{text-align:left}
 
 .total{
-
     font-size:18px;
     font-weight:bold;
-
 }
 
+.actions{
+    text-align:center;
+    margin-top:25px;
+}
 
 button{
-
-    margin:10px;
+    margin:5px;
     padding:12px 20px;
+    border:0;
+    border-radius:7px;
     background:#007bff;
-    color:white;
-    border:none;
-    border-radius:5px;
+    color:#fff;
+    font-weight:600;
     cursor:pointer;
-
 }
 
+button:hover{
+    opacity:.9;
+}
+
+.thank-you{
+    text-align:center;
+    margin-top:25px;
+    color:#4b5563;
+}
+
+/* Important: bill_id is supplied by app.py */
+.pdf-link{
+    text-decoration:none;
+}
+
+@media(max-width:850px){
+    body{padding:8px}
+    .bill{padding:18px}
+    .info{flex-direction:column;gap:5px}
+    table{font-size:13px}
+    th,td{padding:7px}
+}
 
 @media print{
+    @page{
+        margin:10mm;
+    }
 
-button{
-    display:none;
+    body{
+        background:#fff;
+        padding:0;
+    }
+
+    .bill{
+        width:100%;
+        margin:0;
+        padding:10px;
+        box-shadow:none;
+        border-radius:0;
+    }
+
+    .actions{
+        display:none;
+    }
 }
-
-body{
-    background:white;
-}
-
-.bill{
-    box-shadow:none;
-    width:100%;
-}
-
-}
-
-
-
 </style>
-
-
 </head>
-
-
 
 <body>
 
-
 <div class="bill">
 
+    <div class="center">
 
-<div class="center">
+        <h2>
+            {{ shop.shop_name if shop else "My Shop" }}
+        </h2>
 
+        {% if shop and shop.address %}
+        <p class="shop-address">{{ shop.address }}</p>
+        {% endif %}
 
-<h2>
-{{ shop.shop_name if shop else "My Shop" }}
-</h2>
+        {% if shop and shop.phone %}
+        <p class="shop-phone">📞 {{ shop.phone }}</p>
+        {% endif %}
 
+        <hr>
 
-<p>
-{{ shop.address if shop else "" }}
-</p>
+        <h3 class="invoice-title">INVOICE</h3>
 
+    </div>
 
-<p>
-📞 {{ shop.phone if shop else "" }}
-</p>
+    <div class="info">
 
+        <div>
+            <b>Customer:</b>
+            {{ customer_name or "Walk-in Customer" }}
+            <br>
 
-<hr>
+            <b>Mobile:</b>
+            {{ mobile or "-" }}
+        </div>
 
+        <div>
+            <b>Date:</b>
+            {{ current_time }}
+            <br>
 
-<h3>
-INVOICE
-</h3>
+            <b>Invoice:</b>
+            #{{ invoice_id }}
+        </div>
 
+    </div>
+
+    <table>
+
+        <thead>
+        <tr>
+            <th>S.No</th>
+            <th>Product</th>
+            <th>Qty</th>
+            <th>Price</th>
+            <th>Amount</th>
+        </tr>
+        </thead>
+
+        <tbody>
+
+        {% for i in range(products|length) %}
+
+        <tr>
+
+            <td>{{ i + 1 }}</td>
+
+            <td class="left">
+                {{ products[i] }}
+            </td>
+
+            <td>
+                {{ quantities[i] }}
+            </td>
+
+            <td>
+                ₹{{ "%.2f"|format(prices[i]|float) }}
+            </td>
+
+            <td>
+                ₹{{ "%.2f"|format((quantities[i]|int) * (prices[i]|float)) }}
+            </td>
+
+        </tr>
+
+        {% endfor %}
+
+        <tr>
+
+            <td colspan="4" class="left total">
+                Grand Total
+            </td>
+
+            <td class="total">
+                ₹{{ "%.2f"|format(grand_total|float) }}
+            </td>
+
+        </tr>
+
+        </tbody>
+
+    </table>
+
+    <div class="actions">
+
+        <button type="button" onclick="window.print()">
+            🖨 Print Bill
+        </button>
+
+        {% if invoice_id %}
+        <a class="pdf-link" href="{{ url_for('download_bill', id=invoice_id) }}">
+            <button type="button">
+                ⬇ Download PDF
+            </button>
+        </a>
+        {% endif %}
+
+    </div>
+
+    <div class="thank-you">
+        <p>🙏 Thank You! Visit Again</p>
+    </div>
 
 </div>
-
-
-
-<div class="info">
-
-
-<div>
-
-<b>Customer:</b>
-{{ customer_name }}
-
-<br>
-
-
-<b>Mobile:</b>
-{{ mobile }}
-
-
-</div>
-
-
-
-<div>
-
-<b>Date:</b>
-{{ current_time }}
-
-
-<br>
-
-
-<b>Invoice:</b>
-#{{ range(10000,99999)|random }}
-
-
-</div>
-
-
-</div>
-
-
-
-<table>
-
-
-<tr>
-
-<th>S.No</th>
-<th>Product</th>
-<th>Qty</th>
-<th>Price</th>
-<th>Amount</th>
-
-</tr>
-
-
-
-{% for i in range(products|length) %}
-
-
-<tr>
-
-
-<td>
-{{ i+1 }}
-</td>
-
-
-<td class="left">
-{{ products[i] }}
-</td>
-
-
-<td>
-{{ quantities[i] }}
-</td>
-
-
-<td>
-₹{{ "%.2f"|format(prices[i]|float) }}
-</td>
-
-
-<td>
-₹{{ "%.2f"|format((quantities[i]|int)*(prices[i]|float)) }}
-</td>
-
-
-</tr>
-
-
-{% endfor %}
-
-
-
-
-<tr>
-
-
-<td colspan="4" class="left total">
-
-Grand Total
-
-</td>
-
-
-<td class="total">
-
-₹{{ "%.2f"|format(grand_total) }}
-
-</td>
-
-
-</tr>
-
-
-
-</table>
-
-
-
-
-<div class="center">
-
-
-<button onclick="window.print()">
-
-🖨 Print Bill
-
-</button>
-
-
-<a href="/download_bill/{{ request.args.get('bill_id') }}">
-
-<button type="button">
-
-⬇ Download PDF
-
-</button>
-
-</a>
-
-
-</div>
-
-
-
-
-<div class="center">
-
-<p>
-
-🙏 Thank You! Visit Again
-
-</p>
-
-</div>
-
-
-
-</div>
-
-
 
 </body>
-
 </html>

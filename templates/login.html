@@ -24,12 +24,16 @@
         <div class="brand-content">
 
             <div class="brand-logo">
-                <div class="brand-logo-icon">AI</div>
+
+                <div class="brand-logo-icon">
+                    AI
+                </div>
 
                 <div>
                     <h1>AI Billing</h1>
                     <span>Business Suite</span>
                 </div>
+
             </div>
 
 
@@ -189,8 +193,15 @@
             <form method="POST"
                   class="login-form">
 
+                <!-- ================= CSRF TOKEN ================= -->
 
-                <!-- USERNAME -->
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token }}">
+
+
+                <!-- ================= USERNAME ================= -->
 
                 <div class="form-group">
 
@@ -218,7 +229,7 @@
                 </div>
 
 
-                <!-- PASSWORD -->
+                <!-- ================= PASSWORD ================= -->
 
                 <div class="form-group">
 
@@ -260,7 +271,7 @@
                 </div>
 
 
-                <!-- SHOW PASSWORD -->
+                <!-- ================= SHOW PASSWORD ================= -->
 
                 <label class="remember-row">
 
@@ -276,7 +287,7 @@
                 </label>
 
 
-                <!-- LOGIN -->
+                <!-- ================= LOGIN ================= -->
 
                 <button
                     type="submit"
@@ -382,6 +393,8 @@
 </div>
 
 
+<!-- ================= JAVASCRIPT ================= -->
+
 <script>
 
 function togglePassword() {
@@ -410,6 +423,6 @@ function togglePassword() {
 
 </script>
 
-</body>
 
+</body>
 </html>

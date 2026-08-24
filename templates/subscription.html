@@ -333,6 +333,10 @@
                 method="POST"
                 action="/select_plan"
                 id="planForm">
+                
+                <input type="hidden"
+       name="csrf_token"
+       value="{{ csrf_token() }}">
 
 
                 <div class="plan-grid">

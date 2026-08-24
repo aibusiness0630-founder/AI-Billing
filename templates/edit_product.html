@@ -12,6 +12,10 @@
 
 <form method="POST" id="editProductForm">
 
+    <input type="hidden"
+       name="csrf_token"
+       value="{{ csrf_token }}">
+
     <label>Product Name</label><br>
     <input
         type="text"

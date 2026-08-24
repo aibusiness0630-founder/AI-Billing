@@ -21,12 +21,18 @@ from io import BytesIO
 import os
 import shutil
 import pandas as pd
+import dotenv
 
 import matplotlib
 matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
 
+# =========================================================
+# LOAD ENVIRONMENT VARIABLES
+# =========================================================
+
+dotenv.load_dotenv()
 
 # =========================================================
 # APP CONFIGURATION
@@ -35,13 +41,17 @@ import matplotlib.pyplot as plt
 app = Flask(__name__)
 
 # IMPORTANT:
-# Change this secret in production and keep it in environment variable.
+# Secret key from environment variable
 app.secret_key = os.environ.get(
     "SECRET_KEY",
     "AI_BILLING_SECRET_2026"
 )
 
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///billing.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
+    "DATABASE_URI",
+    "sqlite:///billing.db"
+)
+
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
@@ -212,6 +222,13 @@ def get_current_shop_id():
 
     return session.get("shop_id")
 
+def get_csrf_token():
+
+    if "csrf_token" not in session:
+        session["csrf_token"] = os.urandom(32).hex()
+
+    return session["csrf_token"]    
+
 
 def require_login():
 
@@ -248,6 +265,94 @@ def check_subscription(shop_id):
 
     return True, "Active"
 
+
+def validate_password_strength(password):
+    """
+    Validate password strength.
+    Requirements:
+    - At least 8 characters
+    - At least 1 uppercase letter
+    - At least 1 number
+    - At least 1 special character
+    """
+    
+    if len(password) < 8:
+        return False, "❌ Password must be at least 8 characters"
+    
+    if not any(c.isupper() for c in password):
+        return False, "❌ Password must contain at least 1 uppercase letter"
+    
+    if not any(c.isdigit() for c in password):
+        return False, "❌ Password must contain at least 1 number"
+    
+    special_chars = "!@#$%^&*()_+-=[]{}|;:,.<>?"
+    
+    if not any(c in special_chars for c in password):
+        return False, "❌ Password must contain at least 1 special character (!@#$%^&*)"
+    
+    return True, "✅ Password strength: Strong"
+
+
+# =========================================================
+# RATE LIMITING FOR LOGIN
+# =========================================================
+
+LOGIN_ATTEMPTS = {}
+
+def record_failed_login(username):
+    """Record failed login attempt."""
+    
+    client_ip = request.remote_addr
+    login_key = f"{username}_{client_ip}"
+    
+    if login_key not in LOGIN_ATTEMPTS:
+        LOGIN_ATTEMPTS[login_key] = {
+            "attempts": 0,
+            "first_attempt": datetime.now(),
+            "blocked_until": None
+        }
+    
+    attempt_data = LOGIN_ATTEMPTS[login_key]
+    
+    attempt_data["attempts"] += 1
+    
+    # After 5 failed attempts, block for 15 min
+    if attempt_data["attempts"] >= 5:
+        
+        attempt_data["blocked_until"] = (
+            datetime.now() + timedelta(minutes=15)
+        )
+
+
+def reset_login_attempts(username):
+    """Reset login attempts after successful login."""
+    
+    client_ip = request.remote_addr
+    login_key = f"{username}_{client_ip}"
+    
+    if login_key in LOGIN_ATTEMPTS:
+        del LOGIN_ATTEMPTS[login_key]
+
+
+def check_login_rate_limit(username):
+    """Check if user is rate limited."""
+    
+    client_ip = request.remote_addr
+    login_key = f"{username}_{client_ip}"
+    
+    if login_key in LOGIN_ATTEMPTS:
+        
+        attempt_data = LOGIN_ATTEMPTS[login_key]
+        blocked_until = attempt_data.get("blocked_until")
+        
+        if blocked_until and datetime.now() < blocked_until:
+            
+            remaining = (blocked_until - datetime.now()).seconds
+            
+            return False, remaining
+    
+    return True, 0
+
 # =========================================================
 # REGISTER / CREATE NEW SHOP
 # =========================================================
@@ -256,7 +361,14 @@ def check_subscription(shop_id):
 def register():
 
     if request.method == "GET":
-        return render_template("register.html")
+        
+        # Generate CSRF token for form
+        session["csrf_token"] = os.urandom(32).hex()
+        
+        return render_template(
+            "register.html",
+            csrf_token=session.get("csrf_token")
+        )
 
     shop_name = request.form.get(
         "shop_name",
@@ -288,6 +400,12 @@ def register():
         ""
     )
 
+    # CSRF TOKEN CHECK (SECURITY)
+    csrf_token = request.form.get("csrf_token", "")
+    
+    if not csrf_token or csrf_token != session.get("csrf_token"):
+        return "❌ CSRF Token Invalid. Please try again."
+
     # -----------------------------------------------------
     # VALIDATION
     # -----------------------------------------------------
@@ -301,8 +419,11 @@ def register():
     if not password:
         return "❌ Password is required"
 
-    if len(password) < 6:
-        return "❌ Password must contain at least 6 characters"
+    # NEW: Strong password validation
+    is_strong, message = validate_password_strength(password)
+    
+    if not is_strong:
+        return message
 
     # -----------------------------------------------------
     # CHECK USERNAME
@@ -367,54 +488,92 @@ def register():
         return f"❌ Registration failed: {str(e)}"
 
 # =========================================================
-# LOGIN
+# LOGIN - WITH RATE LIMITING & CSRF
 # =========================================================
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
 
-    if request.method == "POST":
-
-        username = request.form.get(
-            "username",
-            ""
-        ).strip()
-
-        password = request.form.get(
-            "password",
-            ""
+    if request.method == "GET":
+        
+        # Generate CSRF token for form
+        session["csrf_token"] = os.urandom(32).hex()
+        
+        return render_template(
+            "login.html",
+            csrf_token=session.get("csrf_token")
         )
 
-        shop = Shop.query.filter_by(
-            username=username
-        ).first()
+    username = request.form.get(
+        "username",
+        ""
+    ).strip()
 
-        if shop and check_password_hash(
-            shop.password,
-            password
-        ):
+    password = request.form.get(
+        "password",
+        ""
+    )
 
-            ok, status = check_subscription(
-                shop.id
+    # CSRF TOKEN CHECK (SECURITY)
+    csrf_token = request.form.get("csrf_token", "")
+    
+    if not csrf_token or csrf_token != session.get("csrf_token"):
+        return "❌ CSRF Token Invalid. Please try again."
+
+    # RATE LIMITING CHECK
+    is_allowed, remaining = check_login_rate_limit(username)
+    
+    if not is_allowed:
+        
+        return f"""
+        <h2 style='color: red; text-align: center;'>
+        ❌ Too many login attempts!
+        </h2>
+        <p style='text-align: center;'>
+        Try again in {remaining} seconds.
+        </p>
+        <a href='/login' style='text-align: center; display: block;'>
+        Back to Login
+        </a>
+        """, 429
+
+    # Try login
+    shop = Shop.query.filter_by(
+        username=username
+    ).first()
+
+    if shop and check_password_hash(
+        shop.password,
+        password
+    ):
+
+        ok, status = check_subscription(
+            shop.id
+        )
+
+        if not ok:
+
+            return (
+                "❌ Your subscription has expired. "
+                "Please renew."
             )
 
-            if not ok:
+        # Clear old session before creating new login session
+        session.clear()
 
-                return (
-                    "❌ Your subscription has expired. "
-                    "Please renew."
-                )
+        session["shop_id"] = shop.id
+        
+        session["csrf_token"] = os.urandom(32).hex()
 
-            # Clear old session before creating new login session
-            session.clear()
+        # RESET rate limit on successful login
+        reset_login_attempts(username)
 
-            session["shop_id"] = shop.id
+        return redirect("/")
 
-            return redirect("/")
+    # RECORD failed attempt (RATE LIMIT)
+    record_failed_login(username)
 
-        return "❌ Invalid Username or Password"
-
-    return render_template("login.html")
+    return "❌ Invalid Username or Password"
 
 
 # =========================================================
@@ -482,6 +641,11 @@ def select_plan():
     if "shop_id" not in session:
         return redirect("/login")
 
+    csrf_token = request.form.get("csrf_token", "")
+
+    if not csrf_token or csrf_token != session.get("csrf_token"):
+        return "❌ CSRF Token Invalid. Please try again."
+
     shop_id = session["shop_id"]
 
     selected_plan = request.form.get(
@@ -510,12 +674,16 @@ def select_plan():
 
     return redirect("/subscription")
 
-
-@app.route("/renew_subscription")
+@app.route("/renew_subscription", methods=["POST"])
 def renew_subscription():
 
     if "shop_id" not in session:
         return redirect("/login")
+
+    csrf_token = request.form.get("csrf_token", "")
+
+    if not csrf_token or csrf_token != session.get("csrf_token"):
+        return "❌ CSRF Token Invalid. Please try again."
 
     shop_id = session["shop_id"]
 
@@ -595,6 +763,14 @@ def home():
 
     if request.method == "POST":
 
+        csrf_token = request.form.get(
+            "csrf_token",
+            ""
+        )
+
+        if csrf_token != session.get("csrf_token"):
+            return "❌ CSRF Token Invalid. Please try again."
+
         customer_name = request.form.get(
             "customer_name",
             ""
@@ -621,12 +797,11 @@ def home():
         )
 
         grand_total = 0
-
         bill_items = []
 
-        # -------------------------------------------------
-        # STOCK VALIDATION
-        # -------------------------------------------------
+        # ---------------------------------------------
+        # VALIDATE BILL ITEMS
+        # ---------------------------------------------
 
         for product, quantity, price in zip(
             products,
@@ -634,25 +809,24 @@ def home():
             prices
         ):
 
-            if not product or not quantity or not price:
+            if not product or not quantity:
                 continue
 
             try:
 
                 quantity = int(quantity)
-                price = float(price)
 
             except ValueError:
 
-                return "❌ Invalid quantity or price"
+                return "❌ Invalid quantity"
 
             if quantity <= 0:
 
                 return "❌ Quantity must be greater than 0"
 
             # IMPORTANT:
-            # Product is searched using BOTH
-            # product_name AND shop_id.
+            # Never trust price coming from browser.
+            # Get the actual product from this shop.
 
             product_data = Product.query.filter_by(
                 product_name=product,
@@ -661,50 +835,42 @@ def home():
 
             if not product_data:
 
-                return f"""
-                <h2 style='color:red'>
-                ❌ Product not found
-                </h2>
-
-                <h3>
-                {product}
-                </h3>
-
-                <a href='/'>
-                Back
-                </a>
-                """
+                return (
+                    f"❌ Product not found: "
+                    f"{product}"
+                )
 
             if product_data.stock < quantity:
 
-                return f"""
-                <h2 style='color:red'>
-                ❌ Not enough stock for {product}
-                </h2>
+                return (
+                    f"❌ Not enough stock for "
+                    f"{product}. "
+                    f"Available Stock: "
+                    f"{product_data.stock}"
+                )
 
-                <h3>
-                Available Stock: {product_data.stock}
-                </h3>
+            actual_price = float(
+                product_data.price
+            )
 
-                <a href='/'>
-                Back
-                </a>
-                """
-
-            total = quantity * price
+            total = quantity * actual_price
 
             bill_items.append({
-                "product": product,
+                "product": product_data.product_name,
                 "quantity": quantity,
-                "price": price,
+                "price": actual_price,
                 "total": total
             })
 
             grand_total += total
 
-        # -------------------------------------------------
+        if not bill_items:
+
+            return "❌ Please add at least one product"
+
+        # ---------------------------------------------
         # SAVE BILL
-        # -------------------------------------------------
+        # ---------------------------------------------
 
         for item in bill_items:
 
@@ -746,19 +912,32 @@ def home():
             shop=shop,
             customer_name=customer_name,
             mobile=mobile,
-            products=products,
-            quantities=quantities,
-            prices=prices,
+            products=[
+                item["product"]
+                for item in bill_items
+            ],
+            quantities=[
+                item["quantity"]
+                for item in bill_items
+            ],
+            prices=[
+                item["price"]
+                for item in bill_items
+            ],
             grand_total=grand_total,
             current_time=current_time
         )
 
+    # IMPORTANT:
+    # Do NOT generate a new token here.
+    csrf_token = get_csrf_token()
+
     return render_template(
         "index.html",
-        product_list=product_list
+        product_list=product_list,
+        csrf_token=csrf_token
     )
-
-
+    
 # =========================================================
 # DASHBOARD
 # =========================================================
@@ -1049,34 +1228,34 @@ def add_product():
 
     if request.method == "POST":
 
+        csrf_token = request.form.get("csrf_token", "")
+
+        if csrf_token != session.get("csrf_token"):
+            return "❌ CSRF Token Invalid. Please try again."
+
         product_name = request.form.get(
             "product_name",
             ""
         ).strip()
 
-        price = request.form.get(
-            "price"
-        )
-
-        stock = request.form.get(
-            "stock"
-        )
+        price = request.form.get("price")
+        stock = request.form.get("stock")
 
         if not product_name or not price or not stock:
-
-            return "All fields required"
+            return "❌ All fields are required"
 
         try:
-
             price = float(price)
             stock = int(stock)
 
         except ValueError:
-
             return "❌ Invalid price or stock"
 
-        # IMPORTANT:
-        # Duplicate checking is now shop-specific.
+        if price < 0:
+            return "❌ Price cannot be negative"
+
+        if stock < 0:
+            return "❌ Stock cannot be negative"
 
         existing = Product.query.filter_by(
             product_name=product_name,
@@ -1084,7 +1263,6 @@ def add_product():
         ).first()
 
         if existing:
-
             return "❌ Product already exists"
 
         new_product = Product(
@@ -1095,13 +1273,15 @@ def add_product():
         )
 
         db.session.add(new_product)
-
         db.session.commit()
 
         return redirect("/products")
 
+    csrf_token = get_csrf_token()
+
     return render_template(
-        "add_product.html"
+        "add_product.html",
+        csrf_token=csrf_token
     )
 
 
@@ -1138,6 +1318,12 @@ def import_products():
     shop_id = session["shop_id"]
 
     if request.method == "POST":
+
+        # CSRF TOKEN CHECK (SECURITY)
+        csrf_token = request.form.get("csrf_token", "")
+        
+        if not csrf_token or csrf_token != session.get("csrf_token"):
+            return "❌ CSRF Token Invalid. Please try again."
 
         file = request.files.get(
             "file"
@@ -1260,8 +1446,12 @@ def import_products():
                 f"❌ Import Error : {str(e)}"
             )
 
+    # Generate CSRF token for form
+    session["csrf_token"] = os.urandom(32).hex()
+
     return render_template(
-        "import_products.html"
+        "import_products.html",
+        csrf_token=session.get("csrf_token")
     )
 
 
@@ -1551,6 +1741,12 @@ def edit(id):
 
     if request.method == "POST":
 
+        # CSRF TOKEN CHECK (SECURITY)
+        csrf_token = request.form.get("csrf_token", "")
+        
+        if not csrf_token or csrf_token != session.get("csrf_token"):
+            return "❌ CSRF Token Invalid. Please try again."
+
         customer_name = request.form.get(
             "customer_name"
         )
@@ -1612,9 +1808,13 @@ def edit(id):
 
         return redirect("/history")
 
+    # Generate CSRF token for form
+    session["csrf_token"] = os.urandom(32).hex()
+
     return render_template(
         "edit.html",
-        bill=bill
+        bill=bill,
+        csrf_token=session.get("csrf_token")
     )
 
 
@@ -1622,11 +1822,16 @@ def edit(id):
 # DELETE BILL
 # =========================================================
 
-@app.route("/delete/<int:id>")
+@app.route("/delete/<int:id>", methods=["POST"])
 def delete(id):
 
     if "shop_id" not in session:
         return redirect("/login")
+
+    csrf_token = request.form.get("csrf_token", "")
+
+    if not csrf_token or csrf_token != session.get("csrf_token"):
+        return "❌ CSRF Token Invalid. Please try again."
 
     shop_id = session["shop_id"]
 
@@ -1636,7 +1841,6 @@ def delete(id):
     ).first_or_404()
 
     db.session.delete(bill)
-
     db.session.commit()
 
     return redirect("/history")
@@ -1663,6 +1867,12 @@ def edit_product(id):
     ).first_or_404()
 
     if request.method == "POST":
+
+        # CSRF TOKEN CHECK (SECURITY)
+        csrf_token = request.form.get("csrf_token", "")
+        
+        if not csrf_token or csrf_token != session.get("csrf_token"):
+            return "❌ CSRF Token Invalid. Please try again."
 
         product_name = request.form.get(
             "product_name"
@@ -1697,9 +1907,13 @@ def edit_product(id):
 
         return redirect("/products")
 
+    # Generate CSRF token for form
+    session["csrf_token"] = os.urandom(32).hex()
+
     return render_template(
         "edit_product.html",
-        product=product
+        product=product,
+        csrf_token=session.get("csrf_token")
     )
 
 
@@ -1707,11 +1921,16 @@ def edit_product(id):
 # DELETE PRODUCT
 # =========================================================
 
-@app.route("/delete_product/<int:id>")
+@app.route("/delete_product/<int:id>", methods=["POST"])
 def delete_product(id):
 
     if "shop_id" not in session:
         return redirect("/login")
+
+    csrf_token = request.form.get("csrf_token", "")
+
+    if not csrf_token or csrf_token != session.get("csrf_token"):
+        return "❌ CSRF Token Invalid. Please try again."
 
     shop_id = session["shop_id"]
 
@@ -1725,7 +1944,6 @@ def delete_product(id):
     db.session.commit()
 
     return redirect("/products")
-
 
 # =========================================================
 # DOWNLOAD BILL PDF
@@ -2011,6 +2229,12 @@ def shop_settings():
 
     if request.method == "POST":
 
+        # CSRF TOKEN CHECK (SECURITY)
+        csrf_token = request.form.get("csrf_token", "")
+        
+        if not csrf_token or csrf_token != session.get("csrf_token"):
+            return "❌ CSRF Token Invalid. Please try again."
+
         shop_name = request.form.get(
             "shop_name"
         )
@@ -2045,21 +2269,18 @@ def shop_settings():
             "/shop-settings"
         )
 
+    # Generate CSRF token for form
+    session["csrf_token"] = os.urandom(32).hex()
+
     return render_template(
         "shop_settings.html",
-        shop=shop
+        shop=shop,
+        csrf_token=session.get("csrf_token")
     )
 
 
 # =========================================================
 # SHOP SETUP
-# =========================================================
-#
-# IMPORTANT:
-# This route is intended for initial setup.
-# It should NOT be exposed as a normal multi-shop
-# administration route in production.
-#
 # =========================================================
 
 @app.route(
@@ -2076,14 +2297,22 @@ def shop():
                 id=session["shop_id"]
             ).first()
 
+            # Generate CSRF token for form
+            session["csrf_token"] = os.urandom(32).hex()
+
             return render_template(
                 "shop.html",
-                shop=shop
+                shop=shop,
+                csrf_token=session.get("csrf_token")
             )
+
+        # Generate CSRF token for form
+        session["csrf_token"] = os.urandom(32).hex()
 
         return render_template(
             "shop.html",
-            shop=None
+            shop=None,
+            csrf_token=session.get("csrf_token")
         )
 
     # -----------------------------------------------------
@@ -2131,6 +2360,12 @@ def shop():
     if not shop_name:
 
         return "Shop name required"
+
+    # CSRF TOKEN CHECK (SECURITY)
+    csrf_token = request.form.get("csrf_token", "")
+    
+    if not csrf_token or csrf_token != session.get("csrf_token"):
+        return "❌ CSRF Token Invalid. Please try again."
 
     # -----------------------------------------------------
     # CREATE NEW SHOP
@@ -2236,11 +2471,6 @@ def shop():
 # =========================================================
 # VIEW SUBSCRIPTIONS
 # =========================================================
-#
-# SECURITY:
-# A normal shop user should only see THEIR subscription.
-#
-# =========================================================
 
 @app.route("/view_subscriptions")
 def view_subscriptions():
@@ -2268,7 +2498,7 @@ def view_subscriptions():
 
 
 # =========================================================
-# DATABASE BACKUP
+# DATABASE BACKUP - PER SHOP
 # =========================================================
 
 @app.route("/backup")
@@ -2277,13 +2507,26 @@ def backup_database():
     if "shop_id" not in session:
         return redirect("/login")
 
+    shop_id = session["shop_id"]
+
+    # Get shop name
+    shop = Shop.query.filter_by(
+        id=shop_id
+    ).first()
+
+    shop_name = (
+        shop.shop_name.replace(" ", "_")
+        if shop
+        else f"shop_{shop_id}"
+    )
+
+    # Create backup for THIS SHOP ONLY
     source = "instance/billing.db"
 
     if not os.path.exists(source):
-
         return "❌ Database file not found"
 
-    backup_folder = "instance/backups"
+    backup_folder = f"instance/backups/shop_{shop_id}"
 
     os.makedirs(
         backup_folder,
@@ -2291,7 +2534,7 @@ def backup_database():
     )
 
     backup_name = (
-        f"billing_backup_"
+        f"{shop_name}_backup_"
         f"{datetime.now().strftime('%d_%m_%Y_%H_%M_%S')}.db"
     )
 
@@ -2306,22 +2549,14 @@ def backup_database():
     )
 
     return (
-        "✅ Backup Created Successfully : "
-        f"{backup_name}"
+        "✅ Backup Created Successfully<br>"
+        f"File: {backup_name}<br>"
+        f"Location: {backup_folder}"
     )
 
 
 # =========================================================
-# DATABASE RESTORE
-# =========================================================
-#
-# WARNING:
-# SQLite restore is GLOBAL.
-# It restores the complete SaaS database.
-#
-# Do NOT give this route to normal shop users
-# in production.
-#
+# DATABASE RESTORE - DISABLED FOR SHOPS
 # =========================================================
 
 @app.route("/restore")

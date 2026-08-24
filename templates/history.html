@@ -7,70 +7,52 @@
 
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
-
 <style>
 
 .table-box{
     overflow-x:auto;
 }
 
-
 table{
-
     width:100%;
     border-collapse:collapse;
-
 }
 
-
 th,td{
-
     border:1px solid #ddd;
     padding:10px;
     text-align:center;
-
 }
-
 
 th{
-
     background:#007bff;
     color:white;
-
 }
-
 
 button{
-
     padding:6px 10px;
     cursor:pointer;
-
 }
 
+.delete-form{
+    display:inline;
+}
 
 </style>
 
-
 </head>
-
 
 <body>
 
-
 <div class="container">
-
 
 <h1>
 📜 Bill History
 </h1>
 
-
-
 <div class="table-box">
 
-
 <table>
-
 
 <tr>
 
@@ -83,108 +65,86 @@ button{
 <th>Total</th>
 <th>Action</th>
 
-
 </tr>
-
-
-
 
 {% for bill in bills %}
 
-
-
 <tr>
-
 
 <td>
 {{ bill.id }}
 </td>
 
-
 <td>
 {{ bill.customer_name }}
 </td>
-
 
 <td>
 {{ bill.mobile }}
 </td>
 
-
 <td>
 {{ bill.product }}
 </td>
-
 
 <td>
 {{ bill.quantity }}
 </td>
 
-
 <td>
 ₹{{ "%.2f"|format(bill.price) }}
 </td>
-
 
 <td>
 ₹{{ "%.2f"|format(bill.total) }}
 </td>
 
-
-
 <td>
-
 
 <a href="/edit/{{ bill.id }}">
 
-<button>
+<button type="button">
 ✏️ Edit
 </button>
 
 </a>
 
 
+<!-- DELETE BILL -->
+
+<form
+    method="POST"
+    action="{{ url_for('delete', id=bill.id) }}"
+    class="delete-form"
+    onsubmit="return confirm('Delete this bill?')">
+
+    <input
+        type="hidden"
+        name="csrf_token"
+        value="{{ csrf_token() }}">
+
+    <button type="submit">
+        🗑 Delete
+    </button>
+
+</form>
 
 
-<a href="/delete/{{ bill.id }}"
-onclick="return confirm('Delete this bill?')">
-
-
-<button>
-🗑 Delete
-</button>
-
-
-</a>
-
-
-
-
+<!-- DOWNLOAD PDF -->
 
 <a href="/download_bill/{{ bill.id }}">
 
-
-<button>
-
+<button type="button">
 📄 PDF
-
 </button>
-
 
 </a>
 
-
-
 </td>
-
 
 </tr>
 
-
-
-
 {% else %}
-
 
 <tr>
 
@@ -196,34 +156,23 @@ No Bills Available
 
 </tr>
 
-
-
 {% endfor %}
-
-
 
 </table>
 
-
 </div>
-
-
 
 <br>
 
-
 <a href="/">
 
-<button>
+<button type="button">
 ⬅ Back to Billing
 </button>
 
 </a>
 
-
-
 </div>
-
 
 </body>
 

@@ -8,6 +8,9 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
+    <meta name="csrf-token"
+          content="{{ csrf_token }}">
+
     <title>AI Billing System</title>
 
     <link rel="stylesheet"
@@ -19,7 +22,9 @@
 
 <div class="dashboard">
 
-    <!-- ================= SIDEBAR ================= -->
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
 
     <aside class="sidebar">
 
@@ -70,10 +75,11 @@
     </aside>
 
 
-    <!-- ================= MAIN CONTENT ================= -->
+    <!-- =====================================================
+         MAIN CONTENT
+    ====================================================== -->
 
     <main class="main-content">
-
 
         <!-- HEADER -->
 
@@ -101,7 +107,7 @@
                         <h4>Administrator</h4>
 
                         <small>
-                            {{ shop.shop_name if shop else "My Shop" }}
+                            AI Billing Business Suite
                         </small>
 
                     </div>
@@ -113,15 +119,18 @@
         </div>
 
 
-        <!-- ================= BILLING AREA ================= -->
+        <!-- =================================================
+             BILLING LAYOUT
+        ================================================== -->
 
         <div class="billing-layout">
 
 
-            <!-- ================= LEFT BILLING ================= -->
+            <!-- =================================================
+                 BILLING MAIN
+            ================================================== -->
 
             <div class="billing-main">
-
 
                 <div class="dashboard-box">
 
@@ -130,39 +139,54 @@
 
                     <form method="POST"
                           action="/"
-                          id="billForm">
+                          id="billForm"
+                          autocomplete="off">
+
+                        <!-- IMPORTANT:
+                             Flask app.py checks this token
+                        -->
+
+                        <input type="hidden"
+                               name="csrf_token"
+                               value="{{ csrf_token }}">
 
 
-                        <!-- CUSTOMER -->
+                        <!-- CUSTOMER INFORMATION -->
 
                         <div class="form-grid">
 
                             <div>
 
-                                <label>
+                                <label for="customer_name">
                                     Customer Name
                                 </label>
 
                                 <input
+                                    id="customer_name"
                                     type="text"
                                     name="customer_name"
-                                    placeholder="Walk-in Customer">
+                                    placeholder="Walk-in Customer"
+                                    maxlength="100"
+                                    autocomplete="off">
 
                             </div>
 
 
                             <div>
 
-                                <label>
+                                <label for="mobile">
                                     Mobile Number
                                 </label>
 
                                 <input
-                                    type="text"
+                                    id="mobile"
+                                    type="tel"
                                     name="mobile"
                                     maxlength="10"
+                                    inputmode="numeric"
                                     pattern="[0-9]{10}"
-                                    placeholder="Enter Mobile Number">
+                                    placeholder="Enter 10 digit mobile number"
+                                    autocomplete="off">
 
                             </div>
 
@@ -172,7 +196,9 @@
                         <br>
 
 
-                        <!-- PRODUCTS -->
+                        <!-- =================================================
+                             PRODUCTS
+                        ================================================== -->
 
                         <h2>📦 Products</h2>
 
@@ -183,7 +209,6 @@
                             <!-- FIRST PRODUCT -->
 
                             <div class="product-card">
-
 
                                 <h3>
                                     🛒 Product Details
@@ -203,7 +228,8 @@
 
                                         <select
                                             name="product[]"
-                                            class="product-select">
+                                            class="product-select"
+                                            required>
 
                                             <option value="">
                                                 Select Product
@@ -213,7 +239,8 @@
 
                                             <option
                                                 value="{{ product.product_name }}"
-                                                data-id="{{ product.id }}">
+                                                data-id="{{ product.id }}"
+                                                data-price="{{ product.price }}">
 
                                                 {{ product.product_name }}
 
@@ -237,6 +264,7 @@
                                         <input
                                             type="number"
                                             name="quantity[]"
+                                            class="quantity-input"
                                             min="1"
                                             value="1"
                                             required>
@@ -255,7 +283,11 @@
                                         <input
                                             type="number"
                                             name="price[]"
-                                            readonly>
+                                            class="price-input"
+                                            step="0.01"
+                                            min="0"
+                                            readonly
+                                            required>
 
                                     </div>
 
@@ -274,7 +306,6 @@
 
                                 </button>
 
-
                             </div>
 
                         </div>
@@ -283,10 +314,11 @@
                         <br>
 
 
-                        <!-- BUTTONS -->
+                        <!-- =================================================
+                             ACTION BUTTONS
+                        ================================================== -->
 
                         <div class="action-buttons">
-
 
                             <button
                                 type="button"
@@ -307,7 +339,6 @@
 
                             </button>
 
-
                         </div>
 
 
@@ -315,14 +346,14 @@
 
                 </div>
 
-
             </div>
 
 
-            <!-- ================= RIGHT QUICK MENU ================= -->
+            <!-- =================================================
+                 QUICK MENU
+            ================================================== -->
 
             <div class="billing-side">
-
 
                 <div class="dashboard-box">
 
@@ -408,52 +439,113 @@
 
                 </div>
 
-
             </div>
 
 
         </div>
-
 
     </main>
 
 </div>
 
 
-<!-- ================= JAVASCRIPT ================= -->
+
+<!-- =========================================================
+     JAVASCRIPT
+========================================================= -->
 
 <script>
 
-
-/* =========================================
+/* =========================================================
    PRODUCT PRICE
-========================================= */
+   =========================================================
+   Uses the shop-specific /get_price/<product_id> route.
+========================================================= */
 
 function addPriceEvent(selectElement) {
 
-    selectElement.addEventListener("change", function () {
+    if (!selectElement) {
+        return;
+    }
 
-        let productId =
-            this.options[this.selectedIndex]
-            .getAttribute("data-id");
+    selectElement.addEventListener("change", async function () {
 
+        const selectedOption =
+            this.options[this.selectedIndex];
 
-        let priceInput =
-            this.closest(".product-card")
-            .querySelector('input[name="price[]"]');
+        const productId =
+            selectedOption
+                ? selectedOption.getAttribute("data-id")
+                : null;
 
+        const productCard =
+            this.closest(".product-card");
 
-        if (productId) {
+        const priceInput =
+            productCard
+                ? productCard.querySelector(
+                    'input[name="price[]"]'
+                )
+                : null;
 
-            fetch("/get_price/" + productId)
+        if (!priceInput) {
+            return;
+        }
 
-                .then(response => response.json())
+        priceInput.value = "";
 
-                .then(data => {
+        if (!productId) {
+            return;
+        }
 
-                    priceInput.value = data.price;
+        try {
 
-                });
+            const response =
+                await fetch(
+                    "/get_price/" +
+                    encodeURIComponent(productId),
+                    {
+                        method: "GET",
+                        headers: {
+                            "X-Requested-With": "XMLHttpRequest"
+                        }
+                    }
+                );
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Unable to load product price"
+                );
+
+            }
+
+            const data =
+                await response.json();
+
+            if (
+                data &&
+                data.price !== undefined &&
+                data.price !== null
+            ) {
+
+                priceInput.value =
+                    Number(data.price).toFixed(2);
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                "Price loading error:",
+                error
+            );
+
+            priceInput.value = "";
+
+            alert(
+                "Unable to load product price. Please try again."
+            );
 
         }
 
@@ -462,9 +554,9 @@ function addPriceEvent(selectElement) {
 }
 
 
-/* =========================================
-   EXISTING PRODUCT SELECT
-========================================= */
+/* =========================================================
+   INITIAL PRODUCT SELECT
+========================================================= */
 
 document
     .querySelectorAll(".product-select")
@@ -475,24 +567,23 @@ document
     });
 
 
-/* =========================================
+
+/* =========================================================
    ADD PRODUCT
-========================================= */
+========================================================= */
 
 document
     .getElementById("addProduct")
     .addEventListener("click", function () {
 
-
-        let products =
+        const products =
             document.getElementById("products");
 
-
-        let row =
+        const row =
             document.createElement("div");
 
-
-        row.className = "product-card";
+        row.className =
+            "product-card";
 
 
         row.innerHTML = `
@@ -513,7 +604,8 @@ document
 
                     <select
                         name="product[]"
-                        class="product-select">
+                        class="product-select"
+                        required>
 
                         <option value="">
                             Select Product
@@ -523,7 +615,8 @@ document
 
                         <option
                             value="{{ product.product_name }}"
-                            data-id="{{ product.id }}">
+                            data-id="{{ product.id }}"
+                            data-price="{{ product.price }}">
 
                             {{ product.product_name }}
 
@@ -545,6 +638,7 @@ document
                     <input
                         type="number"
                         name="quantity[]"
+                        class="quantity-input"
                         min="1"
                         value="1"
                         required>
@@ -561,7 +655,11 @@ document
                     <input
                         type="number"
                         name="price[]"
-                        readonly>
+                        class="price-input"
+                        step="0.01"
+                        min="0"
+                        readonly
+                        required>
 
                 </div>
 
@@ -586,47 +684,110 @@ document
         products.appendChild(row);
 
 
-        addPriceEvent(
-            row.querySelector(".product-select")
-        );
+        const newSelect =
+            row.querySelector(
+                ".product-select"
+            );
+
+
+        addPriceEvent(newSelect);
 
     });
 
 
-/* =========================================
+
+/* =========================================================
    REMOVE PRODUCT
-========================================= */
+========================================================= */
 
-document.addEventListener("click", function (e) {
+document.addEventListener(
+    "click",
+    function (event) {
+
+        const removeButton =
+            event.target.closest(
+                ".remove-btn"
+            );
+
+        if (!removeButton) {
+            return;
+        }
 
 
-    if (
-        e.target.classList.contains("remove-btn")
-    ) {
-
-
-        let rows =
+        const rows =
             document.querySelectorAll(
                 ".product-card"
             );
 
 
-        if (rows.length > 1) {
+        /*
+         * Always keep at least one
+         * product row.
+         */
 
-            e.target
-              .closest(".product-card")
-              .remove();
+        if (rows.length <= 1) {
 
+            const card =
+                removeButton.closest(
+                    ".product-card"
+                );
+
+            if (card) {
+
+                const select =
+                    card.querySelector(
+                        ".product-select"
+                    );
+
+                const quantity =
+                    card.querySelector(
+                        'input[name="quantity[]"]'
+                    );
+
+                const price =
+                    card.querySelector(
+                        'input[name="price[]"]'
+                    );
+
+                if (select) {
+                    select.value = "";
+                }
+
+                if (quantity) {
+                    quantity.value = "1";
+                }
+
+                if (price) {
+                    price.value = "";
+                }
+
+            }
+
+            return;
+        }
+
+
+        const card =
+            removeButton.closest(
+                ".product-card"
+            );
+
+
+        if (card) {
+            card.remove();
         }
 
     }
+);
 
-});
 
 
-/* =========================================
+/* =========================================================
    CUSTOMER AUTO FILL
-========================================= */
+   =========================================================
+   Flask route already filters using shop_id,
+   so Shop A cannot receive Shop B customer data.
+========================================================= */
 
 const mobileInput =
     document.querySelector(
@@ -640,42 +801,104 @@ const customerInput =
     );
 
 
-if (mobileInput && customerInput) {
+let customerLookupTimer = null;
 
+
+if (
+    mobileInput &&
+    customerInput
+) {
 
     mobileInput.addEventListener(
-        "keyup",
+        "input",
         function () {
 
+            /*
+             * Allow only numbers.
+             */
 
-            let mobile =
+            this.value =
+                this.value
+                    .replace(/\D/g, "")
+                    .slice(0, 10);
+
+
+            const mobile =
                 this.value;
 
 
-            if (mobile.length >= 10) {
+            clearTimeout(
+                customerLookupTimer
+            );
 
 
-                fetch(
-                    "/get_customer/" + mobile
-                )
+            /*
+             * Don't search until
+             * 10 digits are entered.
+             */
 
-                .then(
-                    response => response.json()
-                )
+            if (
+                mobile.length !== 10
+            ) {
 
-                .then(data => {
-
-
-                    if (data.customer_name) {
-
-                        customerInput.value =
-                            data.customer_name;
-
-                    }
-
-                });
+                return;
 
             }
+
+
+            customerLookupTimer =
+                setTimeout(
+                    async function () {
+
+                        try {
+
+                            const response =
+                                await fetch(
+                                    "/get_customer/" +
+                                    encodeURIComponent(
+                                        mobile
+                                    ),
+                                    {
+                                        method: "GET",
+                                        headers: {
+                                            "X-Requested-With":
+                                                "XMLHttpRequest"
+                                        }
+                                    }
+                                );
+
+
+                            if (!response.ok) {
+                                return;
+                            }
+
+
+                            const data =
+                                await response.json();
+
+
+                            if (
+                                data &&
+                                data.customer_name
+                            ) {
+
+                                customerInput.value =
+                                    data.customer_name;
+
+                            }
+
+                        } catch (error) {
+
+                            console.error(
+                                "Customer lookup error:",
+                                error
+                            );
+
+                        }
+
+                    },
+                    300
+                );
 
         }
     );
@@ -683,35 +906,168 @@ if (mobileInput && customerInput) {
 }
 
 
-/* =========================================
-   GENERATE BILL BUTTON
-========================================= */
+
+/* =========================================================
+   FORM VALIDATION
+========================================================= */
 
 document
     .getElementById("billForm")
     .addEventListener(
         "submit",
-        function () {
+        function (event) {
+
+            const productCards =
+                document.querySelectorAll(
+                    ".product-card"
+                );
 
 
-            let btn =
+            if (
+                productCards.length === 0
+            ) {
+
+                event.preventDefault();
+
+                alert(
+                    "Please add at least one product."
+                );
+
+                return;
+
+            }
+
+
+            let valid =
+                true;
+
+
+            productCards.forEach(
+                function (card) {
+
+                    const product =
+                        card.querySelector(
+                            ".product-select"
+                        );
+
+                    const quantity =
+                        card.querySelector(
+                            ".quantity-input"
+                        );
+
+                    const price =
+                        card.querySelector(
+                            ".price-input"
+                        );
+
+
+                    if (
+                        !product ||
+                        !product.value
+                    ) {
+
+                        valid = false;
+
+                    }
+
+
+                    if (
+                        !quantity ||
+                        !quantity.value ||
+                        Number(quantity.value) <= 0
+                    ) {
+
+                        valid = false;
+
+                    }
+
+
+                    if (
+                        !price ||
+                        !price.value ||
+                        Number(price.value) < 0
+                    ) {
+
+                        valid = false;
+
+                    }
+
+                }
+            );
+
+
+            if (!valid) {
+
+                event.preventDefault();
+
+                alert(
+                    "Please select a product and verify quantity and price."
+                );
+
+                return;
+
+            }
+
+
+            /*
+             * Prevent accidental double submission.
+             */
+
+            const submitButton =
                 document.getElementById(
                     "submitBtn"
                 );
 
 
-            btn.disabled = true;
+            if (submitButton) {
 
+                submitButton.disabled =
+                    true;
 
-            btn.innerHTML =
-                "Generating Bill...";
+                submitButton.innerHTML =
+                    "⏳ Generating Bill...";
+
+            }
 
         }
     );
 
 
-</script>
 
+/* =========================================================
+   PREVENT ENTER KEY FROM ACCIDENTALLY SUBMITTING
+   ========================================================= */
+
+document
+    .getElementById("billForm")
+    .addEventListener(
+        "keydown",
+        function (event) {
+
+            if (
+                event.key === "Enter" &&
+                event.target.tagName !== "TEXTAREA"
+            ) {
+
+                /*
+                 * Allow normal form submission
+                 * only from the Generate Bill button.
+                 */
+
+                if (
+                    event.target.tagName !== "BUTTON"
+                ) {
+
+                    event.preventDefault();
+
+                }
+
+            }
+
+        }
+    );
+
+</script>
 
 </body>
 

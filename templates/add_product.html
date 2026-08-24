@@ -12,6 +12,8 @@
 
 <form method="POST" id="productForm">
 
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">    
+
 <label>Product Name:</label><br>
 <input type="text"
        name="product_name"

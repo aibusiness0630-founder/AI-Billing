@@ -39,9 +39,19 @@ def create_app():
         from app.routes.auth import auth_bp
         from app.routes.products import products_bp
         from app.routes.billing import billing_bp
+        from app.routes.customers import customers_bp
+        from app.routes.history import history_bp
+        from app.routes.subscription import subscription_bp
+        from app.routes.shop_settings import shop_settings_bp
+        from app.routes.suppliers import suppliers_bp
         
         app.register_blueprint(auth_bp)
         app.register_blueprint(products_bp)
         app.register_blueprint(billing_bp)
+        app.register_blueprint(customers_bp)
+        app.register_blueprint(history_bp)
+        app.register_blueprint(subscription_bp)
+        app.register_blueprint(shop_settings_bp)
+        app.register_blueprint(suppliers_bp)
     
     return app

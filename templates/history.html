@@ -34,10 +34,6 @@ button{
     cursor:pointer;
 }
 
-.delete-form{
-    display:inline;
-}
-
 </style>
 
 </head>
@@ -56,13 +52,12 @@ button{
 
 <tr>
 
-<th>ID</th>
+<th>Invoice No</th>
 <th>Customer</th>
 <th>Mobile</th>
-<th>Product</th>
-<th>Qty</th>
-<th>Price</th>
 <th>Total</th>
+<th>Status</th>
+<th>Date</th>
 <th>Action</th>
 
 </tr>
@@ -71,73 +66,22 @@ button{
 
 <tr>
 
-<td>
-{{ bill.id }}
-</td>
+<td>{{ bill.invoice_number }}</td>
 
-<td>
-{{ bill.customer_name }}
-</td>
+<td>{{ bill.customer_name }}</td>
 
-<td>
-{{ bill.mobile }}
-</td>
+<td>{{ bill.mobile }}</td>
 
-<td>
-{{ bill.product }}
-</td>
+<td>₹{{ "%.2f"|format(bill.total) }}</td>
 
-<td>
-{{ bill.quantity }}
-</td>
+<td>{{ bill.payment_status }}</td>
 
-<td>
-₹{{ "%.2f"|format(bill.price) }}
-</td>
-
-<td>
-₹{{ "%.2f"|format(bill.total) }}
-</td>
+<td>{{ bill.created_at.strftime("%d-%m-%Y %I:%M %p") if bill.created_at else "" }}</td>
 
 <td>
 
-<a href="/edit/{{ bill.id }}">
-
-<button type="button">
-✏️ Edit
-</button>
-
-</a>
-
-
-<!-- DELETE BILL -->
-
-<form
-    method="POST"
-    action="{{ url_for('delete', id=bill.id) }}"
-    class="delete-form"
-    onsubmit="return confirm('Delete this bill?')">
-
-    <input
-        type="hidden"
-        name="csrf_token"
-        value="{{ csrf_token() }}">
-
-    <button type="submit">
-        🗑 Delete
-    </button>
-
-</form>
-
-
-<!-- DOWNLOAD PDF -->
-
-<a href="/download_bill/{{ bill.id }}">
-
-<button type="button">
-📄 PDF
-</button>
-
+<a href="/invoice/{{ bill.id }}">
+<button type="button">👁 View</button>
 </a>
 
 </td>
@@ -147,13 +91,7 @@ button{
 {% else %}
 
 <tr>
-
-<td colspan="8">
-
-No Bills Available
-
-</td>
-
+<td colspan="7">No Bills Available</td>
 </tr>
 
 {% endfor %}
@@ -165,11 +103,7 @@ No Bills Available
 <br>
 
 <a href="/">
-
-<button type="button">
-⬅ Back to Billing
-</button>
-
+<button type="button">⬅ Back to Billing</button>
 </a>
 
 </div>

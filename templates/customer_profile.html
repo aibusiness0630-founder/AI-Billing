@@ -66,21 +66,19 @@
 
 <div class="card">
 
-<h2>{{ customer_name }}</h2>
+<h2>{{ customer.name }}</h2>
 
-<p><b>📱 Mobile:</b> {{ mobile }}</p>
+<p><b>📱 Mobile:</b> {{ customer.mobile }}</p>
 
 <p><b>🧾 Total Bills:</b> {{ total_bills }}</p>
 
 <p><b>💰 Total Purchase:</b> ₹{{ "%.2f"|format(total_purchase) }}</p>
 
-<p><b>📅 Last Bill ID:</b> {{ last_purchase.id }}</p>
-
 <p><b>💵 Average Bill:</b> ₹{{ "%.2f"|format(average_bill) }}</p>
 
-<p><b>🏆 Most Purchased Product:</b> {{ most_product }}</p>
-
-<p><b>📦 Total Items Purchased:</b> {{ total_items }}</p>
+{% if last_purchase %}
+<p><b>📅 Last Invoice:</b> {{ last_purchase.invoice_number }}</p>
+{% endif %}
 
 </div>
 
@@ -91,19 +89,19 @@
 <table>
 
 <tr>
-    <th>Bill ID</th>
-    <th>Product</th>
-    <th>Quantity</th>
+    <th>Invoice No</th>
+    <th>Status</th>
+    <th>Date</th>
     <th>Amount</th>
 </tr>
 
 {% for bill in bills %}
 
 <tr>
-    <td>{{ bill.id }}</td>
-    <td>{{ bill.product }}</td>
-    <td>{{ bill.quantity }}</td>
-    <td>₹{{ "%.2f"|format(bill.total) }}</td>
+    <td>{{ bill.invoice_number }}</td>
+    <td>{{ bill.payment_status }}</td>
+    <td>{{ bill.created_at.strftime("%d-%m-%Y") if bill.created_at else "" }}</td>
+    <td>₹{{ "%.2f"|format(bill.total_amount) }}</td>
 </tr>
 
 {% else %}

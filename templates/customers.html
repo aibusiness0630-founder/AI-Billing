@@ -7,98 +7,22 @@
 
     <style>
 
-        body{
-            font-family:Arial,sans-serif;
-            background:#f4f6f9;
-            padding:20px;
-            margin:0;
-        }
-
-        h1{
-            text-align:center;
-            color:#333;
-            margin-bottom:25px;
-        }
-
-        .top{
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            margin-bottom:20px;
-            flex-wrap:wrap;
-            gap:10px;
-        }
-
-        .btn{
-            background:#007bff;
-            color:white;
-            padding:10px 15px;
-            text-decoration:none;
-            border-radius:5px;
-            display:inline-block;
-        }
-
-        .btn:hover{
-            background:#0056b3;
-        }
-
-        .table-box{
-            overflow-x:auto;
-        }
-
-        table{
-            width:100%;
-            border-collapse:collapse;
-            background:white;
-            box-shadow:0 0 10px #ccc;
-        }
-
-        th{
-            background:#007bff;
-            color:white;
-            padding:12px;
-        }
-
-        td{
-            padding:10px;
-            text-align:center;
-            border-bottom:1px solid #ddd;
-        }
-
-        tr:hover{
-            background:#f5f5f5;
-        }
-
-        .walkin{
-            color:#777;
-            font-style:italic;
-        }
-
-        .disabled{
-            background:#999;
-            cursor:not-allowed;
-        }
+        body{font-family:Arial,sans-serif;background:#f4f6f9;padding:20px;margin:0;}
+        h1{text-align:center;color:#333;margin-bottom:25px;}
+        .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
+        .btn{background:#007bff;color:white;padding:10px 15px;text-decoration:none;border-radius:5px;display:inline-block;}
+        .btn:hover{background:#0056b3;}
+        .table-box{overflow-x:auto;}
+        table{width:100%;border-collapse:collapse;background:white;box-shadow:0 0 10px #ccc;}
+        th{background:#007bff;color:white;padding:12px;}
+        td{padding:10px;text-align:center;border-bottom:1px solid #ddd;}
+        tr:hover{background:#f5f5f5;}
+        .walkin{color:#777;font-style:italic;}
 
         @media(max-width:600px){
-
-            body{
-                padding:10px;
-            }
-
-            th,td{
-                padding:8px;
-                font-size:14px;
-            }
-
-            .top{
-                flex-direction:column;
-                align-items:stretch;
-                text-align:center;
-            }
-
-            .btn{
-                text-align:center;
-            }
+            body{padding:10px;}
+            th,td{padding:8px;font-size:14px;}
+            .top{flex-direction:column;align-items:stretch;text-align:center;}
         }
 
     </style>
@@ -110,21 +34,13 @@
 <h1>👥 Customers</h1>
 
 <div class="top">
-
-    <a href="/" class="btn">
-        🏠 Home
-    </a>
-
-    <b>
-        Total Customers : {{ customers|length }}
-    </b>
-
+    <a href="/" class="btn">🏠 Home</a>
+    <a href="/add_customer" class="btn" style="background:green;">➕ Add Customer</a>
+    <b>Total Customers : {{ customers|length }}</b>
 </div>
 
 <div class="table-box">
-
 <table>
-
 <tr>
     <th>S.No</th>
     <th>Customer Name</th>
@@ -132,89 +48,24 @@
     <th>Action</th>
 </tr>
 
-
 {% for customer in customers %}
-
 <tr>
-
+    <td>{{ loop.index }}</td>
+    <td>{% if customer.name %}{{ customer.name }}{% else %}<span class="walkin">Walk-in Customer</span>{% endif %}</td>
+    <td>{% if customer.mobile %}{{ customer.mobile }}{% else %}<span class="walkin">Not Provided</span>{% endif %}</td>
     <td>
-        {{ loop.index }}
+        <a class="btn" href="/customer/{{ customer.id }}">👤 View</a>
+        <a class="btn" style="background:orange;" href="/edit_customer/{{ customer.id }}">✏️ Edit</a>
+        <a class="btn" style="background:red;" href="/delete_customer/{{ customer.id }}" onclick="return confirm('Delete this customer?')">🗑 Delete</a>
     </td>
-
-
-    <td>
-
-        {% if customer.customer_name %}
-
-            {{ customer.customer_name }}
-
-        {% else %}
-
-            <span class="walkin">
-                Walk-in Customer
-            </span>
-
-        {% endif %}
-
-    </td>
-
-
-    <td>
-
-        {% if customer.mobile %}
-
-            {{ customer.mobile }}
-
-        {% else %}
-
-            <span class="walkin">
-                Not Provided
-            </span>
-
-        {% endif %}
-
-    </td>
-
-
-    <td>
-
-        {% if customer.mobile %}
-
-            <a
-                class="btn"
-                href="{{ url_for('customer_profile', mobile=customer.mobile) }}"
-            >
-                👤 View Profile
-            </a>
-
-        {% else %}
-
-            <span class="btn disabled">
-                👤 No Profile
-            </span>
-
-        {% endif %}
-
-    </td>
-
 </tr>
-
-
 {% else %}
-
 <tr>
-
-    <td colspan="4">
-        No Customers Found
-    </td>
-
+    <td colspan="4">No Customers Found</td>
 </tr>
-
 {% endfor %}
 
-
 </table>
-
 </div>
 
 </body>

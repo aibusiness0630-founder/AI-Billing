@@ -143,7 +143,7 @@
                           autocomplete="off">
 
                         <!-- IMPORTANT:
-                             Flask app.py checks this token
+                             Flask app checks this token
                         -->
 
                         <input type="hidden"
@@ -238,11 +238,11 @@
                                             {% for product in product_list %}
 
                                             <option
-                                                value="{{ product.product_name }}"
+                                                value="{{ product.name }}"
                                                 data-id="{{ product.id }}"
-                                                data-price="{{ product.price }}">
+                                                data-price="{{ product.price_sell }}">
 
-                                                {{ product.product_name }}
+                                                {{ product.name }}
 
                                             </option>
 
@@ -614,11 +614,11 @@ document
                         {% for product in product_list %}
 
                         <option
-                            value="{{ product.product_name }}"
+                            value="{{ product.name }}"
                             data-id="{{ product.id }}"
-                            data-price="{{ product.price }}">
+                            data-price="{{ product.price_sell }}">
 
-                            {{ product.product_name }}
+                            {{ product.name }}
 
                         </option>
 

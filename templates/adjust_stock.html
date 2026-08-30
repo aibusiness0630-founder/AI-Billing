@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Adjust Stock</title>
+    <style>
+        body{font-family:Arial,sans-serif;background:#f4f6f9;padding:20px;display:flex;justify-content:center;}
+        .form-box{background:white;padding:30px;border-radius:10px;box-shadow:0 0 10px #ccc;width:100%;max-width:450px;}
+        h1{text-align:center;margin-bottom:20px;}
+        label{display:block;margin-bottom:6px;font-weight:bold;}
+        select,input{width:100%;padding:10px;margin-bottom:15px;border:1px solid #ccc;border-radius:5px;box-sizing:border-box;}
+        .type-buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:15px;}
+        .type-btn{padding:12px;border-radius:5px;border:2px solid #ddd;text-align:center;cursor:pointer;font-weight:bold;background:white;}
+        .type-btn input{display:none;}
+        .type-btn.add-type{color:#16a34a;}
+        .type-btn.remove-type{color:#dc2626;}
+        button[type="submit"]{width:100%;padding:12px;background:#007bff;color:white;border:none;border-radius:5px;cursor:pointer;font-size:15px;}
+        button[type="submit"]:hover{background:#0056b3;}
+        .back-link{display:block;text-align:center;margin-top:15px;color:#007bff;text-decoration:none;}
+    </style>
+</head>
+<body>
+
+<div class="form-box">
+    <h1>⚙ Adjust Stock</h1>
+
+    <form method="POST" action="/adjust_stock">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+        <label>Product</label>
+        <select name="product_id" required>
+            <option value="">Select Product</option>
+            {% for product in products %}
+            <option value="{{ product.id }}">{{ product.name }} (Current: {{ product.stock }})</option>
+            {% endfor %}
+        </select>
+
+        <label>Adjustment Type</label>
+        <div class="type-buttons">
+
+            <label class="type-btn add-type">
+                <input type="radio" name="adjustment_type" value="ADD" checked>
+                ➕ Add Stock
+            </label>
+
+            <label class="type-btn remove-type">
+                <input type="radio" name="adjustment_type" value="REMOVE">
+                ➖ Remove Stock
+            </label>
+
+        </div>
+
+        <label>Quantity</label>
+        <input type="number" name="quantity" min="1" required placeholder="Enter quantity">
+
+        <label>Notes (Reason)</label>
+        <input type="text" name="notes" placeholder="e.g. Damaged goods, Stock count correction">
+
+        <button type="submit">💾 Apply Adjustment</button>
+    </form>
+
+    <a href="/stock_history" class="back-link">⬅ Back to Stock History</a>
+</div>
+
+</body>
+</html>

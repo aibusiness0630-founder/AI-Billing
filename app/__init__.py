@@ -44,6 +44,8 @@ def create_app():
         from app.routes.subscription import subscription_bp
         from app.routes.shop_settings import shop_settings_bp
         from app.routes.suppliers import suppliers_bp
+        from app.routes.purchases import purchases_bp
+        from app.routes.stock import stock_bp
         
         app.register_blueprint(auth_bp)
         app.register_blueprint(products_bp)
@@ -53,5 +55,7 @@ def create_app():
         app.register_blueprint(subscription_bp)
         app.register_blueprint(shop_settings_bp)
         app.register_blueprint(suppliers_bp)
+        app.register_blueprint(purchases_bp) 
+        app.register_blueprint(stock_bp)
     
     return app

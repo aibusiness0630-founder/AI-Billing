@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Supplier</title>
+    <style>
+        body{font-family:Arial,sans-serif;background:#f4f6f9;padding:20px;display:flex;justify-content:center;}
+        .form-box{background:white;padding:30px;border-radius:10px;box-shadow:0 0 10px #ccc;width:100%;max-width:450px;}
+        h1{text-align:center;margin-bottom:20px;}
+        label{display:block;margin-bottom:6px;font-weight:bold;}
+        input{width:100%;padding:10px;margin-bottom:15px;border:1px solid #ccc;border-radius:5px;box-sizing:border-box;}
+        button{width:100%;padding:12px;background:#28a745;color:white;border:none;border-radius:5px;cursor:pointer;font-size:15px;}
+        button:hover{background:#1e7e34;}
+        .back-link{display:block;text-align:center;margin-top:15px;color:#007bff;text-decoration:none;}
+    </style>
+</head>
+<body>
+
+<div class="form-box">
+    <h1>✏️ Edit Supplier</h1>
+
+    <form method="POST" action="/edit_supplier/{{ supplier.id }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+        <label>Supplier Name</label>
+        <input type="text" name="name" required value="{{ supplier.name }}">
+
+        <label>Contact Person</label>
+        <input type="text" name="contact_person" value="{{ supplier.contact_person or '' }}">
+
+        <label>Mobile Number</label>
+        <input type="text" name="mobile" value="{{ supplier.mobile or '' }}">
+
+        <label>Email</label>
+        <input type="email" name="email" value="{{ supplier.email or '' }}">
+
+        <label>Address</label>
+        <input type="text" name="address" value="{{ supplier.address or '' }}">
+
+        <button type="submit">💾 Update Supplier</button>
+    </form>
+
+    <a href="/suppliers" class="back-link">⬅ Back to Suppliers</a>
+</div>
+
+</body>
+</html>

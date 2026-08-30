@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Suppliers</title>
+    <style>
+        body{font-family:Arial,sans-serif;background:#f4f6f9;padding:20px;margin:0;}
+        h1{text-align:center;color:#333;margin-bottom:25px;}
+        .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
+        .btn{background:#007bff;color:white;padding:10px 15px;text-decoration:none;border-radius:5px;display:inline-block;}
+        .btn:hover{background:#0056b3;}
+        .table-box{overflow-x:auto;}
+        table{width:100%;border-collapse:collapse;background:white;box-shadow:0 0 10px #ccc;}
+        th{background:#007bff;color:white;padding:12px;}
+        td{padding:10px;text-align:center;border-bottom:1px solid #ddd;}
+        tr:hover{background:#f5f5f5;}
+    </style>
+</head>
+<body>
+
+<h1>🏭 Suppliers</h1>
+
+<div class="top">
+    <a href="/" class="btn">🏠 Home</a>
+    <a href="/add_supplier" class="btn" style="background:green;">➕ Add Supplier</a>
+    <b>Total Suppliers : {{ suppliers|length }}</b>
+</div>
+
+<div class="table-box">
+<table>
+<tr>
+    <th>S.No</th>
+    <th>Name</th>
+    <th>Mobile</th>
+    <th>Contact Person</th>
+    <th>Action</th>
+</tr>
+
+{% for supplier in suppliers %}
+<tr>
+    <td>{{ loop.index }}</td>
+    <td>{{ supplier.name }}</td>
+    <td>{{ supplier.mobile or "-" }}</td>
+    <td>{{ supplier.contact_person or "-" }}</td>
+    <td>
+        <a class="btn" style="background:orange;" href="/edit_supplier/{{ supplier.id }}">✏️ Edit</a>
+        <a class="btn" style="background:red;" href="/delete_supplier/{{ supplier.id }}" onclick="return confirm('Delete this supplier?')">🗑 Delete</a>
+    </td>
+</tr>
+{% else %}
+<tr>
+    <td colspan="5">No Suppliers Found</td>
+</tr>
+{% endfor %}
+
+</table>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>New Purchase</title>
+    <style>
+        body{font-family:Arial,sans-serif;background:#f4f6f9;padding:20px;}
+        .box{background:white;max-width:800px;margin:auto;padding:30px;border-radius:10px;box-shadow:0 0 10px #ccc;}
+        h1{text-align:center;margin-bottom:20px;}
+        label{display:block;margin-bottom:6px;font-weight:bold;}
+        select,input{width:100%;padding:10px;margin-bottom:15px;border:1px solid #ccc;border-radius:5px;box-sizing:border-box;}
+        .product-row{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:10px;padding:10px;background:#f9f9f9;border-radius:5px;}
+        .remove-btn{background:#dc2626;color:white;border:none;padding:10px;border-radius:5px;cursor:pointer;height:42px;}
+        .add-btn{background:#16a34a;color:white;border:none;padding:10px 15px;border-radius:5px;cursor:pointer;margin-bottom:20px;}
+        .payment-section{background:#eff6ff;padding:15px;border-radius:8px;margin-bottom:20px;border:1px solid #dbeafe;}
+        .payment-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;}
+        button[type="submit"]{width:100%;padding:12px;background:#007bff;color:white;border:none;border-radius:5px;cursor:pointer;font-size:15px;}
+        button[type="submit"]:hover{background:#0056b3;}
+        .back-link{display:block;text-align:center;margin-top:15px;color:#007bff;text-decoration:none;}
+        h3{margin-bottom:10px;}
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h1>➕ New Purchase Order</h1>
+
+    <form method="POST" action="/add_purchase">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+        <label>Supplier</label>
+        <select name="supplier_id" required>
+            <option value="">Select Supplier</option>
+            {% for supplier in suppliers %}
+            <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+            {% endfor %}
+        </select>
+
+        <h3>📦 Products</h3>
+
+        <div id="productRows">
+
+            <div class="product-row">
+                <div>
+                    <label>Product</label>
+                    <select name="product_id[]" required>
+                        <option value="">Select Product</option>
+                        {% for product in products %}
+                        <option value="{{ product.id }}">{{ product.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label>Quantity</label>
+                    <input type="number" name="quantity[]" min="1" required>
+                </div>
+                <div>
+                    <label>Cost Price</label>
+                    <input type="number" name="cost_price[]" step="0.01" min="0" required>
+                </div>
+                <div>
+                    <button type="button" class="remove-btn" onclick="this.closest('.product-row').remove()">❌</button>
+                </div>
+            </div>
+
+        </div>
+
+        <button type="button" class="add-btn" onclick="addRow()">➕ Add Product Row</button>
+
+        <h3>💰 Payment Details</h3>
+
+        <div class="payment-section">
+
+            <div class="payment-grid">
+
+                <div>
+                    <label>Payment Method</label>
+                    <select name="payment_method">
+                        <option value="Cash">Cash</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                        <option value="UPI">UPI</option>
+                        <option value="Cheque">Cheque</option>
+                        <option value="Credit">Credit (Pay Later)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Amount Paid Now (₹)</label>
+                    <input type="number" name="amount_paid" step="0.01" min="0" value="0" placeholder="0 if paying later">
+                </div>
+
+            </div>
+
+            <small style="color:#666;">
+                Leave amount as 0 if paying later (full credit). Partial payment allowed.
+            </small>
+
+        </div>
+
+        <button type="submit">💾 Save Purchase Order</button>
+
+    </form>
+
+    <a href="/purchases" class="back-link">⬅ Back to Purchases</a>
+</div>
+
+<script>
+function addRow() {
+
+    const container = document.getElementById("productRows");
+
+    const row = document.createElement("div");
+    row.className = "product-row";
+
+    row.innerHTML = `
+        <div>
+            <label>Product</label>
+            <select name="product_id[]" required>
+                <option value="">Select Product</option>
+                {% for product in products %}
+                <option value="{{ product.id }}">{{ product.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label>Quantity</label>
+            <input type="number" name="quantity[]" min="1" required>
+        </div>
+        <div>
+            <label>Cost Price</label>
+            <input type="number" name="cost_price[]" step="0.01" min="0" required>
+        </div>
+        <div>
+            <button type="button" class="remove-btn" onclick="this.closest('.product-row').remove()">❌</button>
+        </div>
+    `;
+
+    container.appendChild(row);
+}
+</script>
+
+</body>
+</html>

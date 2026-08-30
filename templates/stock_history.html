@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Stock Movement History</title>
+    <style>
+        body{font-family:Arial,sans-serif;background:#f4f6f9;padding:20px;margin:0;}
+        h1{text-align:center;color:#333;margin-bottom:25px;}
+        .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
+        .btn{background:#007bff;color:white;padding:10px 15px;text-decoration:none;border-radius:5px;display:inline-block;}
+        .btn:hover{background:#0056b3;}
+        .table-box{overflow-x:auto;}
+        table{width:100%;border-collapse:collapse;background:white;box-shadow:0 0 10px #ccc;}
+        th{background:#007bff;color:white;padding:12px;}
+        td{padding:10px;text-align:center;border-bottom:1px solid #ddd;}
+        tr:hover{background:#f5f5f5;}
+        .qty-in{color:#16a34a;font-weight:bold;}
+        .qty-out{color:#dc2626;font-weight:bold;}
+        .tag{display:inline-block;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:bold;}
+        .tag-sale{background:#fee2e2;color:#b91c1c;}
+        .tag-purchase{background:#dcfce7;color:#15803d;}
+        .tag-adjustment{background:#fef3c7;color:#92400e;}
+        .tag-damage{background:#f3e8ff;color:#7e22ce;}
+    </style>
+</head>
+<body>
+
+<h1>📊 Stock Movement History</h1>
+
+<div class="top">
+    <a href="/" class="btn">🏠 Home</a>
+    <a href="/products" class="btn">📦 Products</a>
+    <a href="/adjust_stock" class="btn" style="background:orange;">⚙ Adjust Stock</a>
+</div>
+
+<div class="table-box">
+<table>
+<tr>
+    <th>Product</th>
+    <th>Change</th>
+    <th>Reason</th>
+    <th>Reference</th>
+    <th>Notes</th>
+    <th>Date</th>
+</tr>
+
+{% for m in movements %}
+<tr>
+    <td>{{ m.product_name }}</td>
+    <td class="{% if m.quantity_change > 0 %}qty-in{% else %}qty-out{% endif %}">
+        {% if m.quantity_change > 0 %}+{% endif %}{{ m.quantity_change }}
+    </td>
+    <td>
+        <span class="tag {% if m.reason == 'SALE' %}tag-sale{% elif m.reason == 'PURCHASE' %}tag-purchase{% elif m.reason == 'DAMAGE' %}tag-damage{% else %}tag-adjustment{% endif %}">
+            {{ m.reason }}
+        </span>
+    </td>
+    <td>{{ m.reference_id or "-" }}</td>
+    <td>{{ m.notes or "-" }}</td>
+    <td>{{ m.created_at.strftime("%d-%m-%Y %I:%M %p") if m.created_at else "" }}</td>
+</tr>
+{% else %}
+<tr>
+    <td colspan="6">No Stock Movements Found</td>
+</tr>
+{% endfor %}
+
+</table>
+</div>
+
+</body>
+</html>

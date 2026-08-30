@@ -15,7 +15,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from app import db
-from app.models import Product, Customer, Invoice, InvoiceItem, Subscription
+from app.models import Product, Customer, Invoice, InvoiceItem, Subscription, StockMovement
 from app.utils.decorators import login_required
 
 billing_bp = Blueprint('billing', __name__)
@@ -150,8 +150,21 @@ def home():
             db.session.add(invoice_item)
 
             product_data = Product.query.get(item["product_id"])
+
             if product_data:
+
                 product_data.stock -= item["quantity"]
+
+                stock_movement = StockMovement(
+                    product_id=product_data.id,
+                    shop_id=shop_id,
+                    quantity_change=-item["quantity"],
+                    reason="SALE",
+                    reference_id=invoice_number,
+                    notes="Sold via billing"
+                )
+
+                db.session.add(stock_movement)
 
         db.session.commit()
 

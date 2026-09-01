@@ -6,6 +6,7 @@ from flask import (
     session
 )
 
+from app import db
 from app.models import Invoice, Customer, InvoiceItem
 from app.utils.decorators import login_required
 
@@ -125,3 +126,38 @@ def view_invoice(id):
         invoice=invoice,
         items=items_with_product
     )
+
+    from app.models import AuditLog
+
+@history_bp.route("/delete_invoice/<int:id>")
+@login_required
+def delete_invoice(id):
+
+    shop_id = session["shop_id"]
+
+    invoice = Invoice.query.filter_by(
+        id=id,
+        shop_id=shop_id
+    ).first_or_404()
+
+    invoice_number = invoice.invoice_number
+    total_amount = invoice.total_amount
+
+    # Log the deletion BEFORE deleting
+    audit_log = AuditLog(
+        shop_id=shop_id,
+        action="DELETE",
+        entity_type="INVOICE",
+        entity_id=invoice.id,
+        details=f"Deleted invoice {invoice_number} worth ₹{total_amount:.2f}"
+    )
+
+    db.session.add(audit_log)
+
+    # Delete related invoice items
+    InvoiceItem.query.filter_by(invoice_id=invoice.id).delete()
+
+    db.session.delete(invoice)
+    db.session.commit()
+
+    return redirect("/history")

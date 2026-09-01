@@ -15,7 +15,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from app import db
-from app.models import Product, Customer, Invoice, InvoiceItem, Subscription, StockMovement
+from app.models import Product, Customer, Invoice, InvoiceItem, Subscription, StockMovement, AuditLog
 from app.utils.decorators import login_required
 
 billing_bp = Blueprint('billing', __name__)
@@ -45,11 +45,23 @@ def home():
 
         mobile = request.form.get("mobile", "").strip()
 
+        payment_method = request.form.get("payment_method", "Cash")
+
+        discount_percent = request.form.get("discount_percent", "0")
+        tax_percent = request.form.get("tax_percent", "0")
+
+        try:
+            discount_percent = float(discount_percent) if discount_percent else 0
+            tax_percent = float(tax_percent) if tax_percent else 0
+        except ValueError:
+            discount_percent = 0
+            tax_percent = 0
+
         products = request.form.getlist("product[]")
         quantities = request.form.getlist("quantity[]")
         prices = request.form.getlist("price[]")
 
-        grand_total = 0
+        subtotal = 0
         bill_items = []
 
         for product, quantity, price in zip(products, quantities, prices):
@@ -95,7 +107,19 @@ def home():
                 "total": total
             })
 
-            grand_total += total
+            subtotal += total
+
+        # -------------------------------------------------
+        # CALCULATE DISCOUNT + TAX
+        # -------------------------------------------------
+
+        discount_amount = round(subtotal * (discount_percent / 100), 2)
+
+        after_discount = subtotal - discount_amount
+
+        tax_amount = round(after_discount * (tax_percent / 100), 2)
+
+        grand_total = after_discount + tax_amount
 
         # Find or create customer
         customer = None
@@ -129,8 +153,13 @@ def home():
             shop_id=shop_id,
             customer_id=customer.id if customer else None,
             invoice_number=invoice_number,
-            subtotal=grand_total,
+            subtotal=subtotal,
+            discount_amount=discount_amount,
+            discount_percent=discount_percent,
+            tax_amount=tax_amount,
+            tax_percent=tax_percent,
             total_amount=grand_total,
+            payment_method=payment_method,
             payment_status="PAID"
         )
 
@@ -161,7 +190,7 @@ def home():
                     quantity_change=-item["quantity"],
                     reason="SALE",
                     reference_id=invoice_number,
-                    notes="Sold via billing"
+                    notes=f"Sold via billing - {payment_method}"
                 )
 
                 db.session.add(stock_movement)
@@ -181,8 +210,15 @@ def home():
             products=products,
             quantities=quantities,
             prices=prices,
+            subtotal=subtotal,
+            discount_percent=discount_percent,
+            discount_amount=discount_amount,
+            tax_percent=tax_percent,
+            tax_amount=tax_amount,
             grand_total=grand_total,
-            current_time=current_time
+            payment_method=payment_method,
+            current_time=current_time,
+            invoice_id=new_invoice.id
         )
 
     session["csrf_token"] = os.urandom(32).hex()
@@ -242,7 +278,6 @@ def dashboard():
         Product.stock <= 10
     ).all()
 
-    # Query invoice items directly
     items = InvoiceItem.query.join(Invoice).filter(Invoice.shop_id == shop_id).all()
 
     best_products = {}
@@ -259,6 +294,13 @@ def dashboard():
 
     top_customers = [(c.name, c.total_spent) for c in customers]
 
+    recent_deletions = AuditLog.query.filter_by(
+        shop_id=shop_id,
+        action="DELETE"
+    ).order_by(
+        AuditLog.created_at.desc()
+    ).limit(5).all()
+
     return render_template(
         "dashboard.html",
         today_sales=today_sales,
@@ -271,7 +313,8 @@ def dashboard():
         remaining_days=remaining_days,
         subscription_warning=subscription_warning,
         plan=(subscription.plan if subscription else None),
-        status=(subscription.status if subscription else None)
+        status=(subscription.status if subscription else None),
+        recent_deletions=recent_deletions
     )
 
 

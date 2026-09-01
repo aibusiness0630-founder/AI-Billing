@@ -101,13 +101,16 @@ button:hover{
     opacity:.9;
 }
 
+.whatsapp-btn{
+    background:#25D366;
+}
+
 .thank-you{
     text-align:center;
     margin-top:25px;
     color:#4b5563;
 }
 
-/* Important: bill_id is supplied by app.py */
 .pdf-link{
     text-decoration:none;
 }
@@ -147,7 +150,14 @@ button:hover{
 
 <body>
 
-<div class="bill">
+<div class="bill"
+     id="billData"
+     data-shop-name="{{ shop.shop_name if shop else 'My Shop' }}"
+     data-customer-name="{{ customer_name or 'Customer' }}"
+     data-mobile="{{ mobile or '' }}"
+     data-invoice-id="{{ invoice_id }}"
+     data-grand-total="{{ '%.2f'|format(grand_total|float) }}"
+     data-current-time="{{ current_time }}">
 
     <div class="center">
 
@@ -203,11 +213,16 @@ button:hover{
         </tr>
         </thead>
 
-        <tbody>
+        <tbody id="billItemsBody">
 
         {% for i in range(products|length) %}
 
-        <tr>
+        <tr
+            class="bill-item-row"
+            data-product="{{ products[i] }}"
+            data-qty="{{ quantities[i] }}"
+            data-amount="{{ '%.2f'|format((quantities[i]|int) * (prices[i]|float)) }}"
+        >
 
             <td>{{ i + 1 }}</td>
 
@@ -231,6 +246,46 @@ button:hover{
 
         {% endfor %}
 
+              <tr>
+
+            <td colspan="4" class="left">
+                Subtotal
+            </td>
+
+            <td>
+                ₹{{ "%.2f"|format(subtotal|float) }}
+            </td>
+
+        </tr>
+
+        {% if discount_amount and discount_amount > 0 %}
+        <tr>
+
+            <td colspan="4" class="left">
+                Discount ({{ discount_percent }}%)
+            </td>
+
+            <td>
+                - ₹{{ "%.2f"|format(discount_amount|float) }}
+            </td>
+
+        </tr>
+        {% endif %}
+
+        {% if tax_amount and tax_amount > 0 %}
+        <tr>
+
+            <td colspan="4" class="left">
+                Tax / GST ({{ tax_percent }}%)
+            </td>
+
+            <td>
+                + ₹{{ "%.2f"|format(tax_amount|float) }}
+            </td>
+
+        </tr>
+        {% endif %}
+
         <tr>
 
             <td colspan="4" class="left total">
@@ -239,6 +294,14 @@ button:hover{
 
             <td class="total">
                 ₹{{ "%.2f"|format(grand_total|float) }}
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td colspan="5" class="left">
+                Payment Method: <b>{{ payment_method }}</b>
             </td>
 
         </tr>
@@ -254,11 +317,17 @@ button:hover{
         </button>
 
         {% if invoice_id %}
-        <a class="pdf-link" href="{{ url_for('download_bill', id=invoice_id) }}">
+        <a class="pdf-link" href="/download_bill/{{ invoice_id }}">
             <button type="button">
                 ⬇ Download PDF
             </button>
         </a>
+        {% endif %}
+
+        {% if mobile %}
+        <button type="button" class="whatsapp-btn" onclick="sendWhatsApp()">
+            📱 Send via WhatsApp
+        </button>
         {% endif %}
 
     </div>
@@ -268,6 +337,51 @@ button:hover{
     </div>
 
 </div>
+
+<script>
+function sendWhatsApp() {
+
+    var billEl = document.getElementById("billData");
+
+    var shopName = billEl.getAttribute("data-shop-name");
+    var customerName = billEl.getAttribute("data-customer-name");
+    var mobile = billEl.getAttribute("data-mobile");
+    var invoiceId = billEl.getAttribute("data-invoice-id");
+    var grandTotal = billEl.getAttribute("data-grand-total");
+    var currentTime = billEl.getAttribute("data-current-time");
+
+    var productLines = "";
+
+    var rows = document.querySelectorAll(".bill-item-row");
+
+    rows.forEach(function (row) {
+        var product = row.getAttribute("data-product");
+        var qty = row.getAttribute("data-qty");
+        var amount = row.getAttribute("data-amount");
+        productLines += "• " + product + " x " + qty + " = ₹" + amount + "\n";
+    });
+
+    var message =
+        "🧾 *" + shopName + "*\n" +
+        "Invoice #" + invoiceId + "\n" +
+        "Date: " + currentTime + "\n\n" +
+        "Dear " + customerName + ",\n" +
+        "Thank you for your purchase!\n\n" +
+        productLines +
+        "\n*Grand Total: ₹" + grandTotal + "*\n\n" +
+        "🙏 Thank you, visit again!";
+
+    var phone = mobile.replace(/\D/g, "");
+
+    if (phone.length === 10) {
+        phone = "91" + phone;
+    }
+
+    var url = "https://wa.me/" + phone + "?text=" + encodeURIComponent(message);
+
+    window.open(url, "_blank");
+}
+</script>
 
 </body>
 </html>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reports</title>
+    <style>
+        body{font-family:Arial,sans-serif;background:#f4f6f9;padding:20px;margin:0;}
+        h1{text-align:center;color:#333;margin-bottom:20px;}
+        .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
+        .btn{background:#007bff;color:white;padding:10px 15px;text-decoration:none;border-radius:5px;display:inline-block;}
+        .btn:hover{background:#0056b3;}
+        .btn.active{background:#1d4ed8;font-weight:bold;}
+
+        .period-tabs{display:flex;gap:10px;margin-bottom:25px;flex-wrap:wrap;}
+
+        .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:25px;}
+
+        .kpi-card{background:white;padding:20px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+        .kpi-label{color:#64748b;font-size:12px;font-weight:600;text-transform:uppercase;margin-bottom:8px;}
+        .kpi-value{font-size:24px;font-weight:800;color:#1e293b;}
+        .kpi-value.profit{color:#16a34a;}
+        .kpi-value.expense{color:#dc2626;}
+
+        .section{background:white;padding:20px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:20px;}
+        .section h2{font-size:16px;margin-bottom:15px;color:#1e293b;}
+
+        table{width:100%;border-collapse:collapse;}
+        th{background:#f3f4f6;padding:10px;text-align:left;font-size:12px;color:#64748b;}
+        td{padding:10px;border-top:1px solid #f1f5f9;font-size:13px;}
+
+        .payment-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f1f5f9;}
+
+        @media(max-width:900px){
+            .kpi-grid{grid-template-columns:repeat(2,1fr);}
+        }
+
+        @media(max-width:600px){
+            .kpi-grid{grid-template-columns:1fr;}
+        }
+    </style>
+</head>
+<body>
+
+<h1>📊 Business Reports</h1>
+
+<div class="top">
+    <a href="/" class="btn">🏠 Home</a>
+    <a href="/dashboard" class="btn">📈 Dashboard</a>
+</div>
+
+<div class="period-tabs">
+    <a href="/reports?period=daily" class="btn {% if period == 'daily' %}active{% endif %}">Today</a>
+    <a href="/reports?period=weekly" class="btn {% if period == 'weekly' %}active{% endif %}">Last 7 Days</a>
+    <a href="/reports?period=monthly" class="btn {% if period == 'monthly' %}active{% endif %}">Last 30 Days</a>
+</div>
+
+<h3 style="margin-bottom:15px;color:#64748b;">Showing: {{ period_label }}</h3>
+
+<!-- KPI CARDS -->
+
+<div class="kpi-grid">
+
+    <div class="kpi-card">
+        <div class="kpi-label">Total Sales</div>
+        <div class="kpi-value">₹{{ "%.2f"|format(total_sales) }}</div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-label">Total Bills</div>
+        <div class="kpi-value">{{ total_bills }}</div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-label">Average Bill</div>
+        <div class="kpi-value">₹{{ "%.2f"|format(avg_bill) }}</div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-label">Estimated Profit</div>
+        <div class="kpi-value profit">₹{{ "%.2f"|format(estimated_profit) }}</div>
+    </div>
+
+</div>
+
+<div class="kpi-grid">
+
+    <div class="kpi-card">
+        <div class="kpi-label">Total Discount Given</div>
+        <div class="kpi-value expense">₹{{ "%.2f"|format(total_discount) }}</div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-label">Total Tax Collected</div>
+        <div class="kpi-value">₹{{ "%.2f"|format(total_tax) }}</div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-label">Cost of Goods Sold</div>
+        <div class="kpi-value expense">₹{{ "%.2f"|format(total_cost) }}</div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-label">Purchases (Expenses)</div>
+        <div class="kpi-value expense">₹{{ "%.2f"|format(total_purchases) }}</div>
+    </div>
+
+</div>
+
+<!-- PAYMENT METHOD BREAKDOWN -->
+
+<div class="section">
+    <h2>💳 Payment Method Breakdown</h2>
+
+    {% if payment_breakdown %}
+        {% for method, amount in payment_breakdown.items() %}
+        <div class="payment-row">
+            <span>{{ method }}</span>
+            <strong>₹{{ "%.2f"|format(amount) }}</strong>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p style="color:#94a3b8;">No sales data for this period</p>
+    {% endif %}
+</div>
+
+<!-- TOP PRODUCTS -->
+
+<div class="section">
+    <h2>🏆 Top Selling Products</h2>
+
+    <table>
+        <tr>
+            <th>Product</th>
+            <th>Quantity Sold</th>
+            <th>Revenue</th>
+        </tr>
+
+        {% for product in product_sales_list %}
+        <tr>
+            <td>{{ product.name }}</td>
+            <td>{{ product.qty }}</td>
+            <td>₹{{ "%.2f"|format(product.revenue) }}</td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="3" style="text-align:center;color:#94a3b8;">No sales data for this period</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+</body>
+</html>

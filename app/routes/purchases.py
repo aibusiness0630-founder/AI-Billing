@@ -11,13 +11,14 @@ import os
 
 from app import db
 from app.models import Purchase, PurchaseItem, Supplier, Product, StockMovement, Payment
-from app.utils.decorators import login_required
+from app.utils.decorators import login_required, premium_required
 
 purchases_bp = Blueprint('purchases', __name__)
 
 
 @purchases_bp.route("/purchases")
 @login_required
+@premium_required
 def purchases():
 
     shop_id = session["shop_id"]
@@ -60,6 +61,7 @@ def purchases():
 
 @purchases_bp.route("/add_purchase", methods=["GET", "POST"])
 @login_required
+@premium_required
 def add_purchase():
 
     shop_id = session["shop_id"]
@@ -124,10 +126,6 @@ def add_purchase():
         if amount_paid > grand_total:
             return "❌ Amount paid cannot be more than total amount"
 
-        # -------------------------------------------------
-        # DETERMINE PAYMENT STATUS
-        # -------------------------------------------------
-
         if amount_paid >= grand_total:
             payment_status = "PAID"
         elif amount_paid > 0:
@@ -150,10 +148,6 @@ def add_purchase():
 
         db.session.add(new_purchase)
         db.session.flush()
-
-        # -------------------------------------------------
-        # SAVE ITEMS + UPDATE STOCK
-        # -------------------------------------------------
 
         for item in items:
 
@@ -187,10 +181,6 @@ def add_purchase():
 
                 db.session.add(stock_movement)
 
-        # -------------------------------------------------
-        # RECORD PAYMENT (if any paid)
-        # -------------------------------------------------
-
         if amount_paid > 0:
 
             payment = Payment(
@@ -203,10 +193,6 @@ def add_purchase():
             )
 
             db.session.add(payment)
-
-        # -------------------------------------------------
-        # UPDATE SUPPLIER OUTSTANDING
-        # -------------------------------------------------
 
         supplier = Supplier.query.get(int(supplier_id))
 
@@ -234,6 +220,7 @@ def add_purchase():
 
 @purchases_bp.route("/purchase/<int:id>")
 @login_required
+@premium_required
 def view_purchase(id):
 
     shop_id = session["shop_id"]
@@ -282,6 +269,7 @@ def view_purchase(id):
 
 @purchases_bp.route("/pay_purchase/<int:id>", methods=["POST"])
 @login_required
+@premium_required
 def pay_purchase(id):
 
     shop_id = session["shop_id"]

@@ -132,7 +132,8 @@
             box-shadow:
                 12px 0 40px rgba(2, 6, 23, 0.06);
 
-            overflow: hidden;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
 
         .sidebar::before {
@@ -328,6 +329,7 @@
             z-index: 2;
 
             margin-top: auto;
+            padding-top: 12px;
         }
 
         .sidebar-card {
@@ -1243,6 +1245,25 @@
                 0 10px 22px rgba(234, 88, 12, 0.24);
         }
 
+        .alert.danger {
+            border-color: #fecaca;
+            background: linear-gradient(135deg, #fef2f2, #fffbfb);
+        }
+
+        .alert.danger .alert-icon {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .alert.danger h4 {
+            color: #991b1b;
+        }
+
+        .alert.danger p {
+            color: #dc2626;
+            line-height: 1.6;
+        }
+
         footer {
             padding: 18px 0 5px;
 
@@ -1295,10 +1316,6 @@
                 padding: 4px 0 25px;
 
                 text-align: center;
-            }
-
-            .brand-name {
-                justify-content: center;
             }
 
             .brand h2,
@@ -1423,263 +1440,121 @@
 
     <aside class="sidebar">
 
-        <!-- BRAND -->
-
         <div class="brand">
 
             <div class="brand-name">
-
-                <div class="brand-icon">
-                    AI
-                </div>
-
-                <h2>
-                    AI Billing
-                </h2>
-
+                <div class="brand-icon">AI</div>
+                <h2>AI Billing</h2>
             </div>
 
-            <p>
-                Business Suite
-            </p>
+            <p>Business Suite</p>
 
         </div>
 
 
-        <!-- WORKSPACE -->
-
-        <div class="nav-title">
-            Workspace
-        </div>
+        <div class="nav-title">Workspace</div>
 
 
         <ul class="nav">
 
             <li class="active">
-
                 <a href="/dashboard">
-
-                    <span class="nav-icon">
-                        ⌂
-                    </span>
-
-                    <span class="nav-text">
-                        Dashboard
-                    </span>
-
+                    <span class="nav-icon">⌂</span>
+                    <span class="nav-text">Dashboard</span>
                 </a>
-
             </li>
 
-
             <li>
-
                 <a href="/">
-
-                    <span class="nav-icon">
-                        ▣
-                    </span>
-
-                    <span class="nav-text">
-                        Billing
-                    </span>
-
+                    <span class="nav-icon">▣</span>
+                    <span class="nav-text">Billing</span>
                 </a>
-
             </li>
 
-
             <li>
-
                 <a href="/products">
-
-                    <span class="nav-icon">
-                        □
-                    </span>
-
-                    <span class="nav-text">
-                        Products
-                    </span>
-
+                    <span class="nav-icon">□</span>
+                    <span class="nav-text">Products</span>
                 </a>
-
-            </li>
-
-<li>
-
-    <a href="/suppliers">
-
-        <span class="nav-icon">
-            ⌬
-        </span>
-
-        <span class="nav-text">
-            Suppliers
-        </span>
-
-    </a>
-
-</li>
-
-
-<li>
-
-    <a href="/purchases">
-
-        <span class="nav-icon">
-            ⇩
-        </span>
-
-        <span class="nav-text">
-            Purchases
-        </span>
-
-    </a>
-
-</li>
-
-
-<li>
-
-    <a href="/stock_history">
-
-        <span class="nav-icon">
-            ⇄
-        </span>
-
-        <span class="nav-text">
-            Stock History
-        </span>
-
-    </a>
-
-</li>
-
-
-<li>
-
-    <a href="/customers">
-
-                    <span class="nav-icon">
-                        ♙
-                    </span>
-
-                    <span class="nav-text">
-                        Customers
-                    </span>
-
-                </a>
-
-            </li>
-
-
-            <li>    
-
-                <a href="/history">
-
-                    <span class="nav-icon">
-                        ≡
-                    </span>
-
-                    <span class="nav-text">
-                        History
-                    </span>
-
-                </a>
-
             </li>
 
             <li>
+                <a href="/suppliers">
+                    <span class="nav-icon">⌬</span>
+                    <span class="nav-text">Suppliers</span>
+                </a>
+            </li>
 
-    <a href="/reports">
+            <li>
+                <a href="/purchases">
+                    <span class="nav-icon">⇩</span>
+                    <span class="nav-text">Purchases</span>
+                </a>
+            </li>
 
-        <span class="nav-icon">
-            ⬢
-        </span>
+            <li>
+                <a href="/stock_history">
+                    <span class="nav-icon">⇄</span>
+                    <span class="nav-text">Stock History</span>
+                </a>
+            </li>
 
-        <span class="nav-text">
-            Reports
-        </span>
+            <li>
+                <a href="/customers">
+                    <span class="nav-icon">♙</span>
+                    <span class="nav-text">Customers</span>
+                </a>
+            </li>
 
-    </a>
+            <li>
+                <a href="/history">
+                    <span class="nav-icon">≡</span>
+                    <span class="nav-text">History</span>
+                </a>
+            </li>
 
-</li>
+            <li>
+                <a href="/reports">
+                    <span class="nav-icon">⬢</span>
+                    <span class="nav-text">Reports</span>
+                </a>
+            </li>
 
         </ul>
 
 
-        <!-- ACCOUNT -->
-
-        <div class="nav-title">
-            Account
-        </div>
+        <div class="nav-title">Account</div>
 
 
         <ul class="nav">
 
             <li>
-
                 <a href="/subscription">
-
-                    <span class="nav-icon">
-                        ◇
-                    </span>
-
-                    <span class="nav-text">
-                        Subscription
-                    </span>
-
+                    <span class="nav-icon">◇</span>
+                    <span class="nav-text">Subscription</span>
                 </a>
-
             </li>
 
-
             <li>
-
                 <a href="/shop">
-
-                    <span class="nav-icon">
-                        ⚙
-                    </span>
-
-                    <span class="nav-text">
-                        Settings
-                    </span>
-
+                    <span class="nav-icon">⚙</span>
+                    <span class="nav-text">Settings</span>
                 </a>
-
             </li>
 
         </ul>
 
 
-        <!-- SIDEBAR BOTTOM -->
-
         <div class="sidebar-bottom">
 
             <div class="sidebar-card">
-
-                <div class="sidebar-card-title">
-                    AI Billing
-                </div>
-
-                <div class="sidebar-card-text">
-                    Professional Business Suite
-                </div>
-
+                <div class="sidebar-card-title">AI Billing</div>
+                <div class="sidebar-card-text">Professional Business Suite</div>
             </div>
 
-
             <a href="/logout" class="logout">
-
-                <span>
-                    ↪
-                </span>
-
-                <span>
-                    Logout
-                </span>
-
+                <span>↪</span>
+                <span>Logout</span>
             </a>
 
         </div>
@@ -1693,54 +1568,25 @@
 
     <main class="main">
 
-
-        <!-- TOPBAR -->
-
         <header class="topbar">
 
             <div class="page-title">
-
-                <h1>
-                    Dashboard
-                </h1>
-
-                <p>
-                    Business overview & analytics
-                </p>
-
+                <h1>Dashboard</h1>
+                <p>Business overview & analytics</p>
             </div>
-
 
             <div class="top-actions">
 
-                <button
-                    class="notification"
-                    title="Notifications"
-                    type="button"
-                    onclick="window.location.href='/dashboard'"
-                >
+                <button class="notification" title="Notifications" type="button" onclick="window.location.href='/dashboard'">
                     ♢
                 </button>
 
-
                 <div class="profile">
-
-                    <div class="avatar">
-                        A
-                    </div>
-
+                    <div class="avatar">A</div>
                     <div class="profile-info">
-
-                        <strong>
-                            Admin
-                        </strong>
-
-                        <span>
-                            Shop Administrator
-                        </span>
-
+                        <strong>Admin</strong>
+                        <span>Shop Administrator</span>
                     </div>
-
                 </div>
 
             </div>
@@ -1748,23 +1594,11 @@
         </header>
 
 
-        <!-- CONTENT -->
-
         <section class="content">
 
-
-            <!-- WELCOME -->
-
             <div class="welcome">
-
-                <h2>
-                    Welcome back 👋
-                </h2>
-
-                <p>
-                    Here's what's happening with your business today.
-                </p>
-
+                <h2>Welcome back 👋</h2>
+                <p>Here's what's happening with your business today.</p>
             </div>
 
 
@@ -1772,112 +1606,40 @@
 
             <div class="stats-grid">
 
-
-                <!-- TOTAL BILLS -->
-
                 <div class="stat-card">
-
                     <div class="stat-top">
-
-                        <span class="stat-label">
-                            TOTAL BILLS
-                        </span>
-
-                        <div class="stat-icon icon-blue">
-                            ▣
-                        </div>
-
+                        <span class="stat-label">TOTAL BILLS</span>
+                        <div class="stat-icon icon-blue">▣</div>
                     </div>
-
-                    <h3>
-                        {{ total_bills or 0 }}
-                    </h3>
-
-                    <div class="stat-meta">
-                        All-time invoices generated
-                    </div>
-
+                    <h3>{{ total_bills or 0 }}</h3>
+                    <div class="stat-meta">All-time invoices generated</div>
                 </div>
 
-
-                <!-- TOTAL REVENUE -->
-
                 <div class="stat-card">
-
                     <div class="stat-top">
-
-                        <span class="stat-label">
-                            TOTAL REVENUE
-                        </span>
-
-                        <div class="stat-icon icon-green">
-                            ₹
-                        </div>
-
+                        <span class="stat-label">TOTAL REVENUE</span>
+                        <div class="stat-icon icon-green">₹</div>
                     </div>
-
-                    <h3>
-                        ₹ {{ "%.2f"|format(total_revenue or 0) }}
-                    </h3>
-
-                    <div class="stat-meta">
-                        Total business revenue
-                    </div>
-
+                    <h3>₹ {{ "%.2f"|format(total_revenue or 0) }}</h3>
+                    <div class="stat-meta">Total business revenue</div>
                 </div>
 
-
-                <!-- CUSTOMERS -->
-
                 <div class="stat-card">
-
                     <div class="stat-top">
-
-                        <span class="stat-label">
-                            CUSTOMERS
-                        </span>
-
-                        <div class="stat-icon icon-orange">
-                            ♙
-                        </div>
-
+                        <span class="stat-label">CUSTOMERS</span>
+                        <div class="stat-icon icon-orange">♙</div>
                     </div>
-
-                    <h3>
-                        {{ total_customers or 0 }}
-                    </h3>
-
-                    <div class="stat-meta">
-                        Unique customers
-                    </div>
-
+                    <h3>{{ total_customers or 0 }}</h3>
+                    <div class="stat-meta">Unique customers</div>
                 </div>
 
-
-                <!-- TODAY SALES -->
-
                 <div class="stat-card">
-
                     <div class="stat-top">
-
-                        <span class="stat-label">
-                            TODAY'S SALES
-                        </span>
-
-                        <div class="stat-icon icon-purple">
-                            ↗
-                        </div>
-
+                        <span class="stat-label">TODAY'S SALES</span>
+                        <div class="stat-icon icon-purple">↗</div>
                     </div>
-
-                    <h3>
-                        ₹ {{ "%.2f"|format(today_sales or 0) }}
-                    </h3>
-
-                    <div class="stat-meta">
-                        Sales generated today
-                    </div>
-
+                    <h3>₹ {{ "%.2f"|format(today_sales or 0) }}</h3>
+                    <div class="stat-meta">Sales generated today</div>
                 </div>
 
             </div>
@@ -1887,190 +1649,87 @@
 
             <div class="main-grid">
 
-
-                <!-- SALES OVERVIEW -->
-
                 <div class="card">
 
                     <div class="card-header">
-
                         <div class="card-title">
-
-                            <div class="card-title-icon">
-                                ↗
-                            </div>
-
+                            <div class="card-title-icon">↗</div>
                             <div>
-
-                                <h3>
-                                    Sales Overview
-                                </h3>
-
-                                <p>
-                                    Product sales performance
-                                </p>
-
+                                <h3>Sales Overview</h3>
+                                <p>Product sales performance</p>
                             </div>
-
                         </div>
-
                     </div>
 
-
                     <div class="chart-container">
-
                         <img
                             src="/sales_chart"
                             alt="Sales Overview Chart"
                             onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=&quot;color:#94a3b8;font-size:11px;text-align:center;padding:40px;&quot;>Sales chart unavailable</div>';"
                         >
-
                     </div>
 
                 </div>
 
 
-                <!-- SUBSCRIPTION -->
-
                 <div class="card subscription">
 
                     <div class="card-header">
-
                         <div class="card-title">
-
-                            <div class="card-title-icon">
-                                ◇
-                            </div>
-
+                            <div class="card-title-icon">◇</div>
                             <div>
-
-                                <h3>
-                                    Subscription
-                                </h3>
-
-                                <p>
-                                    Current billing plan
-                                </p>
-
+                                <h3>Subscription</h3>
+                                <p>Current billing plan</p>
                             </div>
-
                         </div>
-
                     </div>
-
-
-                    <!-- PLAN -->
 
                     <div class="plan-box">
 
-                        <div class="plan-label">
-                            CURRENT PLAN
-                        </div>
-
-                        <div class="plan-name">
-                            {{ plan or "No Plan" }}
-                        </div>
-
+                        <div class="plan-label">CURRENT PLAN</div>
+                        <div class="plan-name">{{ plan or "No Plan" }}</div>
 
                         {% if status == "Active" %}
-
                             <div class="status-badge">
-
                                 <span class="status-dot"></span>
-
                                 Active
-
                             </div>
-
                         {% elif status == "Expired" %}
-
                             <div class="status-badge expired">
-
                                 <span class="status-dot"></span>
-
                                 Expired
-
                             </div>
-
                         {% else %}
-
                             <div class="status-badge warning">
-
                                 <span class="status-dot"></span>
-
                                 {{ status or "Unknown" }}
-
                             </div>
-
                         {% endif %}
 
                     </div>
 
-
-                    <!-- DETAILS -->
-
                     <div class="subscription-details">
 
-
                         <div class="subscription-row">
-
-                            <span>
-                                Status
-                            </span>
-
-                            <strong>
-                                {{ status or "N/A" }}
-                            </strong>
-
+                            <span>Status</span>
+                            <strong>{{ status or "N/A" }}</strong>
                         </div>
 
-
                         <div class="subscription-row">
-
-                            <span>
-                                Remaining
-                            </span>
-
-                            <strong>
-                                {{ remaining_days or 0 }} days
-                            </strong>
-
+                            <span>Remaining</span>
+                            <strong>{{ remaining_days or 0 }} days</strong>
                         </div>
 
-
                         <div class="subscription-row">
-
-                            <span>
-                                Price
-                            </span>
-
+                            <span>Price</span>
                             <strong>
-
-                                {% if plan == "Premium" %}
-
-                                    ₹999
-
-                                {% elif plan == "Basic" %}
-
-                                    ₹499
-
-                                {% else %}
-
-                                    ₹0
-
-                                {% endif %}
-
+                                {% if plan == "Premium" %}₹999{% elif plan == "Basic" %}₹499{% else %}₹0{% endif %}
                             </strong>
-
                         </div>
 
                     </div>
 
-
-                    
-                        href="/subscription"
-                        class="manage-btn"
-                    >
+                    <a href="/subscription" class="manage-btn">
                         Manage Subscription →
                     </a>
 
@@ -2083,297 +1742,145 @@
 
             <div class="table-grid">
 
-
-                <!-- LOW STOCK -->
-
                 <div class="table-card">
 
                     <div class="card-header">
-
                         <div class="card-title">
-
-                            <div
-                                class="card-title-icon"
-                                style="
-                                    background:#fff7ed;
-                                    color:#ea580c;
-                                "
-                            >
-                                !
-                            </div>
-
+                            <div class="card-title-icon" style="background:#fff7ed;color:#ea580c;">!</div>
                             <div>
-
-                                <h3>
-                                    Low Stock
-                                </h3>
-
-                                <p>
-                                    Products needing attention
-                                </p>
-
+                                <h3>Low Stock</h3>
+                                <p>Products needing attention</p>
                             </div>
-
                         </div>
-
                     </div>
 
-
                     <div class="table-wrap">
-
                         <table>
-
                             <thead>
-
                                 <tr>
-
-                                    <th>
-                                        Product
-                                    </th>
-
-                                    <th>
-                                        Stock
-                                    </th>
-
+                                    <th>Product</th>
+                                    <th>Stock</th>
                                 </tr>
-
                             </thead>
-
-
                             <tbody>
-
                             {% for product in low_stock %}
-
                                 <tr>
-
-                                    <td class="product-name">
-                                        {{ product.name }}
-                                    </td>
-
-                                    <td
-                                        class="{% if product.stock <= 5 %}stock-danger{% else %}stock-warning{% endif %}"
-                                    >
+                                    <td class="product-name">{{ product.name }}</td>
+                                    <td class="{% if product.stock <= 5 %}stock-danger{% else %}stock-warning{% endif %}">
                                         {{ product.stock }}
                                     </td>
-
                                 </tr>
-
                             {% else %}
-
                                 <tr>
-
-                                    <td
-                                        colspan="2"
-                                        class="empty"
-                                    >
-                                        ✓ All products sufficiently stocked
-                                    </td>
-
+                                    <td colspan="2" class="empty">✓ All products sufficiently stocked</td>
                                 </tr>
-
                             {% endfor %}
-
                             </tbody>
-
                         </table>
-
                     </div>
 
                 </div>
 
 
-                <!-- BEST PRODUCTS -->
-
                 <div class="table-card">
 
                     <div class="card-header">
-
                         <div class="card-title">
-
-                            <div
-                                class="card-title-icon"
-                                style="
-                                    background:#fefce8;
-                                    color:#ca8a04;
-                                "
-                            >
-                                ★
-                            </div>
-
+                            <div class="card-title-icon" style="background:#fefce8;color:#ca8a04;">★</div>
                             <div>
-
-                                <h3>
-                                    Best Products
-                                </h3>
-
-                                <p>
-                                    Top selling products
-                                </p>
-
+                                <h3>Best Products</h3>
+                                <p>Top selling products</p>
                             </div>
-
                         </div>
-
                     </div>
 
-
                     <div class="table-wrap">
-
                         <table>
-
                             <thead>
-
                                 <tr>
-
-                                    <th>
-                                        Product
-                                    </th>
-
-                                    <th>
-                                        Sold
-                                    </th>
-
+                                    <th>Product</th>
+                                    <th>Sold</th>
                                 </tr>
-
                             </thead>
-
-
                             <tbody>
-
                             {% for product, qty in best_products[:5] %}
-
                                 <tr>
-
-                                    <td class="product-name">
-                                        {{ product }}
-                                    </td>
-
-                                    <td>
-                                        {{ qty }}
-                                    </td>
-
+                                    <td class="product-name">{{ product }}</td>
+                                    <td>{{ qty }}</td>
                                 </tr>
-
                             {% else %}
-
                                 <tr>
-
-                                    <td
-                                        colspan="2"
-                                        class="empty"
-                                    >
-                                        No sales data available
-                                    </td>
-
+                                    <td colspan="2" class="empty">No sales data available</td>
                                 </tr>
-
                             {% endfor %}
-
                             </tbody>
-
                         </table>
-
                     </div>
 
                 </div>
 
 
-                <!-- TOP CUSTOMERS -->
-
                 <div class="table-card">
 
                     <div class="card-header">
-
                         <div class="card-title">
-
-                            <div
-                                class="card-title-icon"
-                                style="
-                                    background:#fdf4ff;
-                                    color:#a21caf;
-                                "
-                            >
-                                ♛
-                            </div>
-
+                            <div class="card-title-icon" style="background:#fdf4ff;color:#a21caf;">♛</div>
                             <div>
-
-                                <h3>
-                                    Top Customers
-                                </h3>
-
-                                <p>
-                                    Highest purchase value
-                                </p>
-
+                                <h3>Top Customers</h3>
+                                <p>Highest purchase value</p>
                             </div>
-
                         </div>
-
                     </div>
 
-
                     <div class="table-wrap">
-
                         <table>
-
                             <thead>
-
                                 <tr>
-
-                                    <th>
-                                        Customer
-                                    </th>
-
-                                    <th>
-                                        Purchase
-                                    </th>
-
+                                    <th>Customer</th>
+                                    <th>Purchase</th>
                                 </tr>
-
                             </thead>
-
-
                             <tbody>
-
                             {% for customer, amount in top_customers %}
-
                                 <tr>
-
-                                    <td class="product-name">
-                                        {{ customer }}
-                                    </td>
-
-                                    <td class="amount">
-                                        ₹ {{ "%.2f"|format(amount or 0) }}
-                                    </td>
-
+                                    <td class="product-name">{{ customer }}</td>
+                                    <td class="amount">₹ {{ "%.2f"|format(amount or 0) }}</td>
                                 </tr>
-
                             {% else %}
-
                                 <tr>
-
-                                    <td
-                                        colspan="2"
-                                        class="empty"
-                                    >
-                                        No customer data
-                                    </td>
-
+                                    <td colspan="2" class="empty">No customer data</td>
                                 </tr>
-
                             {% endfor %}
-
                             </tbody>
-
                         </table>
-
                     </div>
 
                 </div>
 
             </div>
+
+
+            <!-- DELETE ALERTS -->
+
+            {% if recent_deletions %}
+
+            <div class="alert danger">
+
+                <div class="alert-content">
+                    <div class="alert-icon">🗑</div>
+                    <div>
+                        <h4>Recent Deletions</h4>
+                        <p>
+                            {% for log in recent_deletions[:3] %}
+                                {{ log.details }} ({{ log.created_at.strftime("%d-%m %I:%M %p") if log.created_at else "" }})<br>
+                            {% endfor %}
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+            {% endif %}
 
 
             <!-- SUBSCRIPTION ALERT -->
@@ -2383,30 +1890,14 @@
             <div class="alert">
 
                 <div class="alert-content">
-
-                    <div class="alert-icon">
-                        !
-                    </div>
-
+                    <div class="alert-icon">!</div>
                     <div>
-
-                        <h4>
-                            Subscription Alert
-                        </h4>
-
-                        <p>
-                            {{ subscription_warning }}
-                        </p>
-
+                        <h4>Subscription Alert</h4>
+                        <p>{{ subscription_warning }}</p>
                     </div>
-
                 </div>
 
-
-                
-                    href="/renew_subscription"
-                    class="renew-btn"
-                >
+                <a href="/renew_subscription" class="renew-btn">
                     Renew Subscription →
                 </a>
 
@@ -2415,24 +1906,8 @@
             {% endif %}
 
 
-            <!-- FOOTER -->
-
             <footer>
-
-                © 2026 AI Billing System
-
-                ·
-
-                Professional Business Management Suite
-
-                ·
-
-                Developed by
-
-                <strong>
-                    Mohammed Al Mubris
-                </strong>
-
+                © 2026 AI Billing System · Professional Business Management Suite · Developed by <strong>Mohammed Al Mubris</strong>
             </footer>
 
 

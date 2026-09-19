@@ -10,13 +10,14 @@ import os
 
 from app import db
 from app.models import Supplier
-from app.utils.decorators import login_required
+from app.utils.decorators import login_required, premium_required
 
 suppliers_bp = Blueprint('suppliers', __name__)
 
 
 @suppliers_bp.route("/suppliers")
 @login_required
+@premium_required
 def suppliers():
 
     shop_id = session["shop_id"]
@@ -35,6 +36,7 @@ def suppliers():
 
 @suppliers_bp.route("/add_supplier", methods=["GET", "POST"])
 @login_required
+@premium_required
 def add_supplier():
 
     shop_id = session["shop_id"]
@@ -78,6 +80,7 @@ def add_supplier():
 
 @suppliers_bp.route("/edit_supplier/<int:id>", methods=["GET", "POST"])
 @login_required
+@premium_required
 def edit_supplier(id):
 
     shop_id = session["shop_id"]
@@ -123,6 +126,7 @@ def edit_supplier(id):
 
 @suppliers_bp.route("/delete_supplier/<int:id>")
 @login_required
+@premium_required
 def delete_supplier(id):
 
     shop_id = session["shop_id"]

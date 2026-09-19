@@ -10,13 +10,14 @@ import os
 
 from app import db
 from app.models import StockMovement, Product
-from app.utils.decorators import login_required
+from app.utils.decorators import login_required, premium_required
 
 stock_bp = Blueprint('stock', __name__)
 
 
 @stock_bp.route("/stock_history")
 @login_required
+@premium_required
 def stock_history():
 
     shop_id = session["shop_id"]
@@ -51,6 +52,7 @@ def stock_history():
 
 @stock_bp.route("/adjust_stock", methods=["GET", "POST"])
 @login_required
+@premium_required
 def adjust_stock():
 
     shop_id = session["shop_id"]

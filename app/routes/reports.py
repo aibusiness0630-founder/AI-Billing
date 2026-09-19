@@ -8,13 +8,14 @@ from flask import (
 from datetime import datetime, timedelta
 
 from app.models import Invoice, InvoiceItem, Product, Customer, Purchase
-from app.utils.decorators import login_required
+from app.utils.decorators import login_required, premium_required
 
 reports_bp = Blueprint('reports', __name__)
 
 
 @reports_bp.route("/reports")
 @login_required
+@premium_required
 def reports():
 
     shop_id = session["shop_id"]
@@ -56,19 +57,11 @@ def reports():
 
     avg_bill = round(total_sales / total_bills, 2) if total_bills else 0
 
-    # -------------------------------------------------
-    # PAYMENT METHOD BREAKDOWN
-    # -------------------------------------------------
-
     payment_breakdown = {}
 
     for inv in invoices:
         method = inv.payment_method or "Cash"
         payment_breakdown[method] = payment_breakdown.get(method, 0) + (inv.total_amount or 0)
-
-    # -------------------------------------------------
-    # PRODUCT-WISE SALES
-    # -------------------------------------------------
 
     invoice_ids = [inv.id for inv in invoices]
 
@@ -94,10 +87,6 @@ def reports():
         reverse=True
     )
 
-    # -------------------------------------------------
-    # PROFIT CALCULATION (revenue - cost)
-    # -------------------------------------------------
-
     total_cost = 0
 
     for item in items:
@@ -106,10 +95,6 @@ def reports():
             total_cost += (product.price_cost * item.quantity)
 
     estimated_profit = total_sales - total_cost
-
-    # -------------------------------------------------
-    # PURCHASES IN PERIOD (expenses)
-    # -------------------------------------------------
 
     purchases = Purchase.query.filter(
         Purchase.shop_id == shop_id,

@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 import os
 import dotenv
@@ -16,13 +16,11 @@ def create_app():
         static_folder="../static"
     )
 
-    # Secret Key
     app.secret_key = os.environ.get(
         "SECRET_KEY",
         "AI_BILLING_SECRET_2026"
     )
 
-    # Database Configuration
     app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
         "DATABASE_URI",
         "sqlite:///billing.db"
@@ -30,21 +28,13 @@ def create_app():
 
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-    # Initialize Database
     db.init_app(app)
 
-    # Application Context
     with app.app_context():
 
-        # Import Models
         from app import models
 
-        # Create Database Tables
         db.create_all()
-
-        # =========================
-        # Register Blueprints
-        # =========================
 
         from app.routes.auth import auth_bp
         from app.routes.products import products_bp
@@ -58,10 +48,6 @@ def create_app():
         from app.routes.stock import stock_bp
         from app.routes.reports import reports_bp
 
-        # =========================
-        # Blueprint Registration
-        # =========================
-
         app.register_blueprint(auth_bp)
         app.register_blueprint(products_bp)
         app.register_blueprint(billing_bp)
@@ -73,5 +59,18 @@ def create_app():
         app.register_blueprint(purchases_bp)
         app.register_blueprint(stock_bp)
         app.register_blueprint(reports_bp)
+
+    @app.errorhandler(404)
+    def not_found_error(error):
+        return render_template("errors/404.html"), 404
+
+    @app.errorhandler(500)
+    def internal_error(error):
+        db.session.rollback()
+        return render_template("errors/500.html"), 500
+
+    @app.errorhandler(403)
+    def forbidden_error(error):
+        return render_template("errors/403.html"), 403
 
     return app

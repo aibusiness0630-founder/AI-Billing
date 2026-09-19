@@ -47,31 +47,27 @@
             </li>
 
             <li>
-    <a href="/products">📦 Products</a>
-</li>
-
-<li>
-    <a href="/suppliers">🏭 Suppliers</a>
-</li>
-
-<li>
-    <a href="/purchases">🛒 Purchases</a>
-</li>
-
-<li>
-    <a href="/stock_history">📊 Stock History</a>
-</li>
-
-<li>
-    <a href="/customers">👥 Customers</a>
-</li>
-
-            <li>
-                <a href="/history">📜 History</a>
+                <a href="/products">📦 Products</a>
             </li>
 
             <li>
-                <a href="/suppliers">🏭</a>
+                <a href="/suppliers">🏭 Suppliers</a>
+            </li>
+
+            <li>
+                <a href="/purchases">🛒 Purchases</a>
+            </li>
+
+            <li>
+                <a href="/stock_history">📊 Stock History</a>
+            </li>
+
+            <li>
+                <a href="/customers">👥 Customers</a>
+            </li>
+
+            <li>
+                <a href="/history">📜 History</a>
             </li>
 
             <li>
@@ -204,7 +200,9 @@
                                     placeholder="Enter 10 digit mobile number"
                                     autocomplete="off">
 
-                                                  </div>
+                            </div>
+
+                        </div>
 
 
                         <br>
@@ -236,6 +234,31 @@
                                 <input type="number" id="tax_percent" name="tax_percent" min="0" max="100" step="0.01" value="0">
                             </div>
 
+                        </div>
+
+
+                        <br>
+
+
+                        <!-- =================================================
+                             BARCODE SCANNER
+                        ================================================== -->
+
+                        <div class="form-grid">
+
+                            <div>
+                                <label>📷 Scan Barcode to Add Product</label>
+                                <button type="button" id="scanBillBtn" class="btn btn-success" style="margin-top:6px;">
+                                    📷 Start Scanner
+                                </button>
+                            </div>
+
+                        </div>
+
+                        <div id="billScannerBox" style="display:none; margin-top:10px; margin-bottom:15px;">
+                            <video id="billScannerVideo" style="width:100%; max-width:400px; border-radius:8px;"></video>
+                            <br>
+                            <button type="button" id="closeBillScannerBtn" class="btn">❌ Close Scanner</button>
                         </div>
 
 
@@ -495,6 +518,7 @@
 </div>
 
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 
 <!-- =========================================================
      JAVASCRIPT
@@ -1112,6 +1136,109 @@ document
 
         }
     );
+
+
+/* =========================================================
+   BARCODE SCANNER (BILLING PAGE)
+   =========================================================
+   Scans a barcode, looks up the product, and automatically
+   fills the first empty (or last) product row.
+========================================================= */
+
+let billHtml5QrCode = null;
+
+document.getElementById("scanBillBtn").addEventListener("click", function () {
+
+    document.getElementById("billScannerBox").style.display = "block";
+    this.style.display = "none";
+
+    billHtml5QrCode = new Html5Qrcode("billScannerVideo");
+
+    Html5Qrcode.getCameras().then(function (devices) {
+
+        if (devices && devices.length) {
+
+            const cameraId = devices[0].id;
+
+            billHtml5QrCode.start(
+                cameraId,
+                { fps: 10, qrbox: 200 },
+                async function (decodedText) {
+
+                    try {
+
+                        const response = await fetch(
+                            "/get_product_by_barcode/" + encodeURIComponent(decodedText),
+                            {
+                                method: "GET",
+                                headers: { "X-Requested-With": "XMLHttpRequest" }
+                            }
+                        );
+
+                        const data = await response.json();
+
+                        if (data && data.found) {
+
+                            // Find an empty product row, or use the last row
+                            const cards = document.querySelectorAll(".product-card");
+                            let targetCard = null;
+
+                            cards.forEach(function (card) {
+                                const select = card.querySelector(".product-select");
+                                if (!targetCard && select && !select.value) {
+                                    targetCard = card;
+                                }
+                            });
+
+                            if (!targetCard) {
+                                targetCard = cards[cards.length - 1];
+                            }
+
+                            const select = targetCard.querySelector(".product-select");
+                            const priceInput = targetCard.querySelector('input[name="price[]"]');
+
+                            select.value = data.name;
+                            priceInput.value = Number(data.price).toFixed(2);
+
+                        } else {
+                            alert("❌ No product found with this barcode.");
+                        }
+
+                    } catch (error) {
+                        alert("Error looking up barcode: " + error);
+                    }
+
+                    billHtml5QrCode.stop().then(function () {
+                        document.getElementById("billScannerBox").style.display = "none";
+                        document.getElementById("scanBillBtn").style.display = "inline-block";
+                    });
+
+                },
+                function (errorMessage) {
+                    // scanning in progress, ignore
+                }
+            );
+
+        }
+
+    }).catch(function (err) {
+        alert("Camera access error: " + err);
+        document.getElementById("billScannerBox").style.display = "none";
+        document.getElementById("scanBillBtn").style.display = "inline-block";
+    });
+
+});
+
+document.getElementById("closeBillScannerBtn").addEventListener("click", function () {
+
+    if (billHtml5QrCode) {
+        billHtml5QrCode.stop().then(function () {
+            document.getElementById("billScannerBox").style.display = "none";
+            document.getElementById("scanBillBtn").style.display = "inline-block";
+        });
+    }
+
+});
 
 </script>
 

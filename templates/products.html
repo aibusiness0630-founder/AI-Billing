@@ -73,6 +73,12 @@
             color:red;
             font-weight:bold;
         }
+
+        .no-barcode{
+            color:#999;
+            font-style:italic;
+            font-size:12px;
+        }
     </style>
 </head>
 
@@ -91,6 +97,7 @@
 <tr>
     <th>ID</th>
     <th>Product Name</th>
+    <th>Barcode</th>
     <th>Price</th>
     <th>Stock</th>
     <th>Action</th>
@@ -99,6 +106,13 @@
 <tr>
     <td>{{ product.id }}</td>
     <td>{{ product.name }}</td>
+    <td>
+        {% if product.barcode %}
+        {{ product.barcode }}
+        {% else %}
+        <span class="no-barcode">No barcode</span>
+        {% endif %}
+    </td>
     <td>₹ {{ "%.2f"|format(product.price_sell) }}</td>
     <td>
         {% if product.stock <= 10 %}
@@ -114,7 +128,7 @@
 </tr>
 {% else %}
 <tr>
-    <td colspan="5">No Products Found.</td>
+    <td colspan="6">No Products Found.</td>
 </tr>
 {% endfor %}
 </table>

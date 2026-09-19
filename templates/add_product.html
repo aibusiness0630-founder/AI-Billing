@@ -38,6 +38,20 @@
        required>
 <br><br>
 
+<label>Barcode (Optional):</label><br>
+<input type="text"
+       name="barcode"
+       id="barcodeInput"
+       placeholder="Scan or type barcode">
+<button type="button" id="scanBtn" style="margin-left:8px;">📷 Scan</button>
+<br><br>
+
+<div id="scannerBox" style="display:none; margin-bottom:15px;">
+    <video id="scannerVideo" style="width:100%; max-width:400px; border-radius:8px;"></video>
+    <br>
+    <button type="button" id="closeScannerBtn">❌ Close Scanner</button>
+</div>
+
 <button type="submit" id="submitBtn">
 ➕ Add Product
 </button>
@@ -58,10 +72,66 @@
 
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+
 <script>
 document.getElementById("productForm").addEventListener("submit", function () {
     document.getElementById("submitBtn").disabled = true;
     document.getElementById("submitBtn").innerHTML = "Saving...";
+});
+
+let html5QrCode = null;
+
+document.getElementById("scanBtn").addEventListener("click", function () {
+
+    document.getElementById("scannerBox").style.display = "block";
+    this.style.display = "none";
+
+    html5QrCode = new Html5Qrcode("scannerVideo");
+
+    Html5Qrcode.getCameras().then(function (devices) {
+
+        if (devices && devices.length) {
+
+            const cameraId = devices[0].id;
+
+            html5QrCode.start(
+                cameraId,
+                { fps: 10, qrbox: 200 },
+                function (decodedText) {
+
+                    document.getElementById("barcodeInput").value = decodedText;
+
+                    html5QrCode.stop().then(function () {
+                        document.getElementById("scannerBox").style.display = "none";
+                        document.getElementById("scanBtn").style.display = "inline-block";
+                    });
+
+                },
+                function (errorMessage) {
+                    // scanning in progress, ignore
+                }
+            );
+
+        }
+
+    }).catch(function (err) {
+        alert("Camera access error: " + err);
+        document.getElementById("scannerBox").style.display = "none";
+        document.getElementById("scanBtn").style.display = "inline-block";
+    });
+
+});
+
+document.getElementById("closeScannerBtn").addEventListener("click", function () {
+
+    if (html5QrCode) {
+        html5QrCode.stop().then(function () {
+            document.getElementById("scannerBox").style.display = "none";
+            document.getElementById("scanBtn").style.display = "inline-block";
+        });
+    }
+
 });
 </script>
 

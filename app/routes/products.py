@@ -32,6 +32,7 @@ def add_product():
         product_name = request.form.get("product_name", "").strip()
         price = request.form.get("price")
         stock = request.form.get("stock")
+        barcode = request.form.get("barcode", "").strip()
 
         if not product_name or not price or not stock:
             return "All fields required"
@@ -50,10 +51,21 @@ def add_product():
         if existing:
             return "❌ Product already exists"
 
+        if barcode:
+
+            existing_barcode = Product.query.filter_by(
+                barcode=barcode,
+                shop_id=shop_id
+            ).first()
+
+            if existing_barcode:
+                return "❌ This barcode is already assigned to another product"
+
         new_product = Product(
             name=product_name,
             price_sell=price,
             stock=stock,
+            barcode=barcode if barcode else None,
             shop_id=shop_id
         )
 
@@ -132,7 +144,11 @@ def import_products():
                 if column not in df.columns:
                     return f"❌ Missing Column : {column}"
 
-            df = df[required_columns]
+            has_barcode_column = "Barcode" in df.columns
+
+            keep_columns = required_columns + (["Barcode"] if has_barcode_column else [])
+
+            df = df[keep_columns]
             df = df.dropna(subset=required_columns)
 
             imported_count = 0
@@ -151,11 +167,17 @@ def import_products():
                     skipped_count += 1
                     continue
 
+                barcode_value = None
+
+                if has_barcode_column and pd.notna(row.get("Barcode")):
+                    barcode_value = str(row["Barcode"]).strip()
+
                 product = Product(
                     shop_id=shop_id,
                     name=product_name,
                     price_sell=float(row["Price"]),
-                    stock=int(row["Stock"])
+                    stock=int(row["Stock"]),
+                    barcode=barcode_value
                 )
 
                 db.session.add(product)
@@ -211,6 +233,29 @@ def search_products():
     ])
 
 
+@products_bp.route("/get_product_by_barcode/<barcode>")
+@login_required
+def get_product_by_barcode(barcode):
+
+    shop_id = session["shop_id"]
+
+    product = Product.query.filter_by(
+        barcode=barcode,
+        shop_id=shop_id
+    ).first()
+
+    if not product:
+        return jsonify({"found": False}), 404
+
+    return jsonify({
+        "found": True,
+        "id": product.id,
+        "name": product.name,
+        "price": product.price_sell,
+        "stock": product.stock
+    })
+
+
 @products_bp.route("/edit_product/<int:id>", methods=["GET", "POST"])
 @login_required
 def edit_product(id):
@@ -231,6 +276,7 @@ def edit_product(id):
         product_name = request.form.get("product_name")
         price = request.form.get("price")
         stock = request.form.get("stock")
+        barcode = request.form.get("barcode", "").strip()
 
         if not product_name or not price or not stock:
             return "All fields required"
@@ -241,9 +287,21 @@ def edit_product(id):
         except ValueError:
             return "❌ Invalid price or stock"
 
+        if barcode:
+
+            existing_barcode = Product.query.filter(
+                Product.barcode == barcode,
+                Product.shop_id == shop_id,
+                Product.id != product.id
+            ).first()
+
+            if existing_barcode:
+                return "❌ This barcode is already assigned to another product"
+
         product.name = product_name
         product.price_sell = price
         product.stock = stock
+        product.barcode = barcode if barcode else None
 
         db.session.commit()
 

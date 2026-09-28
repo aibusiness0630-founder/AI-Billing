@@ -73,4 +73,11 @@ def create_app():
     def forbidden_error(error):
         return render_template("errors/403.html"), 403
 
+    @app.route("/sw.js")
+    def service_worker():
+        response = app.send_static_file("sw.js")
+        response.headers["Content-Type"] = "application/javascript"
+        response.headers["Service-Worker-Allowed"] = "/"
+        return response    
+
     return app

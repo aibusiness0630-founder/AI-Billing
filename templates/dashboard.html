@@ -606,6 +606,11 @@
             .table-card { border-radius: 16px; }
         }
 </style>
+
+
+    <link rel="manifest" href="/static/manifest.json">
+<meta name="theme-color" content="#2563eb">
+<link rel="apple-touch-icon" href="/static/icons/icon-192.png">
 </head>
 
 <body>
@@ -1094,6 +1099,14 @@
     </main>
 
 </div>
+
+  <script>
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+        navigator.serviceWorker.register("/sw.js");
+    });
+}
+</script>
 
 </body>
 </html>

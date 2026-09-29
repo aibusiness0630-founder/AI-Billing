@@ -6,3 +6,4 @@ instance/
 *.db
 static/charts/*.png
 app.py.backup
+.vscode/

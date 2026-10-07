@@ -1,155 +1,857 @@
+```html
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Reports</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Reports | ANFIA</title>
+
     <style>
-        body{font-family:Arial,sans-serif;background:#f4f6f9;padding:20px;margin:0;}
-        h1{text-align:center;color:#333;margin-bottom:20px;}
-        .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
-        .btn{background:#007bff;color:white;padding:10px 15px;text-decoration:none;border-radius:5px;display:inline-block;}
-        .btn:hover{background:#0056b3;}
-        .btn.active{background:#1d4ed8;font-weight:bold;}
-
-        .period-tabs{display:flex;gap:10px;margin-bottom:25px;flex-wrap:wrap;}
-
-        .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:25px;}
-
-        .kpi-card{background:white;padding:20px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
-        .kpi-label{color:#64748b;font-size:12px;font-weight:600;text-transform:uppercase;margin-bottom:8px;}
-        .kpi-value{font-size:24px;font-weight:800;color:#1e293b;}
-        .kpi-value.profit{color:#16a34a;}
-        .kpi-value.expense{color:#dc2626;}
-
-        .section{background:white;padding:20px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:20px;}
-        .section h2{font-size:16px;margin-bottom:15px;color:#1e293b;}
-
-        table{width:100%;border-collapse:collapse;}
-        th{background:#f3f4f6;padding:10px;text-align:left;font-size:12px;color:#64748b;}
-        td{padding:10px;border-top:1px solid #f1f5f9;font-size:13px;}
-
-        .payment-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f1f5f9;}
-
-        @media(max-width:900px){
-            .kpi-grid{grid-template-columns:repeat(2,1fr);}
+        *{
+            box-sizing:border-box;
         }
 
-        @media(max-width:600px){
-            .kpi-grid{grid-template-columns:1fr;}
+        body{
+            margin:0;
+            padding:24px;
+            font-family:Arial, Helvetica, sans-serif;
+            background:linear-gradient(135deg,#f4f7ff,#eef2ff);
+            color:#172033;
+        }
+
+        .page{
+            max-width:1350px;
+            margin:auto;
+        }
+
+        /* ================= HEADER ================= */
+
+        .header{
+            background:linear-gradient(135deg,#0066cc,#4f46e5);
+            color:white;
+            border-radius:18px;
+            padding:24px 28px;
+            margin-bottom:22px;
+
+            box-shadow:0 12px 30px rgba(37,99,235,.20);
+
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:20px;
+            flex-wrap:wrap;
+        }
+
+        .header-left{
+            display:flex;
+            align-items:center;
+            gap:15px;
+        }
+
+        .header-icon{
+            width:54px;
+            height:54px;
+            border-radius:15px;
+
+            background:rgba(255,255,255,.16);
+            border:1px solid rgba(255,255,255,.18);
+
+            display:flex;
+            align-items:center;
+            justify-content:center;
+
+            font-size:28px;
+        }
+
+        .header h1{
+            margin:0;
+            font-size:27px;
+            font-weight:700;
+        }
+
+        .header p{
+            margin:5px 0 0;
+            font-size:13px;
+            opacity:.85;
+        }
+
+        .report-badge{
+            background:rgba(255,255,255,.14);
+            border:1px solid rgba(255,255,255,.18);
+
+            padding:11px 17px;
+            border-radius:12px;
+
+            font-size:13px;
+            font-weight:600;
+            white-space:nowrap;
+        }
+
+        /* ================= TOP ACTIONS ================= */
+
+        .top{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:18px;
+            gap:12px;
+            flex-wrap:wrap;
+        }
+
+        .actions{
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+        }
+
+        .btn{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap:7px;
+
+            padding:10px 16px;
+
+            border-radius:10px;
+            text-decoration:none;
+
+            font-size:14px;
+            font-weight:600;
+
+            border:1px solid transparent;
+            cursor:pointer;
+
+            transition:.2s ease;
+        }
+
+        .btn-home{
+            background:white;
+            color:#334155;
+            border-color:#dbe2f0;
+
+            box-shadow:0 4px 12px rgba(15,23,42,.06);
+        }
+
+        .btn-home:hover{
+            background:#f8fafc;
+            transform:translateY(-1px);
+        }
+
+        .btn-dashboard{
+            background:#eff6ff;
+            color:#2563eb;
+            border-color:#bfdbfe;
+        }
+
+        .btn-dashboard:hover{
+            background:#dbeafe;
+            transform:translateY(-1px);
+        }
+
+        /* ================= PERIOD TABS ================= */
+
+        .period-box{
+            background:white;
+            border:1px solid #e3e8f2;
+            border-radius:14px;
+            padding:12px;
+
+            display:flex;
+            align-items:center;
+            gap:8px;
+            flex-wrap:wrap;
+
+            margin-bottom:15px;
+
+            box-shadow:0 5px 18px rgba(15,23,42,.05);
+        }
+
+        .period-title{
+            font-size:13px;
+            font-weight:700;
+            color:#64748b;
+            margin-right:4px;
+        }
+
+        .period-tabs{
+            display:flex;
+            gap:8px;
+            flex-wrap:wrap;
+        }
+
+        .period-btn{
+            background:#f8fafc;
+            color:#475569;
+            border:1px solid #e2e8f0;
+
+            padding:9px 14px;
+            border-radius:9px;
+
+            font-size:13px;
+        }
+
+        .period-btn:hover{
+            background:#eff6ff;
+            color:#2563eb;
+            border-color:#bfdbfe;
+        }
+
+        .period-btn.active{
+            background:linear-gradient(135deg,#0066cc,#4f46e5);
+            color:white;
+            border-color:transparent;
+
+            box-shadow:0 5px 12px rgba(37,99,235,.20);
+        }
+
+        .showing{
+            margin:0 0 20px;
+            color:#64748b;
+            font-size:14px;
+        }
+
+        .showing strong{
+            color:#1e293b;
+        }
+
+        /* ================= KPI GRID ================= */
+
+        .kpi-grid{
+            display:grid;
+            grid-template-columns:repeat(4,1fr);
+            gap:16px;
+            margin-bottom:18px;
+        }
+
+        .kpi-card{
+            position:relative;
+
+            background:white;
+            border:1px solid #e3e8f2;
+            border-radius:16px;
+
+            padding:20px;
+
+            min-height:125px;
+
+            box-shadow:0 8px 24px rgba(15,23,42,.06);
+
+            overflow:hidden;
+
+            transition:.2s ease;
+        }
+
+        .kpi-card:hover{
+            transform:translateY(-2px);
+            box-shadow:0 12px 28px rgba(15,23,42,.09);
+        }
+
+        .kpi-card::after{
+            content:"";
+            position:absolute;
+            width:70px;
+            height:70px;
+            right:-25px;
+            top:-25px;
+
+            background:#eff6ff;
+            border-radius:50%;
+        }
+
+        .kpi-label{
+            color:#64748b;
+            font-size:11px;
+            font-weight:700;
+
+            text-transform:uppercase;
+            letter-spacing:.45px;
+
+            margin-bottom:10px;
+
+            position:relative;
+            z-index:1;
+        }
+
+        .kpi-value{
+            font-size:24px;
+            font-weight:800;
+            color:#1e293b;
+
+            position:relative;
+            z-index:1;
+        }
+
+        .kpi-value.profit{
+            color:#16a34a;
+        }
+
+        .kpi-value.expense{
+            color:#dc2626;
+        }
+
+        /* ================= SECTIONS ================= */
+
+        .section{
+            background:white;
+
+            border:1px solid #e3e8f2;
+            border-radius:16px;
+
+            padding:20px;
+            margin-bottom:20px;
+
+            box-shadow:0 8px 24px rgba(15,23,42,.06);
+        }
+
+        .section-header{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+
+            gap:10px;
+
+            margin-bottom:15px;
+        }
+
+        .section h2{
+            margin:0;
+            font-size:16px;
+            color:#1e293b;
+        }
+
+        .section-subtitle{
+            color:#94a3b8;
+            font-size:12px;
+        }
+
+        /* ================= PAYMENT ================= */
+
+        .payment-row{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+
+            padding:13px 4px;
+
+            border-bottom:1px solid #f1f5f9;
+
+            color:#475569;
+            font-size:14px;
+        }
+
+        .payment-row:last-child{
+            border-bottom:none;
+        }
+
+        .payment-method{
+            font-weight:600;
+            color:#334155;
+        }
+
+        .payment-amount{
+            color:#1e293b;
+            font-weight:700;
+        }
+
+        .no-data{
+            color:#94a3b8;
+            margin:8px 0 0;
+            font-size:14px;
+        }
+
+        /* ================= TABLE ================= */
+
+        .table-box{
+            overflow-x:auto;
+        }
+
+        table{
+            width:100%;
+            border-collapse:collapse;
+            min-width:650px;
+        }
+
+        th{
+            background:#f7f9fc;
+
+            padding:13px 12px;
+
+            text-align:left;
+
+            font-size:11px;
+            font-weight:700;
+
+            text-transform:uppercase;
+            letter-spacing:.45px;
+
+            color:#64748b;
+
+            border-bottom:1px solid #e5eaf2;
+        }
+
+        td{
+            padding:14px 12px;
+
+            border-bottom:1px solid #eef1f5;
+
+            font-size:13px;
+            color:#475569;
+        }
+
+        tbody tr{
+            transition:.18s ease;
+        }
+
+        tbody tr:hover{
+            background:#f8faff;
+        }
+
+        tbody tr:last-child td{
+            border-bottom:none;
+        }
+
+        .product-name{
+            font-weight:700;
+            color:#1e293b;
+        }
+
+        .qty{
+            font-weight:700;
+            color:#2563eb;
+        }
+
+        .revenue{
+            font-weight:700;
+            color:#15803d;
+        }
+
+        .empty-row{
+            text-align:center;
+            color:#94a3b8 !important;
+            padding:30px !important;
+        }
+
+        /* ================= RESPONSIVE ================= */
+
+        @media(max-width:1000px){
+
+            .kpi-grid{
+                grid-template-columns:repeat(2,1fr);
+            }
+        }
+
+        @media(max-width:700px){
+
+            body{
+                padding:12px;
+            }
+
+            .header{
+                padding:20px;
+                border-radius:15px;
+            }
+
+            .header h1{
+                font-size:22px;
+            }
+
+            .header-icon{
+                width:46px;
+                height:46px;
+                font-size:24px;
+            }
+
+            .report-badge{
+                width:100%;
+                text-align:center;
+            }
+
+            .top{
+                align-items:stretch;
+            }
+
+            .actions{
+                width:100%;
+            }
+
+            .actions .btn{
+                flex:1;
+            }
+
+            .period-box{
+                padding:10px;
+            }
+
+            .period-title{
+                width:100%;
+            }
+
+            .period-tabs{
+                width:100%;
+            }
+
+            .period-btn{
+                flex:1;
+            }
+
+            .kpi-grid{
+                grid-template-columns:1fr;
+            }
+
+            .kpi-card{
+                min-height:110px;
+            }
+
+            .section{
+                padding:16px;
+                border-radius:14px;
+            }
+
+            .section-header{
+                align-items:flex-start;
+                flex-direction:column;
+            }
         }
     </style>
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
 </head>
+
 <body>
 
-<h1>📊 Business Reports</h1>
+<div class="page">
 
-<div class="top">
-    <a href="/" class="btn">🏠 Home</a>
-    <a href="/dashboard" class="btn">📈 Dashboard</a>
-</div>
+    <!-- ================= HEADER ================= -->
 
-<div class="period-tabs">
-    <a href="/reports?period=daily" class="btn {% if period == 'daily' %}active{% endif %}">Today</a>
-    <a href="/reports?period=weekly" class="btn {% if period == 'weekly' %}active{% endif %}">Last 7 Days</a>
-    <a href="/reports?period=monthly" class="btn {% if period == 'monthly' %}active{% endif %}">Last 30 Days</a>
-</div>
+    <div class="header">
 
-<h3 style="margin-bottom:15px;color:#64748b;">Showing: {{ period_label }}</h3>
+        <div class="header-left">
 
-<!-- KPI CARDS -->
+            <div class="header-icon">
+                📊
+            </div>
 
-<div class="kpi-grid">
+            <div>
 
-    <div class="kpi-card">
-        <div class="kpi-label">Total Sales</div>
-        <div class="kpi-value">₹{{ "%.2f"|format(total_sales) }}</div>
-    </div>
+                <h1>Business Reports</h1>
 
-    <div class="kpi-card">
-        <div class="kpi-label">Total Bills</div>
-        <div class="kpi-value">{{ total_bills }}</div>
-    </div>
+                <p>
+                    Sales, profit, expenses and business performance overview
+                </p>
 
-    <div class="kpi-card">
-        <div class="kpi-label">Average Bill</div>
-        <div class="kpi-value">₹{{ "%.2f"|format(avg_bill) }}</div>
-    </div>
+            </div>
 
-    <div class="kpi-card">
-        <div class="kpi-label">Estimated Profit</div>
-        <div class="kpi-value profit">₹{{ "%.2f"|format(estimated_profit) }}</div>
-    </div>
-
-</div>
-
-<div class="kpi-grid">
-
-    <div class="kpi-card">
-        <div class="kpi-label">Total Discount Given</div>
-        <div class="kpi-value expense">₹{{ "%.2f"|format(total_discount) }}</div>
-    </div>
-
-    <div class="kpi-card">
-        <div class="kpi-label">Total Tax Collected</div>
-        <div class="kpi-value">₹{{ "%.2f"|format(total_tax) }}</div>
-    </div>
-
-    <div class="kpi-card">
-        <div class="kpi-label">Cost of Goods Sold</div>
-        <div class="kpi-value expense">₹{{ "%.2f"|format(total_cost) }}</div>
-    </div>
-
-    <div class="kpi-card">
-        <div class="kpi-label">Purchases (Expenses)</div>
-        <div class="kpi-value expense">₹{{ "%.2f"|format(total_purchases) }}</div>
-    </div>
-
-</div>
-
-<!-- PAYMENT METHOD BREAKDOWN -->
-
-<div class="section">
-    <h2>💳 Payment Method Breakdown</h2>
-
-    {% if payment_breakdown %}
-        {% for method, amount in payment_breakdown.items() %}
-        <div class="payment-row">
-            <span>{{ method }}</span>
-            <strong>₹{{ "%.2f"|format(amount) }}</strong>
         </div>
-        {% endfor %}
-    {% else %}
-        <p style="color:#94a3b8;">No sales data for this period</p>
-    {% endif %}
-</div>
 
-<!-- TOP PRODUCTS -->
+        <div class="report-badge">
+            📈 Business Analytics
+        </div>
 
-<div class="section">
-    <h2>🏆 Top Selling Products</h2>
+    </div>
 
-    <table>
-        <tr>
-            <th>Product</th>
-            <th>Quantity Sold</th>
-            <th>Revenue</th>
-        </tr>
 
-        {% for product in product_sales_list %}
-        <tr>
-            <td>{{ product.name }}</td>
-            <td>{{ product.qty }}</td>
-            <td>₹{{ "%.2f"|format(product.revenue) }}</td>
-        </tr>
+    <!-- ================= TOP ACTIONS ================= -->
+
+    <div class="top">
+
+        <div class="actions">
+
+            <a href="/" class="btn btn-home">
+                🏠 Home
+            </a>
+
+            <a href="/dashboard" class="btn btn-dashboard">
+                📈 Dashboard
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================= PERIOD ================= -->
+
+    <div class="period-box">
+
+        <div class="period-title">
+            Report Period
+        </div>
+
+        <div class="period-tabs">
+
+            <a
+                href="/reports?period=daily"
+                class="btn period-btn {% if period == 'daily' %}active{% endif %}"
+            >
+                Today
+            </a>
+
+            <a
+                href="/reports?period=weekly"
+                class="btn period-btn {% if period == 'weekly' %}active{% endif %}"
+            >
+                Last 7 Days
+            </a>
+
+            <a
+                href="/reports?period=monthly"
+                class="btn period-btn {% if period == 'monthly' %}active{% endif %}"
+            >
+                Last 30 Days
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <p class="showing">
+        Showing:
+        <strong>{{ period_label }}</strong>
+    </p>
+
+
+    <!-- ================= KPI CARDS ================= -->
+
+    <div class="kpi-grid">
+
+        <div class="kpi-card">
+
+            <div class="kpi-label">
+                Total Sales
+            </div>
+
+            <div class="kpi-value">
+                ₹{{ "%.2f"|format(total_sales) }}
+            </div>
+
+        </div>
+
+
+        <div class="kpi-card">
+
+            <div class="kpi-label">
+                Total Bills
+            </div>
+
+            <div class="kpi-value">
+                {{ total_bills }}
+            </div>
+
+        </div>
+
+
+        <div class="kpi-card">
+
+            <div class="kpi-label">
+                Average Bill
+            </div>
+
+            <div class="kpi-value">
+                ₹{{ "%.2f"|format(avg_bill) }}
+            </div>
+
+        </div>
+
+
+        <div class="kpi-card">
+
+            <div class="kpi-label">
+                Estimated Profit
+            </div>
+
+            <div class="kpi-value profit">
+                ₹{{ "%.2f"|format(estimated_profit) }}
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="kpi-grid">
+
+        <div class="kpi-card">
+
+            <div class="kpi-label">
+                Total Discount Given
+            </div>
+
+            <div class="kpi-value expense">
+                ₹{{ "%.2f"|format(total_discount) }}
+            </div>
+
+        </div>
+
+
+        <div class="kpi-card">
+
+            <div class="kpi-label">
+                Total Tax Collected
+            </div>
+
+            <div class="kpi-value">
+                ₹{{ "%.2f"|format(total_tax) }}
+            </div>
+
+        </div>
+
+
+        <div class="kpi-card">
+
+            <div class="kpi-label">
+                Cost of Goods Sold
+            </div>
+
+            <div class="kpi-value expense">
+                ₹{{ "%.2f"|format(total_cost) }}
+            </div>
+
+        </div>
+
+
+        <div class="kpi-card">
+
+            <div class="kpi-label">
+                Purchases (Expenses)
+            </div>
+
+            <div class="kpi-value expense">
+                ₹{{ "%.2f"|format(total_purchases) }}
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================= PAYMENT BREAKDOWN ================= -->
+
+    <div class="section">
+
+        <div class="section-header">
+
+            <div>
+
+                <h2>
+                    💳 Payment Method Breakdown
+                </h2>
+
+                <div class="section-subtitle">
+                    Sales collected by payment method
+                </div>
+
+            </div>
+
+        </div>
+
+
+        {% if payment_breakdown %}
+
+            {% for method, amount in payment_breakdown.items() %}
+
+            <div class="payment-row">
+
+                <span class="payment-method">
+                    {{ method }}
+                </span>
+
+                <strong class="payment-amount">
+                    ₹{{ "%.2f"|format(amount) }}
+                </strong>
+
+            </div>
+
+            {% endfor %}
+
         {% else %}
-        <tr>
-            <td colspan="3" style="text-align:center;color:#94a3b8;">No sales data for this period</td>
-        </tr>
-        {% endfor %}
-    </table>
+
+            <p class="no-data">
+                No sales data for this period
+            </p>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- ================= TOP PRODUCTS ================= -->
+
+    <div class="section">
+
+        <div class="section-header">
+
+            <div>
+
+                <h2>
+                    🏆 Top Selling Products
+                </h2>
+
+                <div class="section-subtitle">
+                    Best performing products during this period
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="table-box">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+                        <th>Product</th>
+                        <th>Quantity Sold</th>
+                        <th>Revenue</th>
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                {% for product in product_sales_list %}
+
+                <tr>
+
+                    <td class="product-name">
+                        {{ product.name }}
+                    </td>
+
+                    <td class="qty">
+                        {{ product.qty }}
+                    </td>
+
+                    <td class="revenue">
+                        ₹{{ "%.2f"|format(product.revenue) }}
+                    </td>
+
+                </tr>
+
+                {% else %}
+
+                <tr>
+
+                    <td colspan="3" class="empty-row">
+                        No sales data for this period
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
 </div>
 
 </body>
 </html>
+```

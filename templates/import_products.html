@@ -1,103 +1,432 @@
 <!DOCTYPE html>
-<html>
+
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Import Products</title>
 
-    <style>
+```
+<title>Import Products | AI Billing System</title>
 
-        body{
-            font-family:Arial,sans-serif;
-            background:#f4f6f9;
-            padding:30px;
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: Inter, Arial, Helvetica, sans-serif;
+        background:
+            radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 35%),
+            radial-gradient(circle at bottom right, rgba(79, 70, 229, 0.10), transparent 35%),
+            #f5f7fb;
+        color: #172033;
+    }
+
+    .page-wrapper {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 30px 18px;
+    }
+
+    .import-card {
+        width: 100%;
+        max-width: 650px;
+        background: rgba(255, 255, 255, 0.97);
+        border: 1px solid #e2e8f0;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow:
+            0 25px 70px rgba(15, 23, 42, 0.10),
+            0 8px 25px rgba(37, 99, 235, 0.06);
+    }
+
+    /* Header */
+
+    .header {
+        position: relative;
+        padding: 32px 35px;
+        background:
+            linear-gradient(135deg, #0f172a 0%, #1d4ed8 58%, #4f46e5 100%);
+        color: white;
+        overflow: hidden;
+    }
+
+    .header::before {
+        content: "";
+        position: absolute;
+        width: 190px;
+        height: 190px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.07);
+        right: -60px;
+        top: -90px;
+    }
+
+    .header::after {
+        content: "";
+        position: absolute;
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.05);
+        right: 100px;
+        bottom: -85px;
+    }
+
+    .header-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 1.4px;
+        text-transform: uppercase;
+        opacity: 0.9;
+        margin-bottom: 13px;
+    }
+
+    .brand-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #93c5fd;
+        box-shadow: 0 0 12px rgba(147, 197, 253, 0.8);
+    }
+
+    .header h1 {
+        margin: 0;
+        font-size: 29px;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+    }
+
+    .header p {
+        margin: 9px 0 0;
+        color: rgba(255,255,255,0.78);
+        font-size: 14px;
+    }
+
+    /* Content */
+
+    .content {
+        padding: 34px;
+    }
+
+    .intro {
+        text-align: center;
+        margin-bottom: 28px;
+    }
+
+    .upload-icon {
+        width: 68px;
+        height: 68px;
+        margin: 0 auto 17px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 18px;
+        background: linear-gradient(
+            135deg,
+            #eff6ff,
+            #eef2ff
+        );
+        border: 1px solid #dbeafe;
+        font-size: 30px;
+        box-shadow: 0 8px 22px rgba(37, 99, 235, 0.08);
+    }
+
+    .intro h2 {
+        margin: 0;
+        font-size: 19px;
+        color: #1e293b;
+    }
+
+    .intro p {
+        margin: 8px auto 0;
+        max-width: 430px;
+        color: #64748b;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    /* Upload area */
+
+    .upload-area {
+        position: relative;
+        border: 2px dashed #cbd5e1;
+        border-radius: 17px;
+        background: #f8fafc;
+        padding: 28px 20px;
+        text-align: center;
+        transition: all 0.2s ease;
+    }
+
+    .upload-area:hover {
+        border-color: #60a5fa;
+        background: #f8fbff;
+    }
+
+    .upload-label {
+        display: block;
+        cursor: pointer;
+    }
+
+    .upload-label strong {
+        display: block;
+        color: #334155;
+        font-size: 14px;
+        margin-bottom: 6px;
+    }
+
+    .upload-label span {
+        color: #94a3b8;
+        font-size: 12px;
+    }
+
+    input[type="file"] {
+        width: 100%;
+        margin-top: 18px;
+        padding: 11px;
+        border: 1px solid #dbe2ea;
+        border-radius: 10px;
+        background: white;
+        color: #475569;
+        font-size: 13px;
+        cursor: pointer;
+    }
+
+    input[type="file"]:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.10);
+    }
+
+    /* Supported formats */
+
+    .format-info {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 15px;
+        flex-wrap: wrap;
+    }
+
+    .format-badge {
+        padding: 6px 10px;
+        border-radius: 8px;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    /* Actions */
+
+    .actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 25px;
+    }
+
+    button,
+    .back-btn {
+        height: 50px;
+        border-radius: 12px;
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .import-btn {
+        flex: 1;
+        border: none;
+        color: white;
+        background: linear-gradient(135deg, #2563eb, #4f46e5);
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.22);
+    }
+
+    .import-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 26px rgba(37, 99, 235, 0.28);
+    }
+
+    .back-btn {
+        width: 125px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        background: #f1f5f9;
+        color: #334155;
+        border: 1px solid #e2e8f0;
+    }
+
+    .back-btn:hover {
+        background: #e2e8f0;
+    }
+
+    /* Security */
+
+    .security-note {
+        margin-top: 22px;
+        text-align: center;
+        color: #94a3b8;
+        font-size: 12px;
+    }
+
+    .security-note strong {
+        color: #2563eb;
+    }
+
+    /* Mobile */
+
+    @media (max-width: 600px) {
+        .page-wrapper {
+            padding: 15px;
         }
 
-        .box{
-            max-width:600px;
-            margin:auto;
-            background:white;
-            padding:30px;
-            border-radius:12px;
-            box-shadow:0 0 10px #ccc;
-            text-align:center;
+        .import-card {
+            border-radius: 20px;
         }
 
-        h1{
-            margin-bottom:20px;
+        .header {
+            padding: 26px 22px;
         }
 
-        input[type=file]{
-            margin:20px;
+        .header h1 {
+            font-size: 24px;
         }
 
-        button{
-            background:#28a745;
-            color:white;
-            border:none;
-            padding:12px 20px;
-            border-radius:8px;
-            cursor:pointer;
-            font-size:16px;
+        .content {
+            padding: 25px 20px;
         }
 
-        button:hover{
-            background:#218838;
+        .actions {
+            flex-direction: column;
         }
 
-        a{
-            display:inline-block;
-            margin-top:20px;
-            text-decoration:none;
-            background:#007bff;
-            color:white;
-            padding:10px 20px;
-            border-radius:8px;
+        .back-btn {
+            width: 100%;
         }
-
-    </style>
+    }
+</style>
+```
 
 </head>
 
 <body>
 
-<div class="box">
+<div class="page-wrapper">
 
-<h1>📥 Import Old Products</h1>
+```
+<div class="import-card">
 
-<p>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
 
-Upload your old Product Excel / CSV file.
+            <div class="brand">
+                <span class="brand-dot"></span>
+                ANFIA TECHNOLOGY
+            </div>
 
-</p>
+            <h1>📥 Import Products</h1>
 
-<form
-method="POST"
-enctype="multipart/form-data">
+            <p>Quickly migrate your existing product catalogue into AI Billing.</p>
 
-<input type="hidden"
-       name="csrf_token"
-       value="{{ csrf_token }}">
+        </div>
+    </div>
 
-<input
-type="file"
-name="file"
-required>
+    <!-- Content -->
+    <div class="content">
 
-<br>
+        <div class="intro">
 
-<button type="submit">
+            <div class="upload-icon">
+                📊
+            </div>
 
-📤 Import Products
+            <h2>Import Your Old Products</h2>
 
-</button>
+            <p>
+                Upload your existing Product Excel or CSV file
+                and bring your catalogue into the billing system.
+            </p>
 
-</form>
+        </div>
 
-<a href="/products">
+        <form
+            method="POST"
+            enctype="multipart/form-data">
 
-⬅ Back
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token }}">
 
-</a>
+            <div class="upload-area">
+
+                <label class="upload-label" for="productFile">
+
+                    <strong>Choose your product file</strong>
+
+                    <span>
+                        Select an Excel or CSV file from your computer
+                    </span>
+
+                </label>
+
+                <input
+                    type="file"
+                    id="productFile"
+                    name="file"
+                    required>
+
+                <div class="format-info">
+                    <span class="format-badge">📄 CSV</span>
+                    <span class="format-badge">📊 Excel</span>
+                </div>
+
+            </div>
+
+            <div class="actions">
+
+                <button
+                    type="submit"
+                    class="import-btn">
+                    📤 Import Products
+                </button>
+
+                <a
+                    href="/products"
+                    class="back-btn">
+                    ← Back
+                </a>
+
+            </div>
+
+        </form>
+
+        <div class="security-note">
+            🔒 <strong>Secure Import</strong> · Your product data is processed securely
+        </div>
+
+    </div>
+
+</div>
+```
 
 </div>
 

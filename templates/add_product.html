@@ -1,84 +1,633 @@
 <!DOCTYPE html>
-<html>
+
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Product</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+```
+<title>Add Product | AI Billing System</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: Inter, Arial, Helvetica, sans-serif;
+        background:
+            radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 35%),
+            radial-gradient(circle at bottom right, rgba(79, 70, 229, 0.10), transparent 35%),
+            #f5f7fb;
+        color: #172033;
+    }
+
+    .page-wrapper {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 30px 18px;
+    }
+
+    .product-card {
+        width: 100%;
+        max-width: 700px;
+        background: rgba(255, 255, 255, 0.97);
+        border: 1px solid #e2e8f0;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow:
+            0 25px 70px rgba(15, 23, 42, 0.10),
+            0 8px 25px rgba(37, 99, 235, 0.06);
+    }
+
+    /* Header */
+
+    .card-header {
+        position: relative;
+        padding: 32px 35px;
+        background:
+            linear-gradient(135deg, #0f172a 0%, #1d4ed8 58%, #4f46e5 100%);
+        color: white;
+        overflow: hidden;
+    }
+
+    .card-header::before {
+        content: "";
+        position: absolute;
+        width: 190px;
+        height: 190px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.07);
+        right: -65px;
+        top: -90px;
+    }
+
+    .card-header::after {
+        content: "";
+        position: absolute;
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.05);
+        right: 100px;
+        bottom: -85px;
+    }
+
+    .header-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 1.4px;
+        text-transform: uppercase;
+        opacity: 0.9;
+        margin-bottom: 13px;
+    }
+
+    .brand-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #93c5fd;
+        box-shadow: 0 0 12px rgba(147, 197, 253, 0.8);
+    }
+
+    .card-header h1 {
+        margin: 0;
+        font-size: 29px;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+    }
+
+    .card-header p {
+        margin: 9px 0 0;
+        color: rgba(255,255,255,0.78);
+        font-size: 14px;
+    }
+
+    /* Content */
+
+    .form-section {
+        padding: 34px;
+    }
+
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 25px;
+        font-size: 15px;
+        font-weight: 800;
+        color: #334155;
+    }
+
+    .section-icon {
+        width: 35px;
+        height: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        background: #eff6ff;
+        color: #2563eb;
+        font-size: 17px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        color: #334155;
+    }
+
+    .input-wrapper {
+        position: relative;
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 16px;
+        opacity: 0.65;
+        pointer-events: none;
+    }
+
+    input {
+        width: 100%;
+        height: 50px;
+        padding: 0 15px;
+        border: 1px solid #dbe2ea;
+        border-radius: 12px;
+        background: #f8fafc;
+        color: #172033;
+        font-size: 14px;
+        outline: none;
+        transition: all 0.2s ease;
+    }
+
+    .has-icon input {
+        padding-left: 43px;
+    }
+
+    input:hover {
+        border-color: #bfdbfe;
+        background: #ffffff;
+    }
+
+    input:focus {
+        border-color: #2563eb;
+        background: #ffffff;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.10);
+    }
+
+    input::placeholder {
+        color: #94a3b8;
+    }
+
+    /* Barcode */
+
+    .barcode-row {
+        display: flex;
+        gap: 10px;
+        align-items: stretch;
+    }
+
+    .barcode-input {
+        flex: 1;
+    }
+
+    .scan-btn {
+        min-width: 105px;
+        height: 50px;
+        border: none;
+        border-radius: 12px;
+        background: #eff6ff;
+        color: #2563eb;
+        border: 1px solid #dbeafe;
+        font-size: 13px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .scan-btn:hover {
+        background: #dbeafe;
+        transform: translateY(-1px);
+    }
+
+    /* Scanner */
+
+    #scannerBox {
+        margin-top: 16px;
+        padding: 18px;
+        background: #0f172a;
+        border-radius: 16px;
+        border: 1px solid #1e293b;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.16);
+    }
+
+    #scannerVideo {
+        display: block;
+        width: 100%;
+        max-width: 400px;
+        min-height: 220px;
+        margin: auto;
+        border-radius: 12px;
+        background: #020617;
+        object-fit: cover;
+    }
+
+    .scanner-title {
+        text-align: center;
+        color: #e2e8f0;
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 12px;
+    }
+
+    .close-scanner-btn {
+        display: block;
+        margin: 14px auto 0;
+        padding: 10px 17px;
+        border: 1px solid #475569;
+        border-radius: 10px;
+        background: #1e293b;
+        color: #f8fafc;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .close-scanner-btn:hover {
+        background: #334155;
+    }
+
+    /* Main action */
+
+    .action-area {
+        margin-top: 30px;
+        padding-top: 25px;
+        border-top: 1px solid #e8edf3;
+    }
+
+    .submit-btn {
+        width: 100%;
+        height: 53px;
+        border: none;
+        border-radius: 13px;
+        color: white;
+        background: linear-gradient(135deg, #2563eb, #4f46e5);
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.22);
+        font-size: 14px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .submit-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 27px rgba(37, 99, 235, 0.28);
+    }
+
+    .submit-btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* Navigation */
+
+    .navigation {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-top: 14px;
+    }
+
+    .nav-btn {
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        color: #334155;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 700;
+        transition: all 0.2s ease;
+    }
+
+    .nav-btn:hover {
+        background: #e2e8f0;
+        transform: translateY(-1px);
+    }
+
+    /* Footer */
+
+    .security-note {
+        margin-top: 23px;
+        text-align: center;
+        color: #94a3b8;
+        font-size: 12px;
+    }
+
+    .security-note strong {
+        color: #2563eb;
+    }
+
+    /* Mobile */
+
+    @media (max-width: 620px) {
+        .page-wrapper {
+            padding: 15px;
+        }
+
+        .product-card {
+            border-radius: 20px;
+        }
+
+        .card-header {
+            padding: 26px 22px;
+        }
+
+        .card-header h1 {
+            font-size: 24px;
+        }
+
+        .form-section {
+            padding: 25px 20px;
+        }
+
+        .form-row {
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+
+        .barcode-row {
+            flex-direction: column;
+        }
+
+        .scan-btn {
+            width: 100%;
+        }
+
+        .navigation {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+```
+
 </head>
+
 <body>
 
-<div class="container">
+<div class="page-wrapper">
 
-<h1>➕ Add Product</h1>
+```
+<div class="product-card">
 
-<form method="POST" id="productForm">
+    <!-- Header -->
+    <div class="card-header">
 
-<input type="hidden" name="csrf_token" value="{{ csrf_token }}">    
+        <div class="header-content">
 
-<label>Product Name:</label><br>
-<input type="text"
-       name="product_name"
-       placeholder="Enter Product Name"
-       required>
-<br><br>
+            <div class="brand">
+                <span class="brand-dot"></span>
+                ANFIA TECHNOLOGY
+            </div>
 
-<label>Price:</label><br>
-<input type="number"
-       name="price"
-       step="0.01"
-       min="0.01"
-       placeholder="Enter Price"
-       required>
-<br><br>
+            <h1>➕ Add Product</h1>
 
-<label>Stock:</label><br>
-<input type="number"
-       name="stock"
-       min="0"
-       placeholder="Enter Stock"
-       required>
-<br><br>
+            <p>Add products, pricing and inventory details to your catalogue.</p>
 
-<label>Barcode (Optional):</label><br>
-<input type="text"
-       name="barcode"
-       id="barcodeInput"
-       placeholder="Scan or type barcode">
-<button type="button" id="scanBtn" style="margin-left:8px;">📷 Scan</button>
-<br><br>
+        </div>
 
-<div id="scannerBox" style="display:none; margin-bottom:15px;">
-    <video id="scannerVideo" style="width:100%; max-width:400px; border-radius:8px;"></video>
-    <br>
-    <button type="button" id="closeScannerBtn">❌ Close Scanner</button>
+    </div>
+
+    <!-- Form -->
+    <div class="form-section">
+
+        <div class="section-title">
+            <div class="section-icon">📦</div>
+            <span>Product Information</span>
+        </div>
+
+        <form method="POST" id="productForm">
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token }}">
+
+            <!-- Product Name -->
+            <div class="form-group">
+
+                <label for="productName">
+                    Product Name
+                </label>
+
+                <div class="input-wrapper has-icon">
+
+                    <span class="input-icon">📦</span>
+
+                    <input
+                        type="text"
+                        id="productName"
+                        name="product_name"
+                        placeholder="Enter Product Name"
+                        required>
+
+                </div>
+
+            </div>
+
+            <!-- Price + Stock -->
+            <div class="form-row">
+
+                <div class="form-group">
+
+                    <label for="price">
+                        Price
+                    </label>
+
+                    <div class="input-wrapper has-icon">
+
+                        <span class="input-icon">₹</span>
+
+                        <input
+                            type="number"
+                            id="price"
+                            name="price"
+                            step="0.01"
+                            min="0.01"
+                            placeholder="Enter Price"
+                            required>
+
+                    </div>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label for="stock">
+                        Stock
+                    </label>
+
+                    <div class="input-wrapper has-icon">
+
+                        <span class="input-icon">📊</span>
+
+                        <input
+                            type="number"
+                            id="stock"
+                            name="stock"
+                            min="0"
+                            placeholder="Enter Stock"
+                            required>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Barcode -->
+            <div class="form-group">
+
+                <label for="barcodeInput">
+                    Barcode
+                    <span style="color:#94a3b8;font-weight:500;">
+                        (Optional)
+                    </span>
+                </label>
+
+                <div class="barcode-row">
+
+                    <div class="input-wrapper has-icon barcode-input">
+
+                        <span class="input-icon">▦</span>
+
+                        <input
+                            type="text"
+                            name="barcode"
+                            id="barcodeInput"
+                            placeholder="Scan or type barcode">
+
+                    </div>
+
+                    <button
+                        type="button"
+                        id="scanBtn"
+                        class="scan-btn">
+                        📷 Scan
+                    </button>
+
+                </div>
+
+                <!-- Scanner -->
+                <div
+                    id="scannerBox"
+                    style="display:none;">
+
+                    <div class="scanner-title">
+                        📷 Position the barcode inside the scanner
+                    </div>
+
+                    <video
+                        id="scannerVideo">
+                    </video>
+
+                    <button
+                        type="button"
+                        id="closeScannerBtn"
+                        class="close-scanner-btn">
+                        ❌ Close Scanner
+                    </button>
+
+                </div>
+
+            </div>
+
+            <!-- Submit -->
+            <div class="action-area">
+
+                <button
+                    type="submit"
+                    id="submitBtn"
+                    class="submit-btn">
+                    ➕ Add Product
+                </button>
+
+            </div>
+
+        </form>
+
+        <!-- Navigation -->
+        <div class="navigation">
+
+            <a
+                href="/products"
+                class="nav-btn">
+                📦 View Products
+            </a>
+
+            <a
+                href="/"
+                class="nav-btn">
+                🏠 Back to Billing
+            </a>
+
+        </div>
+
+        <div class="security-note">
+            🔒 <strong>Secure Inventory</strong> · Product data is protected by ANFIA Billing
+        </div>
+
+    </div>
+
 </div>
-
-<button type="submit" id="submitBtn">
-➕ Add Product
-</button>
-
-</form>
-
-<br>
-
-<a href="/products">
-    <button type="button">📦 View Products</button>
-</a>
-
-<br><br>
-
-<a href="/">
-    <button type="button">🏠 Back to Billing</button>
-</a>
+```
 
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 
 <script>
+
 document.getElementById("productForm").addEventListener("submit", function () {
+
     document.getElementById("submitBtn").disabled = true;
-    document.getElementById("submitBtn").innerHTML = "Saving...";
+
+    document.getElementById("submitBtn").innerHTML = "⏳ Saving...";
+
 });
 
 let html5QrCode = null;
@@ -86,6 +635,7 @@ let html5QrCode = null;
 document.getElementById("scanBtn").addEventListener("click", function () {
 
     document.getElementById("scannerBox").style.display = "block";
+
     this.style.display = "none";
 
     html5QrCode = new Html5Qrcode("scannerVideo");
@@ -98,28 +648,40 @@ document.getElementById("scanBtn").addEventListener("click", function () {
 
             html5QrCode.start(
                 cameraId,
-                { fps: 10, qrbox: 200 },
+                {
+                    fps: 10,
+                    qrbox: 200
+                },
                 function (decodedText) {
 
                     document.getElementById("barcodeInput").value = decodedText;
 
                     html5QrCode.stop().then(function () {
+
                         document.getElementById("scannerBox").style.display = "none";
+
                         document.getElementById("scanBtn").style.display = "inline-block";
+
                     });
 
                 },
                 function (errorMessage) {
+
                     // scanning in progress, ignore
+
                 }
             );
 
         }
 
     }).catch(function (err) {
+
         alert("Camera access error: " + err);
+
         document.getElementById("scannerBox").style.display = "none";
+
         document.getElementById("scanBtn").style.display = "inline-block";
+
     });
 
 });
@@ -127,13 +689,19 @@ document.getElementById("scanBtn").addEventListener("click", function () {
 document.getElementById("closeScannerBtn").addEventListener("click", function () {
 
     if (html5QrCode) {
+
         html5QrCode.stop().then(function () {
+
             document.getElementById("scannerBox").style.display = "none";
+
             document.getElementById("scanBtn").style.display = "inline-block";
+
         });
+
     }
 
 });
+
 </script>
 
 </body>

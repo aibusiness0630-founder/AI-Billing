@@ -1,72 +1,550 @@
+```html
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock Movement History</title>
+    <meta charset="UTF-8">
+
+    <title>Stock Movement History | ANFIA</title>
+
     <style>
-        body{font-family:Arial,sans-serif;background:#f4f6f9;padding:20px;margin:0;}
-        h1{text-align:center;color:#333;margin-bottom:25px;}
-        .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
-        .btn{background:#007bff;color:white;padding:10px 15px;text-decoration:none;border-radius:5px;display:inline-block;}
-        .btn:hover{background:#0056b3;}
-        .table-box{overflow-x:auto;}
-        table{width:100%;border-collapse:collapse;background:white;box-shadow:0 0 10px #ccc;}
-        th{background:#007bff;color:white;padding:12px;}
-        td{padding:10px;text-align:center;border-bottom:1px solid #ddd;}
-        tr:hover{background:#f5f5f5;}
-        .qty-in{color:#16a34a;font-weight:bold;}
-        .qty-out{color:#dc2626;font-weight:bold;}
-        .tag{display:inline-block;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:bold;}
-        .tag-sale{background:#fee2e2;color:#b91c1c;}
-        .tag-purchase{background:#dcfce7;color:#15803d;}
-        .tag-adjustment{background:#fef3c7;color:#92400e;}
-        .tag-damage{background:#f3e8ff;color:#7e22ce;}
+        *{
+            box-sizing:border-box;
+        }
+
+        body{
+            margin:0;
+            padding:24px;
+            font-family:Arial, Helvetica, sans-serif;
+            background:linear-gradient(135deg,#f4f7ff,#eef2ff);
+            color:#172033;
+        }
+
+        .page{
+            max-width:1350px;
+            margin:auto;
+        }
+
+        /* ================= HEADER ================= */
+
+        .header{
+            background:linear-gradient(135deg,#0066cc,#4f46e5);
+            color:white;
+            border-radius:18px;
+            padding:24px 28px;
+            margin-bottom:22px;
+
+            box-shadow:0 12px 30px rgba(37,99,235,.20);
+
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:20px;
+            flex-wrap:wrap;
+        }
+
+        .header-left{
+            display:flex;
+            align-items:center;
+            gap:15px;
+        }
+
+        .header-icon{
+            width:54px;
+            height:54px;
+            border-radius:15px;
+
+            background:rgba(255,255,255,.16);
+            border:1px solid rgba(255,255,255,.18);
+
+            display:flex;
+            align-items:center;
+            justify-content:center;
+
+            font-size:28px;
+        }
+
+        .header h1{
+            margin:0;
+            font-size:27px;
+            font-weight:700;
+        }
+
+        .header p{
+            margin:5px 0 0;
+            font-size:13px;
+            opacity:.85;
+        }
+
+        .movement-badge{
+            background:rgba(255,255,255,.14);
+            border:1px solid rgba(255,255,255,.18);
+
+            padding:11px 17px;
+            border-radius:12px;
+
+            font-size:13px;
+            font-weight:600;
+            white-space:nowrap;
+        }
+
+        /* ================= TOP ACTIONS ================= */
+
+        .top{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            margin-bottom:20px;
+            flex-wrap:wrap;
+        }
+
+        .btn{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap:7px;
+
+            padding:10px 16px;
+
+            border-radius:10px;
+            text-decoration:none;
+
+            font-size:14px;
+            font-weight:600;
+
+            border:1px solid transparent;
+
+            cursor:pointer;
+            transition:.2s ease;
+        }
+
+        .btn-home{
+            background:white;
+            color:#334155;
+            border-color:#dbe2f0;
+
+            box-shadow:0 4px 12px rgba(15,23,42,.06);
+        }
+
+        .btn-home:hover{
+            background:#f8fafc;
+            transform:translateY(-1px);
+        }
+
+        .btn-products{
+            background:#eff6ff;
+            color:#2563eb;
+            border-color:#bfdbfe;
+        }
+
+        .btn-products:hover{
+            background:#dbeafe;
+            transform:translateY(-1px);
+        }
+
+        .btn-adjust{
+            background:linear-gradient(135deg,#f59e0b,#d97706);
+            color:white;
+
+            box-shadow:0 5px 14px rgba(217,119,6,.22);
+        }
+
+        .btn-adjust:hover{
+            transform:translateY(-1px);
+            box-shadow:0 7px 18px rgba(217,119,6,.28);
+        }
+
+        /* ================= TABLE CARD ================= */
+
+        .card{
+            background:white;
+            border:1px solid #e3e8f2;
+            border-radius:18px;
+            overflow:hidden;
+
+            box-shadow:0 10px 30px rgba(15,23,42,.07);
+        }
+
+        .card-header{
+            padding:18px 22px;
+            border-bottom:1px solid #edf0f5;
+
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+        }
+
+        .card-title{
+            margin:0;
+            font-size:17px;
+            color:#172033;
+        }
+
+        .card-subtitle{
+            margin:4px 0 0;
+            color:#64748b;
+            font-size:13px;
+        }
+
+        .table-box{
+            overflow-x:auto;
+        }
+
+        table{
+            width:100%;
+            border-collapse:collapse;
+            min-width:1050px;
+        }
+
+        th{
+            background:#f7f9fc;
+            color:#475569;
+
+            padding:14px 12px;
+
+            font-size:12px;
+            font-weight:700;
+
+            text-transform:uppercase;
+            letter-spacing:.45px;
+
+            border-bottom:1px solid #e5eaf2;
+
+            text-align:center;
+        }
+
+        td{
+            padding:14px 12px;
+
+            text-align:center;
+
+            border-bottom:1px solid #eef1f5;
+
+            color:#334155;
+            font-size:14px;
+        }
+
+        tbody tr{
+            transition:.18s ease;
+        }
+
+        tbody tr:hover{
+            background:#f8faff;
+        }
+
+        tbody tr:last-child td{
+            border-bottom:none;
+        }
+
+        /* ================= PRODUCT ================= */
+
+        .product-name{
+            font-weight:700;
+            color:#1e293b;
+        }
+
+        .reference{
+            color:#475569;
+            font-weight:500;
+        }
+
+        .notes{
+            color:#64748b;
+            max-width:220px;
+        }
+
+        .date{
+            color:#475569;
+            white-space:nowrap;
+            font-size:13px;
+        }
+
+        /* ================= QUANTITY ================= */
+
+        .qty-in{
+            color:#15803d;
+            font-weight:800;
+            background:#f0fdf4;
+        }
+
+        .qty-out{
+            color:#dc2626;
+            font-weight:800;
+            background:#fef2f2;
+        }
+
+        /* ================= REASON TAGS ================= */
+
+        .tag{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+
+            padding:6px 11px;
+
+            border-radius:20px;
+
+            font-size:11px;
+            font-weight:700;
+
+            letter-spacing:.3px;
+        }
+
+        .tag-sale{
+            background:#fef2f2;
+            color:#b91c1c;
+            border:1px solid #fecaca;
+        }
+
+        .tag-purchase{
+            background:#f0fdf4;
+            color:#15803d;
+            border:1px solid #bbf7d0;
+        }
+
+        .tag-adjustment{
+            background:#fffbeb;
+            color:#a16207;
+            border:1px solid #fde68a;
+        }
+
+        .tag-damage{
+            background:#faf5ff;
+            color:#7e22ce;
+            border:1px solid #e9d5ff;
+        }
+
+        /* ================= EMPTY STATE ================= */
+
+        .empty{
+            padding:45px 20px !important;
+            color:#64748b;
+            font-size:15px;
+        }
+
+        .empty-icon{
+            display:block;
+            font-size:32px;
+            margin-bottom:8px;
+        }
+
+        /* ================= MOBILE ================= */
+
+        @media(max-width:700px){
+
+            body{
+                padding:12px;
+            }
+
+            .header{
+                padding:20px;
+                border-radius:15px;
+            }
+
+            .header h1{
+                font-size:22px;
+            }
+
+            .header-icon{
+                width:46px;
+                height:46px;
+                font-size:24px;
+            }
+
+            .movement-badge{
+                width:100%;
+                text-align:center;
+            }
+
+            .top{
+                width:100%;
+            }
+
+            .top .btn{
+                flex:1;
+            }
+
+            .card{
+                border-radius:14px;
+            }
+
+            .card-header{
+                padding:16px;
+            }
+
+            table{
+                font-size:13px;
+            }
+
+            th,
+            td{
+                padding:10px 8px;
+            }
+
+            .tag{
+                padding:5px 9px;
+                font-size:10px;
+            }
+        }
     </style>
 </head>
+
 <body>
 
-<h1>📊 Stock Movement History</h1>
+<div class="page">
 
-<div class="top">
-    <a href="/" class="btn">🏠 Home</a>
-    <a href="/products" class="btn">📦 Products</a>
-    <a href="/adjust_stock" class="btn" style="background:orange;">⚙ Adjust Stock</a>
-</div>
+    <!-- Header -->
 
-<div class="table-box">
-<table>
-<tr>
-    <th>Product</th>
-    <th>Change</th>
-    <th>Reason</th>
-    <th>Reference</th>
-    <th>Notes</th>
-    <th>Date</th>
-</tr>
+    <div class="header">
 
-{% for m in movements %}
-<tr>
-    <td>{{ m.product_name }}</td>
-    <td class="{% if m.quantity_change > 0 %}qty-in{% else %}qty-out{% endif %}">
-        {% if m.quantity_change > 0 %}+{% endif %}{{ m.quantity_change }}
-    </td>
-    <td>
-        <span class="tag {% if m.reason == 'SALE' %}tag-sale{% elif m.reason == 'PURCHASE' %}tag-purchase{% elif m.reason == 'DAMAGE' %}tag-damage{% else %}tag-adjustment{% endif %}">
-            {{ m.reason }}
-        </span>
-    </td>
-    <td>{{ m.reference_id or "-" }}</td>
-    <td>{{ m.notes or "-" }}</td>
-    <td>{{ m.created_at.strftime("%d-%m-%Y %I:%M %p") if m.created_at else "" }}</td>
-</tr>
-{% else %}
-<tr>
-    <td colspan="6">No Stock Movements Found</td>
-</tr>
-{% endfor %}
+        <div class="header-left">
 
-</table>
+            <div class="header-icon">
+                📊
+            </div>
+
+            <div>
+                <h1>Stock Movement History</h1>
+
+                <p>
+                    Track every stock increase, decrease and adjustment
+                </p>
+            </div>
+
+        </div>
+
+        <div class="movement-badge">
+            Inventory Activity
+        </div>
+
+    </div>
+
+
+    <!-- Top Actions -->
+
+    <div class="top">
+
+        <a href="/" class="btn btn-home">
+            🏠 Home
+        </a>
+
+        <a href="/products" class="btn btn-products">
+            📦 Products
+        </a>
+
+        <a href="/adjust_stock" class="btn btn-adjust">
+            ⚙ Adjust Stock
+        </a>
+
+    </div>
+
+
+    <!-- Movement Table -->
+
+    <div class="card">
+
+        <div class="card-header">
+
+            <div>
+
+                <h2 class="card-title">
+                    Stock Activity
+                </h2>
+
+                <p class="card-subtitle">
+                    Complete history of inventory movements
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="table-box">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+                        <th>Product</th>
+                        <th>Change</th>
+                        <th>Reason</th>
+                        <th>Reference</th>
+                        <th>Notes</th>
+                        <th>Date</th>
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                {% for m in movements %}
+
+                <tr>
+
+                    <td class="product-name">
+                        {{ m.product_name }}
+                    </td>
+
+                    <td class="{% if m.quantity_change > 0 %}qty-in{% else %}qty-out{% endif %}">
+                        {% if m.quantity_change > 0 %}+{% endif %}{{ m.quantity_change }}
+                    </td>
+
+                    <td>
+
+                        <span class="tag {% if m.reason == 'SALE' %}tag-sale{% elif m.reason == 'PURCHASE' %}tag-purchase{% elif m.reason == 'DAMAGE' %}tag-damage{% else %}tag-adjustment{% endif %}">
+
+                            {{ m.reason }}
+
+                        </span>
+
+                    </td>
+
+                    <td class="reference">
+                        {{ m.reference_id or "-" }}
+                    </td>
+
+                    <td class="notes">
+                        {{ m.notes or "-" }}
+                    </td>
+
+                    <td class="date">
+                        {{ m.created_at.strftime("%d-%m-%Y %I:%M %p") if m.created_at else "" }}
+                    </td>
+
+                </tr>
+
+                {% else %}
+
+                <tr>
+
+                    <td colspan="6" class="empty">
+
+                        <span class="empty-icon">
+                            📦
+                        </span>
+
+                        No Stock Movements Found
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
 </div>
 
 </body>
 </html>
+```

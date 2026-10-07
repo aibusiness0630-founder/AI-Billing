@@ -1,131 +1,449 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Invoice</title>
+
+<title>Invoice | {{ shop.shop_name if shop else "My Shop" }}</title>
 
 <style>
-*{box-sizing:border-box}
+*{
+    box-sizing:border-box;
+}
+
+:root{
+    --primary:#2563eb;
+    --primary-dark:#1d4ed8;
+    --indigo:#4f46e5;
+    --blue-soft:#eff6ff;
+    --indigo-soft:#eef2ff;
+    --text:#111827;
+    --muted:#64748b;
+    --border:#e2e8f0;
+    --background:#f1f5f9;
+    --white:#ffffff;
+    --success:#16a34a;
+    --success-soft:#f0fdf4;
+    --danger:#dc2626;
+}
 
 body{
-    font-family:Arial,sans-serif;
-    background:#f4f4f4;
+    font-family:Arial, Helvetica, sans-serif;
+    background:
+        radial-gradient(circle at top left, rgba(37,99,235,.08), transparent 30%),
+        linear-gradient(135deg,#f8fafc,#eef2ff);
     margin:0;
-    padding:20px;
-    color:#111827;
+    padding:35px 20px;
+    color:var(--text);
 }
+
+/* =========================
+   MAIN INVOICE
+========================= */
 
 .bill{
-    width:800px;
+    width:850px;
     max-width:100%;
-    margin:20px auto;
-    background:#fff;
-    padding:30px;
-    border-radius:12px;
-    box-shadow:0 4px 18px rgba(0,0,0,.12);
+    margin:0 auto;
+    background:var(--white);
+    padding:38px;
+    border-radius:20px;
+    border:1px solid rgba(226,232,240,.9);
+    box-shadow:
+        0 20px 45px rgba(15,23,42,.10),
+        0 5px 15px rgba(37,99,235,.05);
+    position:relative;
+    overflow:hidden;
 }
 
-.center{text-align:center}
+.bill::before{
+    content:"";
+    position:absolute;
+    top:0;
+    left:0;
+    right:0;
+    height:5px;
+    background:linear-gradient(90deg,var(--primary),var(--indigo));
+}
+
+/* =========================
+   SHOP HEADER
+========================= */
+
+.center{
+    text-align:center;
+}
 
 h2{
-    margin:0 0 6px;
-    font-size:28px;
+    margin:0;
+    font-size:30px;
+    font-weight:800;
+    letter-spacing:-.5px;
+    color:#0f172a;
 }
 
-.shop-address,
+.shop-address{
+    margin:9px 0 0;
+    color:var(--muted);
+    font-size:14px;
+    line-height:1.5;
+}
+
 .shop-phone{
-    margin:4px 0;
-    color:#4b5563;
+    margin:6px 0 0;
+    color:#475569;
+    font-size:14px;
+}
+
+.center hr{
+    border:0;
+    height:1px;
+    background:linear-gradient(
+        90deg,
+        transparent,
+        #dbeafe,
+        #c7d2fe,
+        #dbeafe,
+        transparent
+    );
+    margin:25px 0 20px;
 }
 
 .invoice-title{
-    margin:18px 0 0;
-    letter-spacing:2px;
+    display:inline-block;
+    margin:0;
+    padding:8px 22px;
+    border-radius:30px;
+    background:linear-gradient(
+        135deg,
+        var(--blue-soft),
+        var(--indigo-soft)
+    );
+    color:var(--primary-dark);
+    border:1px solid #dbeafe;
+    font-size:15px;
+    font-weight:800;
+    letter-spacing:2.5px;
 }
 
+/* =========================
+   CUSTOMER / INVOICE INFO
+========================= */
+
 .info{
-    display:flex;
-    justify-content:space-between;
-    gap:30px;
-    margin-top:25px;
-    padding:15px 0;
-    border-top:1px solid #ddd;
-    border-bottom:1px solid #ddd;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+    margin-top:28px;
 }
 
 .info div{
-    line-height:1.8;
+    background:#f8fafc;
+    border:1px solid var(--border);
+    border-radius:13px;
+    padding:17px 18px;
+    line-height:1.9;
+    color:#475569;
+    font-size:14px;
 }
+
+.info div:first-child{
+    border-left:4px solid var(--primary);
+}
+
+.info div:last-child{
+    border-left:4px solid var(--indigo);
+}
+
+.info b{
+    color:#0f172a;
+    font-weight:700;
+}
+
+/* =========================
+   TABLE
+========================= */
 
 table{
     width:100%;
-    border-collapse:collapse;
-    margin-top:25px;
+    border-collapse:separate;
+    border-spacing:0;
+    margin-top:28px;
+    overflow:hidden;
+    border:1px solid var(--border);
+    border-radius:14px;
 }
 
-th,td{
-    border:1px solid #333;
-    padding:10px;
+th,
+td{
+    padding:13px 12px;
     text-align:center;
+    border-bottom:1px solid var(--border);
 }
 
 th{
-    background:#f3f4f6;
+    background:linear-gradient(
+        135deg,
+        #eff6ff,
+        #eef2ff
+    );
+    color:#1e3a8a;
+    font-size:13px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+    border-bottom:1px solid #dbeafe;
 }
 
-.left{text-align:left}
+td{
+    font-size:14px;
+    color:#334155;
+    background:#fff;
+}
+
+tbody tr:last-child td{
+    border-bottom:0;
+}
+
+tbody tr.bill-item-row:hover td{
+    background:#f8fafc;
+}
+
+.bill-item-row td:first-child{
+    color:#64748b;
+    font-weight:700;
+}
+
+.bill-item-row td:nth-child(3){
+    font-weight:700;
+    color:#1e293b;
+}
+
+.bill-item-row td:nth-child(4),
+.bill-item-row td:nth-child(5){
+    font-weight:600;
+    color:#1e293b;
+}
+
+.left{
+    text-align:left;
+}
+
+/* =========================
+   SUMMARY ROWS
+========================= */
+
+tr:has(.total) td{
+    background:#f8fafc;
+}
 
 .total{
-    font-size:18px;
-    font-weight:bold;
+    font-size:18px !important;
+    font-weight:800 !important;
+    color:#0f172a !important;
 }
 
+tr:last-child td{
+    background:#f8fafc;
+    color:#475569;
+}
+
+tr:last-child td b{
+    color:var(--primary-dark);
+}
+
+/* Grand total value */
+tr td.total:last-child{
+    color:var(--primary-dark) !important;
+    font-size:20px !important;
+}
+
+/* =========================
+   ACTION BUTTONS
+========================= */
+
 .actions{
-    text-align:center;
-    margin-top:25px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:30px;
+    padding-top:25px;
+    border-top:1px solid var(--border);
 }
 
 button{
-    margin:5px;
-    padding:12px 20px;
+    margin:0;
+    min-height:46px;
+    padding:12px 19px;
     border:0;
-    border-radius:7px;
-    background:#007bff;
+    border-radius:10px;
+    background:linear-gradient(
+        135deg,
+        var(--primary),
+        var(--indigo)
+    );
     color:#fff;
-    font-weight:600;
+    font-weight:700;
+    font-size:14px;
     cursor:pointer;
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease,
+        opacity .2s ease;
+    box-shadow:0 7px 18px rgba(37,99,235,.20);
 }
 
 button:hover{
-    opacity:.9;
+    transform:translateY(-2px);
+    box-shadow:0 10px 22px rgba(37,99,235,.28);
+}
+
+button:active{
+    transform:translateY(0);
 }
 
 .whatsapp-btn{
-    background:#25D366;
+    background:linear-gradient(
+        135deg,
+        #16a34a,
+        #22c55e
+    );
+    box-shadow:0 7px 18px rgba(34,197,94,.20);
 }
 
-.thank-you{
-    text-align:center;
-    margin-top:25px;
-    color:#4b5563;
+.whatsapp-btn:hover{
+    box-shadow:0 10px 22px rgba(34,197,94,.28);
 }
 
 .pdf-link{
     text-decoration:none;
 }
 
-@media(max-width:850px){
-    body{padding:8px}
-    .bill{padding:18px}
-    .info{flex-direction:column;gap:5px}
-    table{font-size:13px}
-    th,td{padding:7px}
+/* =========================
+   THANK YOU
+========================= */
+
+.thank-you{
+    text-align:center;
+    margin-top:27px;
+    padding-top:20px;
+    border-top:1px dashed #cbd5e1;
+    color:#64748b;
+    font-size:14px;
 }
 
+.thank-you p{
+    margin:0;
+}
+
+.thank-you p::first-line{
+    font-weight:600;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media(max-width:850px){
+
+    body{
+        padding:15px 8px;
+    }
+
+    .bill{
+        padding:25px 18px;
+        border-radius:16px;
+    }
+
+    h2{
+        font-size:25px;
+    }
+
+    .info{
+        grid-template-columns:1fr;
+        gap:10px;
+    }
+
+    table{
+        font-size:13px;
+    }
+
+    th,
+    td{
+        padding:10px 7px;
+    }
+}
+
+@media(max-width:600px){
+
+    body{
+        padding:8px;
+    }
+
+    .bill{
+        padding:22px 10px;
+        border-radius:13px;
+    }
+
+    h2{
+        font-size:22px;
+    }
+
+    .shop-address,
+    .shop-phone{
+        font-size:13px;
+    }
+
+    .invoice-title{
+        font-size:13px;
+        padding:7px 18px;
+    }
+
+    .info div{
+        padding:13px;
+        font-size:13px;
+    }
+
+    table{
+        margin-top:20px;
+    }
+
+    th,
+    td{
+        padding:8px 4px;
+        font-size:11px;
+    }
+
+    .total{
+        font-size:15px !important;
+    }
+
+    tr td.total:last-child{
+        font-size:17px !important;
+    }
+
+    .actions{
+        flex-direction:column;
+        gap:8px;
+    }
+
+    .actions button{
+        width:100%;
+    }
+}
+
+/* =========================
+   PRINT
+========================= */
+
 @media print{
+
     @page{
         margin:10mm;
+        size:A4;
     }
 
     body{
@@ -135,14 +453,49 @@ button:hover{
 
     .bill{
         width:100%;
+        max-width:none;
         margin:0;
         padding:10px;
         box-shadow:none;
+        border:0;
         border-radius:0;
+    }
+
+    .bill::before{
+        display:none;
     }
 
     .actions{
         display:none;
+    }
+
+    .info div{
+        background:#fff;
+        border:1px solid #ddd;
+    }
+
+    table{
+        border:1px solid #333;
+    }
+
+    th{
+        background:#f3f4f6 !important;
+        color:#111 !important;
+    }
+
+    td,
+    th{
+        border-color:#333;
+    }
+
+    .invoice-title{
+        background:#fff;
+        color:#111;
+        border:1px solid #333;
+    }
+
+    .thank-you{
+        color:#333;
     }
 }
 </style>
@@ -158,6 +511,10 @@ button:hover{
      data-invoice-id="{{ invoice_id }}"
      data-grand-total="{{ '%.2f'|format(grand_total|float) }}"
      data-current-time="{{ current_time }}">
+
+    <!-- =========================
+         SHOP HEADER
+    ========================== -->
 
     <div class="center">
 
@@ -178,6 +535,11 @@ button:hover{
         <h3 class="invoice-title">INVOICE</h3>
 
     </div>
+
+
+    <!-- =========================
+         CUSTOMER / INVOICE INFO
+    ========================== -->
 
     <div class="info">
 
@@ -201,9 +563,15 @@ button:hover{
 
     </div>
 
+
+    <!-- =========================
+         PRODUCTS TABLE
+    ========================== -->
+
     <table>
 
         <thead>
+
         <tr>
             <th>S.No</th>
             <th>Product</th>
@@ -211,6 +579,7 @@ button:hover{
             <th>Price</th>
             <th>Amount</th>
         </tr>
+
         </thead>
 
         <tbody id="billItemsBody">
@@ -246,7 +615,10 @@ button:hover{
 
         {% endfor %}
 
-              <tr>
+
+        <!-- SUBTOTAL -->
+
+        <tr>
 
             <td colspan="4" class="left">
                 Subtotal
@@ -258,7 +630,11 @@ button:hover{
 
         </tr>
 
+
+        <!-- DISCOUNT -->
+
         {% if discount_amount and discount_amount > 0 %}
+
         <tr>
 
             <td colspan="4" class="left">
@@ -270,9 +646,14 @@ button:hover{
             </td>
 
         </tr>
+
         {% endif %}
 
+
+        <!-- TAX -->
+
         {% if tax_amount and tax_amount > 0 %}
+
         <tr>
 
             <td colspan="4" class="left">
@@ -284,7 +665,11 @@ button:hover{
             </td>
 
         </tr>
+
         {% endif %}
+
+
+        <!-- GRAND TOTAL -->
 
         <tr>
 
@@ -298,10 +683,14 @@ button:hover{
 
         </tr>
 
+
+        <!-- PAYMENT METHOD -->
+
         <tr>
 
             <td colspan="5" class="left">
-                Payment Method: <b>{{ payment_method }}</b>
+                Payment Method:
+                <b>{{ payment_method }}</b>
             </td>
 
         </tr>
@@ -310,6 +699,11 @@ button:hover{
 
     </table>
 
+
+    <!-- =========================
+         ACTION BUTTONS
+    ========================== -->
+
     <div class="actions">
 
         <button type="button" onclick="window.print()">
@@ -317,26 +711,45 @@ button:hover{
         </button>
 
         {% if invoice_id %}
+
         <a class="pdf-link" href="/download_bill/{{ invoice_id }}">
+
             <button type="button">
                 ⬇ Download PDF
             </button>
+
         </a>
+
         {% endif %}
 
+
         {% if mobile %}
-        <button type="button" class="whatsapp-btn" onclick="sendWhatsApp()">
+
+        <button
+            type="button"
+            class="whatsapp-btn"
+            onclick="sendWhatsApp()"
+        >
             📱 Send via WhatsApp
         </button>
+
         {% endif %}
 
     </div>
 
+
+    <!-- =========================
+         THANK YOU
+    ========================== -->
+
     <div class="thank-you">
+
         <p>🙏 Thank You! Visit Again</p>
+
     </div>
 
 </div>
+
 
 <script>
 function sendWhatsApp() {
@@ -355,10 +768,16 @@ function sendWhatsApp() {
     var rows = document.querySelectorAll(".bill-item-row");
 
     rows.forEach(function (row) {
+
         var product = row.getAttribute("data-product");
         var qty = row.getAttribute("data-qty");
         var amount = row.getAttribute("data-amount");
-        productLines += "• " + product + " x " + qty + " = ₹" + amount + "\n";
+
+        productLines +=
+            "• " + product +
+            " x " + qty +
+            " = ₹" + amount + "\n";
+
     });
 
     var message =
@@ -377,7 +796,11 @@ function sendWhatsApp() {
         phone = "91" + phone;
     }
 
-    var url = "https://wa.me/" + phone + "?text=" + encodeURIComponent(message);
+    var url =
+        "https://wa.me/" +
+        phone +
+        "?text=" +
+        encodeURIComponent(message);
 
     window.open(url, "_blank");
 }
@@ -385,3 +808,4 @@ function sendWhatsApp() {
 
 </body>
 </html>
+```

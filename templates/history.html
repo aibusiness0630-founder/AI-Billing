@@ -1,42 +1,433 @@
+```html
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
 
-<title>Bill History</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Bill History | ANFIA</title>
 
-<style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
-.table-box{
-    overflow-x:auto;
-}
+    <style>
 
-table{
-    width:100%;
-    border-collapse:collapse;
-}
+        *{
+            box-sizing:border-box;
+        }
 
-th,td{
-    border:1px solid #ddd;
-    padding:10px;
-    text-align:center;
-}
+        :root{
+            --primary:#2563eb;
+            --primary-dark:#1d4ed8;
+            --indigo:#4f46e5;
+            --blue-soft:#eff6ff;
+            --indigo-soft:#eef2ff;
+            --text:#0f172a;
+            --muted:#64748b;
+            --border:#e2e8f0;
+            --white:#ffffff;
+            --success:#16a34a;
+            --success-soft:#f0fdf4;
+            --warning:#d97706;
+            --warning-soft:#fffbeb;
+            --danger:#dc2626;
+        }
 
-th{
-    background:#007bff;
-    color:white;
-}
+        body{
+            font-family:Arial, Helvetica, sans-serif;
+            background:
+                radial-gradient(
+                    circle at top left,
+                    rgba(37,99,235,.08),
+                    transparent 30%
+                ),
+                linear-gradient(
+                    135deg,
+                    #f8fafc,
+                    #eef2ff
+                );
+            margin:0;
+            padding:30px;
+            color:var(--text);
+        }
 
-button{
-    padding:6px 10px;
-    cursor:pointer;
-}
+        /* =========================
+           MAIN CONTAINER
+        ========================== */
 
-</style>
+        .container{
+            max-width:1250px;
+            margin:0 auto;
+        }
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+        /* =========================
+           HEADER
+        ========================== */
+
+        .page-header{
+            display:flex;
+            align-items:center;
+            gap:15px;
+            margin-bottom:25px;
+        }
+
+        .title-icon{
+            width:54px;
+            height:54px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            border-radius:15px;
+            background:linear-gradient(
+                135deg,
+                var(--primary),
+                var(--indigo)
+            );
+            color:#fff;
+            font-size:25px;
+            box-shadow:
+                0 10px 22px rgba(37,99,235,.22);
+        }
+
+        h1{
+            margin:0;
+            font-size:28px;
+            font-weight:800;
+            letter-spacing:-.5px;
+        }
+
+        .subtitle{
+            margin:5px 0 0;
+            color:var(--muted);
+            font-size:14px;
+        }
+
+        /* =========================
+           HISTORY CARD
+        ========================== */
+
+        .history-card{
+            background:rgba(255,255,255,.95);
+            border:1px solid rgba(226,232,240,.9);
+            border-radius:18px;
+            overflow:hidden;
+            box-shadow:
+                0 18px 40px rgba(15,23,42,.08),
+                0 4px 12px rgba(37,99,235,.04);
+        }
+
+        .card-header{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            padding:18px 22px;
+            border-bottom:1px solid var(--border);
+            background:linear-gradient(
+                135deg,
+                #ffffff,
+                #f8faff
+            );
+        }
+
+        .card-title{
+            font-size:16px;
+            font-weight:800;
+            color:#0f172a;
+        }
+
+        .card-subtitle{
+            margin-top:4px;
+            color:var(--muted);
+            font-size:12px;
+        }
+
+        .history-badge{
+            padding:7px 12px;
+            border-radius:20px;
+            background:var(--blue-soft);
+            border:1px solid #dbeafe;
+            color:var(--primary-dark);
+            font-size:12px;
+            font-weight:700;
+        }
+
+        /* =========================
+           TABLE
+        ========================== */
+
+        .table-box{
+            width:100%;
+            overflow-x:auto;
+        }
+
+        table{
+            width:100%;
+            min-width:900px;
+            border-collapse:collapse;
+            background:#fff;
+        }
+
+        th{
+            padding:14px 13px;
+            text-align:center;
+            background:linear-gradient(
+                135deg,
+                #eff6ff,
+                #eef2ff
+            );
+            color:#1e3a8a;
+            border-bottom:1px solid #dbeafe;
+            font-size:12px;
+            font-weight:800;
+            text-transform:uppercase;
+            letter-spacing:.5px;
+            white-space:nowrap;
+        }
+
+        td{
+            padding:14px 12px;
+            text-align:center;
+            border-bottom:1px solid #eef2f7;
+            color:#334155;
+            font-size:13px;
+            background:#fff;
+        }
+
+        tbody tr{
+            transition:background .2s ease;
+        }
+
+        tbody tr:hover td{
+            background:#f8fbff;
+        }
+
+        tbody tr:last-child td{
+            border-bottom:0;
+        }
+
+        /* Invoice number */
+
+        td:first-child{
+            color:var(--primary-dark);
+            font-weight:800;
+        }
+
+        /* Customer */
+
+        td:nth-child(2){
+            color:#0f172a;
+            font-weight:700;
+        }
+
+        /* Mobile */
+
+        td:nth-child(3){
+            color:#475569;
+        }
+
+        /* Total */
+
+        td:nth-child(4){
+            color:#1d4ed8;
+            font-weight:800;
+            white-space:nowrap;
+        }
+
+        /* Date */
+
+        td:nth-child(6){
+            color:#64748b;
+            white-space:nowrap;
+        }
+
+        /* =========================
+           PAYMENT STATUS
+        ========================== */
+
+        td:nth-child(5){
+            font-weight:700;
+        }
+
+        td:nth-child(5){
+            color:#15803d;
+        }
+
+        /* =========================
+           VIEW BUTTON
+        ========================== */
+
+        .view-btn{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap:5px;
+            padding:8px 13px;
+            border-radius:8px;
+            background:var(--blue-soft);
+            border:1px solid #bfdbfe;
+            color:var(--primary-dark);
+            text-decoration:none;
+            font-size:12px;
+            font-weight:700;
+            cursor:pointer;
+            transition:
+                transform .2s ease,
+                box-shadow .2s ease;
+        }
+
+        .view-btn:hover{
+            transform:translateY(-1px);
+            box-shadow:
+                0 6px 14px rgba(37,99,235,.15);
+        }
+
+        /* =========================
+           BOTTOM ACTION
+        ========================== */
+
+        .bottom-actions{
+            display:flex;
+            justify-content:center;
+            margin-top:20px;
+        }
+
+        .back-btn{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap:7px;
+            padding:11px 18px;
+            border-radius:10px;
+            background:linear-gradient(
+                135deg,
+                var(--primary),
+                var(--indigo)
+            );
+            color:#fff;
+            text-decoration:none;
+            font-size:13px;
+            font-weight:700;
+            box-shadow:
+                0 7px 17px rgba(37,99,235,.18);
+            transition:
+                transform .2s ease,
+                box-shadow .2s ease;
+        }
+
+        .back-btn:hover{
+            transform:translateY(-2px);
+            box-shadow:
+                0 10px 22px rgba(37,99,235,.25);
+        }
+
+        /* =========================
+           EMPTY STATE
+        ========================== */
+
+        .empty-state{
+            padding:45px 20px !important;
+            text-align:center !important;
+            color:#64748b !important;
+            font-weight:600;
+            background:#fff !important;
+        }
+
+        .empty-icon{
+            display:block;
+            font-size:35px;
+            margin-bottom:8px;
+        }
+
+        /* =========================
+           RESPONSIVE
+        ========================== */
+
+        @media(max-width:800px){
+
+            body{
+                padding:18px 10px;
+            }
+
+            .title-icon{
+                width:46px;
+                height:46px;
+                font-size:22px;
+            }
+
+            h1{
+                font-size:23px;
+            }
+
+            .history-card{
+                border-radius:14px;
+            }
+
+            .card-header{
+                padding:15px;
+            }
+        }
+
+        @media(max-width:600px){
+
+            body{
+                padding:12px 7px;
+            }
+
+            .page-header{
+                margin-bottom:18px;
+            }
+
+            .title-icon{
+                width:42px;
+                height:42px;
+                border-radius:12px;
+                font-size:20px;
+            }
+
+            h1{
+                font-size:20px;
+            }
+
+            .subtitle{
+                font-size:12px;
+            }
+
+            .card-header{
+                flex-direction:column;
+                align-items:flex-start;
+                gap:10px;
+            }
+
+            table{
+                min-width:900px;
+            }
+
+            th{
+                padding:11px 8px;
+                font-size:11px;
+            }
+
+            td{
+                padding:11px 8px;
+                font-size:12px;
+            }
+
+            .view-btn{
+                padding:6px 9px;
+                font-size:11px;
+            }
+
+            .bottom-actions{
+                margin-top:15px;
+            }
+
+            .back-btn{
+                width:100%;
+            }
+        }
+
+    </style>
 
 </head>
 
@@ -44,72 +435,181 @@ button{
 
 <div class="container">
 
-<h1>
-📜 Bill History
-</h1>
+    <!-- =========================
+         PAGE HEADER
+    ========================== -->
 
-<div class="table-box">
+    <div class="page-header">
 
-<table>
+        <div class="title-icon">
+            📜
+        </div>
 
-<tr>
+        <div>
 
-<th>Invoice No</th>
-<th>Customer</th>
-<th>Mobile</th>
-<th>Total</th>
-<th>Status</th>
-<th>Date</th>
-<th>Action</th>
+            <h1>Bill History</h1>
 
-</tr>
+            <p class="subtitle">
+                View and manage previous billing transactions
+            </p>
 
-{% for bill in bills %}
+        </div>
 
-<tr>
+    </div>
 
-<td>{{ bill.invoice_number }}</td>
 
-<td>{{ bill.customer_name }}</td>
+    <!-- =========================
+         HISTORY CARD
+    ========================== -->
 
-<td>{{ bill.mobile }}</td>
+    <div class="history-card">
 
-<td>₹{{ "%.2f"|format(bill.total) }}</td>
+        <div class="card-header">
 
-<td>{{ bill.payment_status }}</td>
+            <div>
 
-<td>{{ bill.created_at.strftime("%d-%m-%Y %I:%M %p") if bill.created_at else "" }}</td>
+                <div class="card-title">
+                    Invoice History
+                </div>
 
-<td>
+                <div class="card-subtitle">
+                    Recent bills and payment information
+                </div>
 
-<a href="/invoice/{{ bill.id }}">
-<button type="button">👁 View</button>
-</a>
+            </div>
 
-</td>
+            <div class="history-badge">
+                📜 Bill History
+            </div>
 
-</tr>
+        </div>
 
-{% else %}
 
-<tr>
-<td colspan="7">No Bills Available</td>
-</tr>
+        <div class="table-box">
 
-{% endfor %}
+            <table>
 
-</table>
+                <thead>
 
-</div>
+                    <tr>
 
-<br>
+                        <th>Invoice No</th>
 
-<a href="/">
-<button type="button">⬅ Back to Billing</button>
-</a>
+                        <th>Customer</th>
+
+                        <th>Mobile</th>
+
+                        <th>Total</th>
+
+                        <th>Status</th>
+
+                        <th>Date</th>
+
+                        <th>Action</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                {% for bill in bills %}
+
+                    <tr>
+
+                        <td>
+                            {{ bill.invoice_number }}
+                        </td>
+
+
+                        <td>
+                            {{ bill.customer_name }}
+                        </td>
+
+
+                        <td>
+                            {{ bill.mobile }}
+                        </td>
+
+
+                        <td>
+                            ₹{{ "%.2f"|format(bill.total) }}
+                        </td>
+
+
+                        <td>
+                            {{ bill.payment_status }}
+                        </td>
+
+
+                        <td>
+                            {{ bill.created_at.strftime("%d-%m-%Y %I:%M %p") if bill.created_at else "" }}
+                        </td>
+
+
+                        <td>
+
+                            <a
+                                href="/invoice/{{ bill.id }}"
+                                class="view-btn"
+                            >
+                                👁 View
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+
+                {% else %}
+
+                    <tr>
+
+                        <td
+                            colspan="7"
+                            class="empty-state"
+                        >
+
+                            <span class="empty-icon">
+                                📜
+                            </span>
+
+                            No Bills Available
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         BACK BUTTON
+    ========================== -->
+
+    <div class="bottom-actions">
+
+        <a
+            href="/"
+            class="back-btn"
+        >
+            ⬅ Back to Billing
+        </a>
+
+    </div>
 
 </div>
 
 </body>
 
 </html>
+```

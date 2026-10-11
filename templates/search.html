@@ -1,126 +1,63 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Search Bill</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-
-    <style>
-        .table-box{
-            overflow-x:auto;
-        }
-
-        table{
-            width:100%;
-            border-collapse:collapse;
-        }
-
-        th,td{
-            border:1px solid #ddd;
-            padding:10px;
-            text-align:center;
-        }
-
-        th{
-            background:#007bff;
-            color:white;
-        }
-
-        .btn{
-            padding:6px 10px;
-            text-decoration:none;
-            background:#007bff;
-            color:white;
-            border-radius:5px;
-        }
-    
-        @media(max-width:600px){
-            body{padding:10px;}
-            table{font-size:13px;}
-            th,td{padding:6px;}
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Search Bills</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
 </head>
-
 <body>
-
-<div class="container">
-
-<h1>🔍 Search Customer Bill</h1>
-
-<form method="POST">
-
-<input
-    type="text"
-    name="search"
-    value="{{ search_value }}"
-    placeholder="Customer Name or Mobile"
-    required>
-
-<button type="submit">
-🔍 Search
-</button>
-
-</form>
-
-<br>
-
-{% if search_value %}
-
-    {% if bills %}
-
-    <div class="table-box">
-
-    <table>
-
-    <tr>
-        <th>ID</th>
-        <th>Customer</th>
-        <th>Mobile</th>
-        <th>Product</th>
-        <th>Total</th>
-        <th>Action</th>
-    </tr>
-
-    {% for bill in bills %}
-
-    <tr>
-
-        <td>{{ bill.id }}</td>
-        <td>{{ bill.customer_name }}</td>
-        <td>{{ bill.mobile }}</td>
-        <td>{{ bill.product }}</td>
-        <td>₹{{ "%.2f"|format(bill.total) }}</td>
-
-        <td>
-            <a class="btn" href="/download_bill/{{ bill.id }}">
-                📄 PDF
-            </a>
-        </td>
-
-    </tr>
-
-    {% endfor %}
-
-    </table>
-
+{% set active_page = 'history' %}
+{% include '_sidebar.html' %}
+<main class="main">
+  <header class="topbar">
+    <h1>Search Results</h1>
+    <a class="btn btn-light" href="/history">← All Bills</a>
+  </header>
+  <section class="content">
+    <div class="card">
+      <div class="card-head">
+        <form method="POST" action="/search" class="filter-row" style="width:100%">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <input class="search" type="text" name="search_value" value="{{ search_value or '' }}" placeholder="Search again">
+          <button class="btn" type="submit">Search</button>
+        </form>
+      </div>
+      {% if bills %}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Invoice</th><th>Customer</th><th>Mobile</th><th>Total</th><th>Status</th><th>Date</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+          {% for bill in bills %}
+            <tr>
+              <td class="name">{{ bill.invoice_number }}</td>
+              <td>{{ bill.customer_name }}</td>
+              <td class="muted">{{ bill.mobile }}</td>
+              <td>₹{{ "%.2f"|format(bill.total) }}</td>
+              <td>
+                {% if bill.payment_status|lower == 'paid' %}
+                  <span class="badge badge-paid">Paid</span>
+                {% else %}
+                  <span class="badge badge-warn">{{ bill.payment_status }}</span>
+                {% endif %}
+              </td>
+              <td class="muted">{{ bill.created_at }}</td>
+              <td class="actions">
+                <a class="btn btn-sm" href="/invoice/{{ bill.id }}">View</a>
+                <a class="btn btn-sm btn-light" href="/download_bill/{{ bill.id }}">PDF</a>
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty">"{{ search_value }}" ku match aana bill illa.</div>
+      {% endif %}
     </div>
-
-    {% else %}
-
-    <p><b>No bills found.</b></p>
-
-    {% endif %}
-
-{% endif %}
-
-<br>
-
-<a href="/">
-    <button type="button">🏠 Back to Billing</button>
-</a>
-
-</div>
-
+  </section>
+</main>
 </body>
 </html>

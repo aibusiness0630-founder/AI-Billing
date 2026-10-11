@@ -1,0 +1,31 @@
+<aside class="sidebar">
+
+    <div class="brand">
+        <div class="brand-icon">AI</div>
+        <h2>AI Billing</h2>
+    </div>
+
+    <div class="nav-title">Workspace</div>
+
+    <ul class="nav">
+        <li class="{{ 'active' if active_page == 'dashboard' }}"><a href="/dashboard"><span class="nav-icon">⌂</span><span class="nav-text">Dashboard</span></a></li>
+        <li class="{{ 'active' if active_page == 'billing' }}"><a href="/"><span class="nav-icon">▣</span><span class="nav-text">Billing</span></a></li>
+        <li class="{{ 'active' if active_page == 'products' }}"><a href="/products"><span class="nav-icon">□</span><span class="nav-text">Products</span></a></li>
+        <li class="{{ 'active' if active_page == 'suppliers' }}"><a href="/suppliers"><span class="nav-icon">⌬</span><span class="nav-text">Suppliers</span></a></li>
+        <li class="{{ 'active' if active_page == 'purchases' }}"><a href="/purchases"><span class="nav-icon">⇩</span><span class="nav-text">Purchases</span></a></li>
+        <li class="{{ 'active' if active_page == 'stock' }}"><a href="/stock_history"><span class="nav-icon">⇄</span><span class="nav-text">Stock History</span></a></li>
+        <li class="{{ 'active' if active_page == 'customers' }}"><a href="/customers"><span class="nav-icon">♙</span><span class="nav-text">Customers</span></a></li>
+        <li class="{{ 'active' if active_page == 'history' }}"><a href="/history"><span class="nav-icon">≡</span><span class="nav-text">History</span></a></li>
+        <li class="{{ 'active' if active_page == 'reports' }}"><a href="/reports"><span class="nav-icon">⬢</span><span class="nav-text">Reports</span></a></li>
+    </ul>
+
+    <div class="nav-title">Account</div>
+
+    <ul class="nav">
+        <li class="{{ 'active' if active_page == 'subscription' }}"><a href="/subscription"><span class="nav-icon">◇</span><span class="nav-text">Subscription</span></a></li>
+        <li class="{{ 'active' if active_page == 'settings' }}"><a href="/shop"><span class="nav-icon">⚙</span><span class="nav-text">Settings</span></a></li>
+    </ul>
+
+    <a href="/logout" class="logout"><span class="nav-icon">↪</span><span class="nav-text">Logout</span></a>
+
+</aside>

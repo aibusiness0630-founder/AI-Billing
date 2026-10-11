@@ -1,127 +1,68 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer Profile</title>
-
-    <style>
-        body{
-            font-family:Arial,sans-serif;
-            background:#f4f6f9;
-            padding:20px;
-        }
-
-        h1{
-            text-align:center;
-            color:#333;
-        }
-
-        .card{
-            background:white;
-            padding:20px;
-            border-radius:10px;
-            box-shadow:0 0 10px #ccc;
-            margin-bottom:20px;
-        }
-
-        .btn{
-            display:inline-block;
-            margin-bottom:20px;
-            background:#007bff;
-            color:white;
-            padding:10px 15px;
-            text-decoration:none;
-            border-radius:5px;
-        }
-
-        .table-box{
-            overflow-x:auto;
-        }
-
-        table{
-            width:100%;
-            border-collapse:collapse;
-            background:white;
-            box-shadow:0 0 10px #ccc;
-        }
-
-        th{
-            background:#007bff;
-            color:white;
-            padding:12px;
-        }
-
-        td{
-            padding:10px;
-            text-align:center;
-            border-bottom:1px solid #ddd;
-        }
-    
-        @media(max-width:600px){
-            body{padding:10px;}
-            table{font-size:13px;}
-            th,td{padding:6px;}
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer Profile</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
 </head>
-
 <body>
+{% set active_page = 'customers' %}
+{% include '_sidebar.html' %}
 
-<a href="/customers" class="btn">⬅ Back</a>
+<main class="main">
+  <header class="topbar">
+    <h1>Customer Profile</h1>
+    <a class="btn btn-light" href="/customers">← Back</a>
+  </header>
 
-<h1>👤 Customer Profile</h1>
+  <section class="content">
 
-<div class="card">
+    <div class="card" style="padding:20px;margin-bottom:18px">
+      <h2 style="margin:0 0 4px;font-size:20px;color:#0f172a">{{ customer.name }}</h2>
+      <div class="muted">📱 {{ customer.mobile or '-' }}</div>
+      {% if last_purchase %}
+      <div class="muted" style="margin-top:4px">📅 Last Invoice: {{ last_purchase.invoice_number }}</div>
+      {% endif %}
+    </div>
 
-<h2>{{ customer.name }}</h2>
+    <div class="stats">
+      <div class="stat"><div class="label">Total Bills</div><div class="value">{{ total_bills }}</div></div>
+      <div class="stat"><div class="label">Total Purchase</div><div class="value">₹{{ "%.2f"|format(total_purchase) }}</div></div>
+      <div class="stat"><div class="label">Average Bill</div><div class="value">₹{{ "%.2f"|format(average_bill) }}</div></div>
+    </div>
 
-<p><b>📱 Mobile:</b> {{ customer.mobile }}</p>
+    <div class="card">
+      <div class="card-head"><strong>📋 Purchase History</strong></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Invoice No</th><th>Status</th><th>Date</th><th>Amount</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+          {% for bill in bills %}
+            <tr>
+              <td class="name">{{ bill.invoice_number }}</td>
+              <td>
+                {% if bill.payment_status|lower == 'paid' %}
+                  <span class="badge badge-paid">Paid</span>
+                {% else %}
+                  <span class="badge badge-warn">{{ bill.payment_status }}</span>
+                {% endif %}
+              </td>
+              <td class="muted">{{ bill.created_at.strftime("%d-%m-%Y") if bill.created_at else "" }}</td>
+              <td>₹{{ "%.2f"|format(bill.total_amount) }}</td>
+              <td class="actions"><a class="btn btn-sm" href="/invoice/{{ bill.id }}">View</a></td>
+            </tr>
+          {% else %}
+            <tr><td colspan="5" class="empty">No Purchase History</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
 
-<p><b>🧾 Total Bills:</b> {{ total_bills }}</p>
-
-<p><b>💰 Total Purchase:</b> ₹{{ "%.2f"|format(total_purchase) }}</p>
-
-<p><b>💵 Average Bill:</b> ₹{{ "%.2f"|format(average_bill) }}</p>
-
-{% if last_purchase %}
-<p><b>📅 Last Invoice:</b> {{ last_purchase.invoice_number }}</p>
-{% endif %}
-
-</div>
-
-<h2>📋 Purchase History</h2>
-
-<div class="table-box">
-
-<table>
-
-<tr>
-    <th>Invoice No</th>
-    <th>Status</th>
-    <th>Date</th>
-    <th>Amount</th>
-</tr>
-
-{% for bill in bills %}
-
-<tr>
-    <td>{{ bill.invoice_number }}</td>
-    <td>{{ bill.payment_status }}</td>
-    <td>{{ bill.created_at.strftime("%d-%m-%Y") if bill.created_at else "" }}</td>
-    <td>₹{{ "%.2f"|format(bill.total_amount) }}</td>
-</tr>
-
-{% else %}
-
-<tr>
-    <td colspan="4">No Purchase History</td>
-</tr>
-
-{% endfor %}
-
-</table>
-
-</div>
-
+  </section>
+</main>
 </body>
 </html>

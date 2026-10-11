@@ -1,134 +1,107 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Purchase Order</title>
-    <style>
-        body{font-family:Arial,sans-serif;background:#f4f6f9;padding:20px;}
-        .box{background:white;max-width:650px;margin:auto;padding:30px;border-radius:10px;box-shadow:0 0 10px #ccc;}
-        h1{text-align:center;}
-        table{width:100%;border-collapse:collapse;margin-top:20px;}
-        th,td{border:1px solid #ddd;padding:10px;text-align:center;}
-        th{background:#007bff;color:white;}
-        .total{font-size:18px;font-weight:bold;text-align:right;margin-top:15px;}
-        .balance-box{background:#fff7ed;border:1px solid #fed7aa;padding:15px;border-radius:8px;margin-top:20px;}
-        .balance-box.paid{background:#ecfdf3;border-color:#bbf7d0;}
-        .pay-form{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;margin-top:15px;align-items:end;}
-        .pay-form label{display:block;margin-bottom:5px;font-weight:bold;font-size:13px;}
-        .pay-form input,.pay-form select{width:100%;padding:8px;border:1px solid #ccc;border-radius:5px;box-sizing:border-box;}
-        .pay-form button{padding:9px 15px;background:#16a34a;color:white;border:none;border-radius:5px;cursor:pointer;}
-        .back{display:block;text-align:center;margin-top:20px;color:#007bff;text-decoration:none;}
-        .status-tag{display:inline-block;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:bold;}
-        .status-paid{background:#dcfce7;color:#15803d;}
-        .status-pending{background:#fee2e2;color:#b91c1c;}
-        .status-partial{background:#fef3c7;color:#92400e;}
-    
-        @media(max-width:600px){
-            body{padding:10px;}
-            table{font-size:13px;}
-            th,td{padding:6px;}
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Purchase {{ purchase.purchase_number }}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+<style>
+  .pay-form{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end;margin-top:14px}
+  @media(max-width:600px){.pay-form{grid-template-columns:1fr}}
+  .sec-title{padding:18px 20px 6px;margin:0;font-size:16px;color:#0f172a}
+  .card + .card, .stats + .card{margin-top:18px}
+</style>
 </head>
 <body>
+{% set active_page = 'purchases' %}
+{% include '_sidebar.html' %}
 
-<div class="box">
+<main class="main">
+  <header class="topbar">
+    <h1>Purchase {{ purchase.purchase_number }}</h1>
+    <a class="btn btn-light" href="/purchases">← Back</a>
+  </header>
 
-    <h1>🛒 Purchase {{ purchase.purchase_number }}</h1>
+  <section class="content">
 
-    <p><b>Supplier:</b> {{ supplier.name if supplier else "Unknown" }}</p>
-    <p><b>Date:</b> {{ purchase.created_at.strftime("%d-%m-%Y %I:%M %p") if purchase.created_at else "" }}</p>
-    <p><b>Status:</b>
-        <span class="status-tag {% if purchase.payment_status == 'PAID' %}status-paid{% elif purchase.payment_status == 'PARTIAL' %}status-partial{% else %}status-pending{% endif %}">
-            {{ purchase.payment_status }}
-        </span>
-    </p>
-
-    <table>
-        <tr>
-            <th>Product</th>
-            <th>Qty</th>
-            <th>Cost Price</th>
-            <th>Total</th>
-        </tr>
-
-        {% for item in items %}
-        <tr>
-            <td>{{ item.product_name }}</td>
-            <td>{{ item.quantity }}</td>
-            <td>₹{{ "%.2f"|format(item.cost_price) }}</td>
-            <td>₹{{ "%.2f"|format(item.total) }}</td>
-        </tr>
-        {% endfor %}
-    </table>
-
-    <div class="total">
-        Grand Total: ₹{{ "%.2f"|format(purchase.total_amount) }}
+    <div class="card" style="padding:20px;margin-bottom:18px">
+      <div><strong>Supplier:</strong> {{ supplier.name if supplier else "Unknown" }}</div>
+      <div style="margin-top:6px"><strong>Date:</strong> {{ purchase.created_at.strftime("%d-%m-%Y %I:%M %p") if purchase.created_at else "" }}</div>
+      <div style="margin-top:6px"><strong>Status:</strong>
+        {% if balance <= 0 %}<span class="badge badge-paid">Paid</span>
+        {% elif total_paid <= 0 %}<span class="badge badge-outm">Unpaid</span>
+        {% else %}<span class="badge badge-warn">Partial</span>{% endif %}
+      </div>
     </div>
 
-    <!-- PAYMENT SUMMARY -->
-
-    <div class="balance-box {% if balance <= 0 %}paid{% endif %}">
-
-        <p><b>💰 Total Paid:</b> ₹{{ "%.2f"|format(total_paid) }}</p>
-        <p><b>⏳ Balance Due:</b> ₹{{ "%.2f"|format(balance) }}</p>
-
-        {% if balance > 0 %}
-
-        <form method="POST" action="/pay_purchase/{{ purchase.id }}" class="pay-form">
-
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-
-            <div>
-                <label>Amount</label>
-                <input type="number" name="amount" step="0.01" min="0.01" max="{{ balance }}" required placeholder="Amount to pay">
-            </div>
-
-            <div>
-                <label>Method</label>
-                <select name="payment_method">
-                    <option value="Cash">Cash</option>
-                    <option value="Bank Transfer">Bank Transfer</option>
-                    <option value="UPI">UPI</option>
-                    <option value="Cheque">Cheque</option>
-                </select>
-            </div>
-
-            <button type="submit">💵 Pay</button>
-
-        </form>
-
-        {% endif %}
-
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Product</th><th>Qty</th><th>Cost Price</th><th>Total</th></tr></thead>
+          <tbody>
+          {% for item in items %}
+            <tr>
+              <td class="name">{{ item.product_name }}</td>
+              <td>{{ item.quantity }}</td>
+              <td>₹{{ "%.2f"|format(item.cost_price) }}</td>
+              <td>₹{{ "%.2f"|format(item.total) }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
 
-    <!-- PAYMENT HISTORY -->
+    <div class="stats" style="margin-top:18px">
+      <div class="stat"><div class="label">Grand Total</div><div class="value">₹{{ "%.2f"|format(purchase.total_amount) }}</div></div>
+      <div class="stat"><div class="label">Total Paid</div><div class="value pos">₹{{ "%.2f"|format(total_paid) }}</div></div>
+      <div class="stat"><div class="label">Balance Due</div><div class="value {{ 'neg' if balance > 0 else 'pos' }}">₹{{ "%.2f"|format(balance) }}</div></div>
+    </div>
 
-    {% if payments %}
-
-    <h3 style="margin-top:20px;">📋 Payment History</h3>
-
-    <table>
-        <tr>
-            <th>Date</th>
-            <th>Method</th>
-            <th>Amount</th>
-        </tr>
-
-        {% for payment in payments %}
-        <tr>
-            <td>{{ payment.created_at.strftime("%d-%m-%Y %I:%M %p") if payment.created_at else "" }}</td>
-            <td>{{ payment.method }}</td>
-            <td>₹{{ "%.2f"|format(payment.amount) }}</td>
-        </tr>
-        {% endfor %}
-    </table>
-
+    {% if balance > 0 %}
+    <div class="card" style="padding:20px">
+      <strong>💵 Make a Payment</strong>
+      <form method="POST" action="/pay_purchase/{{ purchase.id }}" class="pay-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="field">
+          <label>Amount</label>
+          <input type="number" name="amount" step="0.01" min="0.01" max="{{ balance }}" required placeholder="Amount to pay">
+        </div>
+        <div class="field">
+          <label>Method</label>
+          <select name="payment_method">
+            <option value="Cash">Cash</option>
+            <option value="Bank Transfer">Bank Transfer</option>
+            <option value="UPI">UPI</option>
+            <option value="Cheque">Cheque</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-green">💵 Pay</button>
+      </form>
+    </div>
     {% endif %}
 
-    <a href="/purchases" class="back">⬅ Back to Purchases</a>
+    {% if payments %}
+    <div class="card" style="margin-top:18px">
+      <h3 class="sec-title">📋 Payment History</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Method</th><th>Amount</th></tr></thead>
+          <tbody>
+          {% for payment in payments %}
+            <tr>
+              <td class="muted">{{ payment.created_at.strftime("%d-%m-%Y %I:%M %p") if payment.created_at else "" }}</td>
+              <td>{{ payment.method }}</td>
+              <td class="pos">₹{{ "%.2f"|format(payment.amount) }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
 
-</div>
-
+  </section>
+</main>
 </body>
 </html>

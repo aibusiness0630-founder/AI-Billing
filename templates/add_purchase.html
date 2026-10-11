@@ -1,125 +1,106 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New Purchase</title>
-    <style>
-        body{font-family:Arial,sans-serif;background:#f4f6f9;padding:20px;}
-        .box{background:white;max-width:800px;margin:auto;padding:30px;border-radius:10px;box-shadow:0 0 10px #ccc;}
-        h1{text-align:center;margin-bottom:20px;}
-        label{display:block;margin-bottom:6px;font-weight:bold;}
-        select,input{width:100%;padding:10px;margin-bottom:15px;border:1px solid #ccc;border-radius:5px;box-sizing:border-box;}
-        .product-row{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:10px;padding:10px;background:#f9f9f9;border-radius:5px;}
-        .remove-btn{background:#dc2626;color:white;border:none;padding:10px;border-radius:5px;cursor:pointer;height:42px;}
-        .add-btn{background:#16a34a;color:white;border:none;padding:10px 15px;border-radius:5px;cursor:pointer;margin-bottom:20px;}
-        .payment-section{background:#eff6ff;padding:15px;border-radius:8px;margin-bottom:20px;border:1px solid #dbeafe;}
-        .payment-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;}
-        button[type="submit"]{width:100%;padding:12px;background:#007bff;color:white;border:none;border-radius:5px;cursor:pointer;font-size:15px;}
-        button[type="submit"]:hover{background:#0056b3;}
-        .back-link{display:block;text-align:center;margin-top:15px;color:#007bff;text-decoration:none;}
-        h3{margin-bottom:10px;}
-    
-        @media(max-width:600px){
-            body{padding:10px;}
-            table{font-size:13px;}
-            th,td{padding:6px;}
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>New Purchase</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+<style>
+  .product-row{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:12px;align-items:end;margin-bottom:12px;padding:14px;background:#f8faff;border:1px solid #e2e8f0;border-radius:12px}
+  .pay-box{background:#eff6ff;border:1px solid #dbeafe;border-radius:12px;padding:16px}
+  h3.sec{margin:22px 0 12px;font-size:15px;color:#0f172a}
+  @media(max-width:700px){.product-row{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
+{% set active_page = 'purchases' %}
+{% include '_sidebar.html' %}
 
-<div class="box">
-    <h1>➕ New Purchase Order</h1>
+<main class="main">
+  <header class="topbar">
+    <h1>New Purchase Order</h1>
+    <a class="btn btn-light" href="/purchases">← Back</a>
+  </header>
 
-    <form method="POST" action="/add_purchase">
+  <section class="content">
+    <div class="card" style="padding:22px;max-width:900px">
+      <form method="POST" action="/add_purchase">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
-        <label>Supplier</label>
-        <select name="supplier_id" required>
+        <div class="field">
+          <label>Supplier</label>
+          <select name="supplier_id" required>
             <option value="">Select Supplier</option>
             {% for supplier in suppliers %}
             <option value="{{ supplier.id }}">{{ supplier.name }}</option>
             {% endfor %}
-        </select>
+          </select>
+        </div>
 
-        <h3>📦 Products</h3>
-
+        <h3 class="sec">📦 Products</h3>
         <div id="productRows">
-
-            <div class="product-row">
-                <div>
-                    <label>Product</label>
-                    <select name="product_id[]" required>
-                        <option value="">Select Product</option>
-                        {% for product in products %}
-                        <option value="{{ product.id }}">{{ product.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div>
-                    <label>Quantity</label>
-                    <input type="number" name="quantity[]" min="1" required>
-                </div>
-                <div>
-                    <label>Cost Price</label>
-                    <input type="number" name="cost_price[]" step="0.01" min="0" required>
-                </div>
-                <div>
-                    <button type="button" class="remove-btn" onclick="this.closest('.product-row').remove()">❌</button>
-                </div>
+          <div class="product-row">
+            <div class="field">
+              <label>Product</label>
+              <select name="product_id[]" required>
+                <option value="">Select Product</option>
+                {% for product in products %}
+                <option value="{{ product.id }}">{{ product.name }}</option>
+                {% endfor %}
+              </select>
             </div>
-
+            <div class="field">
+              <label>Quantity</label>
+              <input type="number" name="quantity[]" min="1" required>
+            </div>
+            <div class="field">
+              <label>Cost Price</label>
+              <input type="number" name="cost_price[]" step="0.01" min="0" required>
+            </div>
+            <button type="button" class="btn btn-del" onclick="removeRow(this)">❌</button>
+          </div>
         </div>
 
-        <button type="button" class="add-btn" onclick="addRow()">➕ Add Product Row</button>
+        <button type="button" class="btn btn-green" onclick="addRow()">➕ Add Product Row</button>
 
-        <h3>💰 Payment Details</h3>
-
-        <div class="payment-section">
-
-            <div class="payment-grid">
-
-                <div>
-                    <label>Payment Method</label>
-                    <select name="payment_method">
-                        <option value="Cash">Cash</option>
-                        <option value="Bank Transfer">Bank Transfer</option>
-                        <option value="UPI">UPI</option>
-                        <option value="Cheque">Cheque</option>
-                        <option value="Credit">Credit (Pay Later)</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label>Amount Paid Now (₹)</label>
-                    <input type="number" name="amount_paid" step="0.01" min="0" value="0" placeholder="0 if paying later">
-                </div>
-
+        <h3 class="sec">💰 Payment Details</h3>
+        <div class="pay-box">
+          <div class="form-grid">
+            <div class="field">
+              <label>Payment Method</label>
+              <select name="payment_method">
+                <option value="Cash">Cash</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+                <option value="UPI">UPI</option>
+                <option value="Cheque">Cheque</option>
+                <option value="Credit">Credit (Pay Later)</option>
+              </select>
             </div>
-
-            <small style="color:#666;">
-                Leave amount as 0 if paying later (full credit). Partial payment allowed.
-            </small>
-
+            <div class="field">
+              <label>Amount Paid Now (₹)</label>
+              <input type="number" name="amount_paid" step="0.01" min="0" value="0" placeholder="0 if paying later">
+            </div>
+          </div>
+          <small class="muted" style="display:block;margin-top:10px">Pay later na amount 0-vaa vidunga. Partial payment-um allowed.</small>
         </div>
 
-        <button type="submit">💾 Save Purchase Order</button>
-
-    </form>
-
-    <a href="/purchases" class="back-link">⬅ Back to Purchases</a>
-</div>
+        <button type="submit" class="btn" style="margin-top:20px">💾 Save Purchase Order</button>
+      </form>
+    </div>
+  </section>
+</main>
 
 <script>
+function removeRow(btn) {
+    var rows = document.querySelectorAll(".product-row");
+    if (rows.length > 1) btn.closest(".product-row").remove();
+}
+
 function addRow() {
-
-    const container = document.getElementById("productRows");
-
     const row = document.createElement("div");
     row.className = "product-row";
-
     row.innerHTML = `
-        <div>
+        <div class="field">
             <label>Product</label>
             <select name="product_id[]" required>
                 <option value="">Select Product</option>
@@ -128,22 +109,18 @@ function addRow() {
                 {% endfor %}
             </select>
         </div>
-        <div>
+        <div class="field">
             <label>Quantity</label>
             <input type="number" name="quantity[]" min="1" required>
         </div>
-        <div>
+        <div class="field">
             <label>Cost Price</label>
             <input type="number" name="cost_price[]" step="0.01" min="0" required>
         </div>
-        <div>
-            <button type="button" class="remove-btn" onclick="this.closest('.product-row').remove()">❌</button>
-        </div>
+        <button type="button" class="btn btn-del" onclick="removeRow(this)">❌</button>
     `;
-
-    container.appendChild(row);
+    document.getElementById("productRows").appendChild(row);
 }
 </script>
-
 </body>
 </html>

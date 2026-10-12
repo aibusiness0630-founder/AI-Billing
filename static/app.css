@@ -84,3 +84,24 @@ tbody tr:hover{background:#fbfdff}
 .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
 .pos{color:#16a34a;font-weight:700}
 .neg{color:#dc2626;font-weight:700}
+/* ===== Colored stat cards ===== */
+.stat{position:relative;overflow:hidden;border:1px solid transparent;padding-left:20px}
+.stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px}
+
+.stats .stat:nth-child(4n+1){background:linear-gradient(135deg,#eff6ff,#dbeafe);border-color:#bfdbfe}
+.stats .stat:nth-child(4n+1)::before{background:#2563eb}
+.stats .stat:nth-child(4n+1) .label{color:#1d4ed8}
+
+.stats .stat:nth-child(4n+2){background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-color:#bbf7d0}
+.stats .stat:nth-child(4n+2)::before{background:#16a34a}
+.stats .stat:nth-child(4n+2) .label{color:#15803d}
+
+.stats .stat:nth-child(4n+3){background:linear-gradient(135deg,#f5f3ff,#ede9fe);border-color:#ddd6fe}
+.stats .stat:nth-child(4n+3)::before{background:#7c3aed}
+.stats .stat:nth-child(4n+3) .label{color:#6d28d9}
+
+.stats .stat:nth-child(4n+4){background:linear-gradient(135deg,#fffbeb,#fef3c7);border-color:#fde68a}
+.stats .stat:nth-child(4n+4)::before{background:#f59e0b}
+.stats .stat:nth-child(4n+4) .label{color:#b45309}
+
+.stat:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(15,23,42,.10);transition:.2s}

@@ -1,4 +1,4 @@
-const CACHE_NAME = "ai-billing-v2";
+const CACHE_NAME = "ai-billing-v3";
 
 const STATIC_FILES = [
     "/static/style.css",

@@ -16,6 +16,24 @@ from app.utils.decorators import login_required, premium_required
 purchases_bp = Blueprint('purchases', __name__)
 
 
+def get_paid_map(shop_id):
+    """
+    Returns {purchase_number: total_paid} for the shop.
+    Purchase payments are linked using Payment.reference_number.
+    """
+    paid_map = {}
+
+    payments = Payment.query.filter_by(shop_id=shop_id).all()
+
+    for pay in payments:
+        if pay.reference_number:
+            paid_map[pay.reference_number] = (
+                paid_map.get(pay.reference_number, 0) + (pay.amount or 0)
+            )
+
+    return paid_map
+
+
 @purchases_bp.route("/purchases")
 @login_required
 @premium_required
@@ -29,16 +47,15 @@ def purchases():
         Purchase.id.desc()
     ).all()
 
+    paid_map = get_paid_map(shop_id)
+
     purchase_list = []
 
     for p in all_purchases:
 
         supplier = Supplier.query.get(p.supplier_id)
 
-        paid_amount = sum(
-            pay.amount or 0
-            for pay in Payment.query.filter_by(purchase_id=p.id).all()
-        ) if hasattr(Payment, 'purchase_id') else 0
+        paid_amount = paid_map.get(p.purchase_number, 0)
 
         balance = (p.total_amount or 0) - paid_amount
 
@@ -46,7 +63,7 @@ def purchases():
             "id": p.id,
             "purchase_number": p.purchase_number,
             "supplier_name": supplier.name if supplier else "Unknown",
-            "total_amount": p.total_amount,
+            "total_amount": p.total_amount or 0,
             "paid_amount": paid_amount,
             "balance": balance,
             "payment_status": p.payment_status,
@@ -246,6 +263,7 @@ def view_purchase(id):
         })
 
     payments = Payment.query.filter_by(
+        shop_id=shop_id,
         reference_number=purchase.purchase_number
     ).order_by(Payment.id.desc()).all()
 
@@ -295,6 +313,7 @@ def pay_purchase(id):
         return "❌ Amount must be greater than 0"
 
     existing_payments = Payment.query.filter_by(
+        shop_id=shop_id,
         reference_number=purchase.purchase_number
     ).all()
 

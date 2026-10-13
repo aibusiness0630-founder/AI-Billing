@@ -39,6 +39,20 @@
     .action-buttons{flex-direction:column}
     .action-buttons .btn{width:100%}
   }
+
+  /* ===== Tools row (Scan + Voice) ===== */
+  .tools-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px;margin-bottom:6px}
+  .tool-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px}
+  .tool-title{font-size:12px;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:.5px;margin:0}
+  .tool-hint{font-size:12.5px;color:#64748b;line-height:1.45;margin:0}
+  .tool-card .btn{width:100%;justify-content:center;display:inline-flex;align-items:center;gap:8px;padding:11px 14px;font-size:14px;border-radius:10px;margin-top:auto}
+  .tool-card .btn:focus{outline:none;box-shadow:0 0 0 3px rgba(34,197,94,.25)}
+  .tool-card .btn.listening{background:#dc2626;border-color:#dc2626;color:#fff;animation:pulseMic 1.2s infinite}
+  @keyframes pulseMic{0%{box-shadow:0 0 0 0 rgba(220,38,38,.45)}70%{box-shadow:0 0 0 10px rgba(220,38,38,0)}100%{box-shadow:0 0 0 0 rgba(220,38,38,0)}}
+  #voiceStatus{display:block;font-size:12.5px;line-height:1.4;padding:8px 10px;border-radius:8px;background:#f1f5f9;color:#334155;font-style:normal}
+  #voiceStatus:empty{display:none}
+  .sec-gap{margin-top:24px}
+  @media(max-width:640px){.tools-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -90,16 +104,27 @@
           </div>
         </div>
 
-        <div class="sec">
-          <label>📷 Scan Barcode to Add Product</label>
-          <button type="button" id="scanBillBtn" class="btn btn-green">📷 Start Scanner</button>
-          <div id="billScannerBox" style="display:none;">
-            <video id="billScannerVideo"></video>
-            <button type="button" id="closeBillScannerBtn" class="btn btn-light" style="margin-top:10px;">❌ Close Scanner</button>
+        <div class="tools-grid">
+          <div class="tool-card">
+            <p class="tool-title">📷 Scan Barcode</p>
+            <p class="tool-hint">Product barcode scan pannina udane bill-la add aagum.</p>
+            <button type="button" id="scanBillBtn" class="btn btn-light">📷 Scan Product</button>
+          </div>
+
+          <div class="tool-card">
+            <p class="tool-title">🎤 Voice Billing</p>
+            <p class="tool-hint">Udhaa: "2 rice 1 oil bill pannu" (product name English-la solunga)</p>
+            <button type="button" id="voiceBillBtn" class="btn btn-green">🎤 Speak Bill</button>
+            <span id="voiceStatus"></span>
           </div>
         </div>
 
-        <h2 class="sec">📦 Products</h2>
+        <div id="billScannerBox" style="display:none;">
+          <video id="billScannerVideo"></video>
+          <button type="button" id="closeBillScannerBtn" class="btn btn-light" style="margin-top:10px;">❌ Close Scanner</button>
+        </div>
+
+        <h2 class="sec sec-gap">📦 Products</h2>
         <div id="products">
           <div class="product-card">
             <h3>🛒 Product Details</h3>
@@ -355,6 +380,107 @@ document.getElementById("closeBillScannerBtn").addEventListener("click", functio
         });
     }
 });
+
+/* ---------- VOICE BILLING ---------- */
+(function () {
+    var btn = document.getElementById("voiceBillBtn");
+    var statusEl = document.getElementById("voiceStatus");
+    if (!btn) return;
+
+    /* mic listening animation */
+    new MutationObserver(function () {
+        btn.classList.toggle("listening", btn.textContent.indexOf("Kekkuren") !== -1);
+    }).observe(btn, {childList: true, characterData: true, subtree: true});
+
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+        btn.disabled = true;
+        statusEl.textContent = "Chrome allathu Edge-la mattum work aagum";
+        return;
+    }
+
+    var rec = new SR();
+    rec.lang = "en-IN";
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+    var listening = false;
+
+    function getTargetCard() {
+        var cards = document.querySelectorAll(".product-card");
+        for (var i = 0; i < cards.length; i++) {
+            var s = cards[i].querySelector(".product-select");
+            if (s && !s.value) return cards[i];
+        }
+        document.getElementById("addProduct").click();
+        var all = document.querySelectorAll(".product-card");
+        return all[all.length - 1];
+    }
+
+    function fillRow(item) {
+        var card = getTargetCard();
+        card.querySelector(".product-select").value = item.name;
+        card.querySelector('input[name="quantity[]"]').value = item.quantity;
+        card.querySelector('input[name="price[]"]').value = Number(item.price).toFixed(2);
+    }
+
+    async function process(text) {
+        statusEl.textContent = '"' + text + '" — paarkkuren...';
+        try {
+            var res = await fetch("/api/voice_bill", {
+                method: "POST",
+                headers: {"Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest"},
+                body: JSON.stringify({text: text})
+            });
+            var ct = res.headers.get("content-type") || "";
+            if (!res.ok || ct.indexOf("json") === -1) {
+                statusEl.textContent = "🔒 Voice Billing Premium plan-la mattum.";
+                return;
+            }
+            var data = await res.json();
+
+            if (!data.items.length) {
+                statusEl.textContent = "Product kandupidikka mudiyala. Product name English-la solunga.";
+                return;
+            }
+
+            data.items.forEach(fillRow);
+
+            if (data.mobile) {
+                var m = document.getElementById("mobile");
+                m.value = data.mobile;
+                m.dispatchEvent(new Event("input"));
+            }
+
+            var msg = "✅ " + data.items.length + " product add aachu. Check pannitu Generate Bill click pannunga.";
+            if (data.warnings.length) msg += " ⚠️ " + data.warnings.join(" ");
+            if (data.not_found.length) msg += " ❓ Puriyala: " + data.not_found.join(", ");
+            statusEl.textContent = msg;
+
+        } catch (e) {
+            statusEl.textContent = "Error: server connect aagala.";
+        }
+    }
+
+    rec.onresult = function (e) { process(e.results[0][0].transcript); };
+    rec.onend = function () { listening = false; btn.textContent = "🎤 Speak Bill"; };
+    rec.onerror = function (e) {
+        listening = false;
+        btn.textContent = "🎤 Speak Bill";
+        statusEl.textContent = e.error === "not-allowed"
+            ? "Mic permission kudunga (address bar-la lock icon)."
+            : "Voice puriyala (" + e.error + ").";
+    };
+
+    btn.addEventListener("click", function () {
+        if (listening) { rec.stop(); return; }
+        try {
+            rec.start();
+            listening = true;
+            btn.textContent = "⏹ Kekkuren... (click to stop)";
+            statusEl.textContent = "Pesunga...";
+        } catch (err) {}
+    });
+})();
 
 /* ---------- SERVICE WORKER ---------- */
 if ("serviceWorker" in navigator) {

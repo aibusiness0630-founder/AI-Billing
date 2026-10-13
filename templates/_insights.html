@@ -1,0 +1,94 @@
+<style>
+  .aiw{
+    margin-bottom:22px;
+    border:1px solid rgba(91,143,230,.19);
+    border-radius:20px;
+    background:linear-gradient(145deg, rgba(8,26,59,.94), rgba(4,16,38,.96));
+    box-shadow:0 22px 60px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.035);
+    overflow:hidden;
+  }
+  .aiw-head{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:20px 22px 14px;flex-wrap:wrap;
+  }
+  .aiw-title{display:flex;align-items:center;gap:10px}
+  .aiw-icon{
+    width:35px;height:35px;display:flex;align-items:center;justify-content:center;
+    border-radius:11px;background:linear-gradient(135deg,#1b67ff,#7135ff);
+    color:#fff;font-size:14px;font-weight:700;box-shadow:0 0 22px rgba(73,77,255,.20);
+  }
+  .aiw-title h3{font-family:"Manrope",sans-serif;font-size:13px;font-weight:800;color:#f2f7ff}
+  .aiw-title p{margin-top:3px;color:#7187aa;font-size:9px;font-weight:500}
+  .aiw-open{
+    padding:9px 14px;border-radius:10px;font-size:10px;font-weight:800;color:#fff;
+    background:linear-gradient(135deg,#9a3dff,#396bff,#11bfff);
+    box-shadow:0 10px 28px rgba(87,67,255,.30);
+  }
+  .aiw-list{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    gap:12px;padding:0 22px 22px;
+  }
+  .aiw-i{border-radius:14px;padding:13px 15px;border:1px solid;border-left-width:4px;font-size:11px}
+  .aiw-i .t{font-weight:800;color:#f2f7ff;margin-bottom:5px;font-size:11px}
+  .aiw-i .d{color:#a8b9d4;line-height:1.55;font-size:10px}
+  .aiw-i a{display:inline-block;margin-top:9px;font-size:10px;font-weight:800;color:#6fb4ff}
+  .aiw-i a:hover{color:#fff}
+  .aiw-danger{background:rgba(255,91,110,.10);border-color:rgba(255,91,110,.35)}
+  .aiw-warning{background:rgba(255,173,36,.10);border-color:rgba(255,173,36,.35)}
+  .aiw-info{background:rgba(22,131,255,.10);border-color:rgba(22,131,255,.35)}
+  .aiw-success{background:rgba(0,214,163,.10);border-color:rgba(0,214,163,.35)}
+  .aiw-msg{color:#7187aa;font-size:11px;padding:0 22px 22px}
+  .aiw-msg a{color:#6fb4ff;font-weight:800}
+</style>
+
+<div class="aiw">
+  <div class="aiw-head">
+    <div class="aiw-title">
+      <div class="aiw-icon">✦</div>
+      <div>
+        <h3>AI Insights</h3>
+        <p>Smart suggestions for your business</p>
+      </div>
+    </div>
+    <a href="/assistant" class="aiw-open">🎤 Open Assistant →</a>
+  </div>
+  <div class="aiw-list" id="aiwList"><div class="aiw-msg" style="padding:0">Insights load aaguthu...</div></div>
+</div>
+
+<script>
+(function () {
+  var list = document.getElementById('aiwList');
+
+  function locked() {
+    var box = list.parentNode;
+    list.remove();
+    var m = document.createElement('div');
+    m.className = 'aiw-msg';
+    m.innerHTML = '🔒 AI Insights Premium plan-la mattum. <a href="/subscription">Upgrade pannunga →</a>';
+    box.appendChild(m);
+  }
+
+  fetch('/api/insights', {headers: {'X-Requested-With': 'XMLHttpRequest'}})
+    .then(function (res) {
+      var ct = res.headers.get('content-type') || '';
+      if (!res.ok || ct.indexOf('json') === -1) { throw new Error('locked'); }
+      return res.json();
+    })
+    .then(function (data) {
+      list.innerHTML = '';
+      data.insights.slice(0, 6).forEach(function (i) {
+        var d = document.createElement('div');
+        d.className = 'aiw-i aiw-' + i.level;
+        var t = document.createElement('div'); t.className = 't'; t.textContent = i.icon + ' ' + i.title;
+        var p = document.createElement('div'); p.className = 'd'; p.textContent = i.detail;
+        d.appendChild(t); d.appendChild(p);
+        if (i.url && i.url.charAt(0) === '/') {
+          var a = document.createElement('a'); a.href = i.url; a.textContent = (i.link_text || 'Open') + ' →';
+          d.appendChild(a);
+        }
+        list.appendChild(d);
+      });
+    })
+    .catch(locked);
+})();
+</script>

@@ -36,6 +36,11 @@ def create_app():
 
         db.create_all()
 
+        # add approval columns to old shop table + first super admin
+        from app.utils.schema import ensure_schema, seed_superadmin
+        ensure_schema(db)
+        seed_superadmin(db)
+
         from app.routes.auth import auth_bp
         from app.routes.products import products_bp
         from app.routes.billing import billing_bp
@@ -48,6 +53,7 @@ def create_app():
         from app.routes.stock import stock_bp
         from app.routes.reports import reports_bp
         from app.routes.assistant import assistant_bp
+        from app.routes.superadmin import superadmin_bp
 
         app.register_blueprint(auth_bp)
         app.register_blueprint(products_bp)
@@ -61,6 +67,7 @@ def create_app():
         app.register_blueprint(stock_bp)
         app.register_blueprint(reports_bp)
         app.register_blueprint(assistant_bp)
+        app.register_blueprint(superadmin_bp)
 
     @app.errorhandler(404)
     def not_found_error(error):
@@ -80,6 +87,6 @@ def create_app():
         response = app.send_static_file("sw.js")
         response.headers["Content-Type"] = "application/javascript"
         response.headers["Service-Worker-Allowed"] = "/"
-        return response    
+        return response
 
     return app

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Super Admin{% endblock %} | ANFIA</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Inter,-apple-system,"Segoe UI",Arial,sans-serif;background:#f1f5fb;color:#172033;min-height:100vh}
+  .layout{display:flex;min-height:100vh}
+
+  .side{
+    width:240px;flex-shrink:0;padding:22px 16px;color:#fff;display:flex;flex-direction:column;
+    background:linear-gradient(170deg,#061a38,#0b2854 60%,#12366e);
+  }
+  .brand{display:flex;align-items:center;gap:11px;margin-bottom:28px;padding:0 6px}
+  .brand .lg{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:900;background:linear-gradient(135deg,#2563eb,#4f46e5)}
+  .brand b{display:block;font-size:15px}
+  .brand small{font-size:10px;color:#93c5fd;letter-spacing:1px;font-weight:700}
+  .menu a,.menu span{
+    display:flex;align-items:center;gap:10px;padding:11px 12px;margin-bottom:5px;border-radius:10px;
+    color:#cbd5e1;text-decoration:none;font-size:13.5px;font-weight:600;
+  }
+  .menu a:hover{background:rgba(255,255,255,.08)}
+  .menu a.active{background:rgba(37,99,235,.35);color:#fff}
+  .menu span.soon{opacity:.45;cursor:not-allowed}
+  .menu .tag{margin-left:auto;font-size:9px;padding:2px 7px;border-radius:20px;background:rgba(255,255,255,.12)}
+  .menu .cnt{margin-left:auto;font-size:11px;padding:2px 8px;border-radius:20px;background:#f59e0b;color:#1f2937;font-weight:800}
+  .side .bottom{margin-top:auto;padding:12px 6px 0;border-top:1px solid rgba(255,255,255,.1);font-size:12px;color:#94a3b8}
+  .side .bottom a{color:#fca5a5;text-decoration:none;font-weight:700;display:inline-block;margin-top:6px}
+
+  .main{flex:1;min-width:0}
+  .top{padding:18px 28px;background:#fff;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  .top h1{font-size:20px;color:#0f172a}
+  .top .who{font-size:12px;color:#64748b}
+  .content{padding:24px 28px}
+
+  .flash{padding:12px 15px;border-radius:11px;margin-bottom:16px;font-size:13px;font-weight:600}
+  .flash.ok{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534}
+  .flash.bad{background:#fef2f2;border:1px solid #fecaca;color:#b91c1c}
+
+  @media(max-width:850px){
+    .layout{flex-direction:column}
+    .side{width:100%;flex-direction:row;flex-wrap:wrap;align-items:center;padding:12px 14px;gap:8px}
+    .brand{margin:0}
+    .menu{display:flex;gap:6px;flex-wrap:wrap}
+    .menu a,.menu span{margin:0;padding:8px 10px}
+    .side .bottom{margin:0 0 0 auto;border:0;padding:0}
+    .content{padding:16px 14px}
+    .top{padding:14px}
+  }
+  {% block css %}{% endblock %}
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="side">
+    <div class="brand">
+      <div class="lg">AI</div>
+      <div><b>ANFIA</b><small>SUPER ADMIN</small></div>
+    </div>
+
+    {% set nav = active|default('approvals') %}
+    <nav class="menu">
+      <a href="/superadmin/approvals" class="{% if nav == 'approvals' %}active{% endif %}">✅ Approvals
+        {% if pending_count %}<span class="cnt">{{ pending_count }}</span>{% endif %}
+      </a>
+      <a href="/superadmin/customers" class="{% if nav == 'customers' %}active{% endif %}">🏪 Customers</a>
+      <span class="soon">💳 Revenue <i class="tag">soon</i></span>
+      <span class="soon">✦ AI Agent <i class="tag">soon</i></span>
+    </nav>
+
+    <div class="bottom">
+      👤 {{ admin_name }}<br>
+      <a href="/superadmin/logout">⎋ Logout</a>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="top">
+      <h1>{% block heading %}Super Admin{% endblock %}</h1>
+      <span class="who">ANFIA Technology • AI Billing</span>
+    </header>
+
+    <section class="content">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in messages %}
+          <div class="flash {{ cat }}">{{ msg }}</div>
+        {% endfor %}
+      {% endwith %}
+
+      {% block body %}{% endblock %}
+    </section>
+  </div>
+
+</div>
+</body>
+</html>

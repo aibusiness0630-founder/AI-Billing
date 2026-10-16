@@ -1,0 +1,123 @@
+{% extends "superadmin_base.html" %}
+
+{% block title %}Approvals{% endblock %}
+{% block heading %}✅ Shop Approvals{% endblock %}
+
+{% block css %}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+  .tab{padding:9px 15px;border-radius:30px;font-size:13px;font-weight:700;text-decoration:none;color:#475569;background:#fff;border:1px solid #e2e8f0}
+  .tab.on{background:#1d4ed8;border-color:#1d4ed8;color:#fff}
+  .tab b{margin-left:6px;font-size:11px;padding:2px 7px;border-radius:20px;background:rgba(100,116,139,.15)}
+  .tab.on b{background:rgba(255,255,255,.25)}
+
+  .shop{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:18px 20px;margin-bottom:14px;box-shadow:0 2px 10px rgba(15,23,42,.04)}
+  .shop-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+  .shop-head h3{font-size:16px;color:#0f172a}
+  .when{font-size:11.5px;color:#94a3b8}
+  .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:800}
+  .b-pending{background:#fffbeb;color:#b45309}
+  .b-approved{background:#f0fdf4;color:#15803d}
+  .b-rejected{background:#fef2f2;color:#b91c1c}
+
+  .info{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px 18px;margin:14px 0}
+  .info div small{display:block;font-size:10.5px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+  .info div span{font-size:13.5px;color:#1e293b;word-break:break-word}
+
+  .reason{margin:0 0 12px;padding:9px 12px;border-radius:9px;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;font-size:12.5px}
+
+  .actions{display:flex;gap:12px;flex-wrap:wrap;padding-top:14px;border-top:1px dashed #e2e8f0}
+  .actions form{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .actions .ap{flex:1 1 280px}
+  .actions .rj{flex:1 1 280px}
+  select,input[type=number],input[type=text]{height:38px;padding:0 10px;border:1px solid #cbd5e1;border-radius:9px;font-size:13px;background:#f8fafc;outline:none}
+  select:focus,input:focus{border-color:#2563eb}
+  input[type=number]{width:78px}
+  input[type=text]{flex:1;min-width:130px}
+  .lbl{font-size:12px;color:#64748b;font-weight:600}
+  .btn{height:38px;padding:0 16px;border:0;border-radius:9px;font-size:13px;font-weight:800;cursor:pointer;color:#fff}
+  .btn-ok{background:linear-gradient(135deg,#16a34a,#22c55e)}
+  .btn-no{background:#fff;color:#dc2626;border:1px solid #fecaca}
+  .btn-no:hover{background:#fef2f2}
+
+  .empty{background:#fff;border:1px dashed #cbd5e1;border-radius:16px;padding:46px 20px;text-align:center;color:#64748b}
+  .empty .em{font-size:34px;margin-bottom:8px}
+{% endblock %}
+
+{% block body %}
+
+<div class="tabs">
+  <a class="tab {% if status == 'PENDING' %}on{% endif %}" href="/superadmin/approvals?status=PENDING">⏳ Pending <b>{{ counts.PENDING }}</b></a>
+  <a class="tab {% if status == 'APPROVED' %}on{% endif %}" href="/superadmin/approvals?status=APPROVED">✅ Approved <b>{{ counts.APPROVED }}</b></a>
+  <a class="tab {% if status == 'REJECTED' %}on{% endif %}" href="/superadmin/approvals?status=REJECTED">⛔ Rejected <b>{{ counts.REJECTED }}</b></a>
+</div>
+
+{% if not shops %}
+  <div class="empty">
+    <div class="em">{% if status == 'PENDING' %}🎉{% else %}📭{% endif %}</div>
+    {% if status == 'PENDING' %}Pending approvals onnum illa. Ellam clear!{% else %}Indha list-la shops illa.{% endif %}
+  </div>
+{% endif %}
+
+{% for shop in shops %}
+{% set sub = subs.get(shop.id) %}
+<div class="shop">
+
+  <div class="shop-head">
+    <div>
+      <h3>🏪 {{ shop.shop_name }}</h3>
+      <span class="badge b-{{ status|lower }}">{{ status }}</span>
+    </div>
+    <span class="when">Registered: {{ shop.created_at.strftime('%d-%m-%Y %I:%M %p') if shop.created_at else '-' }} (UTC)</span>
+  </div>
+
+  <div class="info">
+    <div><small>Username</small><span>{{ shop.username }}</span></div>
+    <div><small>Phone</small><span>{{ shop.phone or '-' }}</span></div>
+    <div><small>Shop type</small><span>{{ shop.shop_type or '-' }}</span></div>
+    <div><small>Address</small><span>{{ shop.address or '-' }}</span></div>
+    {% if status == 'APPROVED' and sub %}
+      <div><small>Plan</small><span>{{ sub.plan }}</span></div>
+      <div><small>Expires</small><span>{{ sub.expiry_date.strftime('%d-%m-%Y') if sub.expiry_date else '-' }}</span></div>
+    {% endif %}
+  </div>
+
+  {% if status == 'REJECTED' and shop.rejection_reason %}
+    <div class="reason"><strong>Reason:</strong> {{ shop.rejection_reason }}</div>
+  {% endif %}
+
+  {% if status != 'APPROVED' %}
+  <div class="actions">
+
+    <form class="ap" method="POST" action="/superadmin/approve/{{ shop.id }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <span class="lbl">Plan</span>
+      <select name="plan">
+        <option value="Basic">Basic ₹499</option>
+        <option value="Premium">Premium ₹999</option>
+      </select>
+      <span class="lbl">Days</span>
+      <input type="number" name="days" value="30" min="1" max="3650">
+      <span class="lbl">Paid ₹</span>
+      <input type="number" name="amount" min="0" step="1" placeholder="optional" style="width:100px">
+      <select name="method">
+        <option>Cash</option><option>UPI</option><option>Bank Transfer</option><option>Other</option>
+      </select>
+      <button class="btn btn-ok" type="submit">✅ Approve</button>
+    </form>
+
+    {% if status == 'PENDING' %}
+    <form class="rj" method="POST" action="/superadmin/reject/{{ shop.id }}"
+          onsubmit="return confirm('Indha shop-a reject pannanuma?');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="text" name="reason" maxlength="255" placeholder="Reject reason (optional)">
+      <button class="btn btn-no" type="submit">⛔ Reject</button>
+    </form>
+    {% endif %}
+
+  </div>
+  {% endif %}
+
+</div>
+{% endfor %}
+
+{% endblock %}

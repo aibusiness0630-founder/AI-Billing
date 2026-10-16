@@ -1,0 +1,214 @@
+{% extends "superadmin_base.html" %}
+
+{% block title %}{{ shop.shop_name }}{% endblock %}
+{% block heading %}🏪 {{ shop.shop_name }}{% endblock %}
+
+{% block css %}
+  .back{display:inline-block;margin-bottom:14px;font-size:13px;font-weight:700;color:#1d4ed8;text-decoration:none}
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+  @media(max-width:1000px){.grid{grid-template-columns:1fr}}
+  .card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:18px 20px;margin-bottom:16px;box-shadow:0 2px 10px rgba(15,23,42,.04)}
+  .card h3{font-size:14px;color:#0f172a;margin-bottom:14px}
+  .info{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px 16px}
+  .info small{display:block;font-size:10.5px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+  .info span{font-size:13.5px;color:#1e293b;word-break:break-word}
+  .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:800}
+  .s-active{background:#f0fdf4;color:#15803d}
+  .s-expiring{background:#fffbeb;color:#b45309}
+  .s-expired{background:#fef2f2;color:#b91c1c}
+  .s-suspended{background:#f1f5f9;color:#475569}
+  .plan-Premium{color:#7c3aed;font-weight:800}
+  .reason{margin-top:14px;padding:9px 12px;border-radius:9px;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;font-size:12.5px}
+
+  .usage{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+  .usage div{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:11px 13px}
+  .usage small{display:block;font-size:10.5px;font-weight:700;color:#94a3b8;text-transform:uppercase}
+  .usage b{display:block;font-size:19px;color:#0f172a;margin-top:3px}
+
+  form.act{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+  form.act:last-child{margin-bottom:0}
+  .lbl{font-size:12px;font-weight:700;color:#64748b}
+  select,input[type=number],input[type=text]{height:38px;padding:0 10px;border:1px solid #cbd5e1;border-radius:9px;font-size:13px;background:#f8fafc;outline:none}
+  select:focus,input:focus{border-color:#2563eb}
+  input[type=number]{width:90px}
+  input[type=text]{flex:1;min-width:140px}
+  .btn{height:38px;padding:0 16px;border:0;border-radius:9px;font-size:13px;font-weight:800;cursor:pointer;color:#fff;background:linear-gradient(135deg,#2563eb,#4f46e5)}
+  .btn-ok{background:linear-gradient(135deg,#16a34a,#22c55e)}
+  .btn-no{background:#fff;color:#dc2626;border:1px solid #fecaca}
+  .btn-no:hover{background:#fef2f2}
+  .btn-gray{background:#fff;color:#334155;border:1px solid #cbd5e1}
+  .btn-gray:hover{background:#f1f5f9}
+  .hint{font-size:12px;color:#94a3b8;margin:-6px 0 14px}
+  .sep{height:1px;background:#eef2f7;margin:14px 0}
+
+  .wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;min-width:420px}
+  th{padding:9px 10px;text-align:left;font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;background:#f8fafc;border-bottom:1px solid #e2e8f0}
+  td{padding:10px;font-size:13px;border-bottom:1px solid #f1f5f9;vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  .muted{color:#94a3b8;font-size:12px}
+  .none{padding:18px;text-align:center;color:#94a3b8;font-size:13px}
+{% endblock %}
+
+{% block body %}
+
+<a class="back" href="/superadmin/customers">← Back to Customers</a>
+
+<div class="grid">
+
+  <!-- ============ LEFT ============ -->
+  <div>
+
+    <div class="card">
+      <h3>Shop details</h3>
+      <div class="info">
+        <div><small>Status</small><span class="badge s-{{ state }}">{{ state|capitalize }}</span></div>
+        <div><small>Username</small><span>@{{ shop.username }}</span></div>
+        <div><small>Phone</small><span>{{ shop.phone or '-' }}</span></div>
+        <div><small>Shop type</small><span>{{ shop.shop_type or '-' }}</span></div>
+        <div><small>Address</small><span>{{ shop.address or '-' }}</span></div>
+        <div><small>Registered</small><span>{{ shop.created_at.strftime('%d-%m-%Y') if shop.created_at else '-' }}</span></div>
+        <div><small>Plan</small><span class="plan-{{ sub.plan if sub else '' }}">{{ sub.plan if sub else '-' }}</span></div>
+        <div><small>Expiry</small>
+          <span>
+            {% if sub and sub.expiry_date %}
+              {{ sub.expiry_date.strftime('%d-%m-%Y') }}
+              {% if days_left is not none %}
+                <span class="muted">({% if days_left < 0 %}{{ -days_left }} days munnadi expire{% else %}{{ days_left }} days left{% endif %})</span>
+              {% endif %}
+            {% else %}-{% endif %}
+          </span>
+        </div>
+      </div>
+      {% if state == 'suspended' and shop.rejection_reason %}
+        <div class="reason"><strong>Suspend reason:</strong> {{ shop.rejection_reason }}</div>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <h3>Usage</h3>
+      <div class="usage">
+        <div><small>Total bills</small><b>{{ stats.bills }}</b></div>
+        <div><small>Billed (₹)</small><b>{{ "{:,.0f}".format(stats.billed) }}</b></div>
+        <div><small>Bills (30 days)</small><b>{{ stats.bills_30 }}</b></div>
+        <div><small>Customers</small><b>{{ stats.customers }}</b></div>
+        <div><small>Products</small><b>{{ stats.products }}</b></div>
+        <div><small>Last bill</small><b style="font-size:13px">{{ stats.last_invoice.strftime('%d-%m-%Y') if stats.last_invoice else '-' }}</b></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Subscription payments <span class="muted">(received: ₹{{ "{:,.0f}".format(paid_total) }})</span></h3>
+      {% if not payments %}
+        <div class="none">Payment record illa.</div>
+      {% else %}
+      <div class="wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Amount</th><th>Method</th><th>Plan / Days</th><th>Note</th></tr></thead>
+          <tbody>
+          {% for p in payments %}
+            <tr>
+              <td>{{ p.created_at.strftime('%d-%m-%Y') if p.created_at else '-' }}</td>
+              <td><strong>₹{{ "{:,.0f}".format(p.amount) }}</strong></td>
+              <td>{{ p.method or '-' }}</td>
+              <td>{{ p.plan or '-' }}{% if p.days %} / {{ p.days }}d{% endif %}</td>
+              <td>{{ p.note or '-' }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <!-- ============ RIGHT ============ -->
+  <div>
+
+    <div class="card">
+      <h3>Subscription</h3>
+
+      <form class="act" method="POST" action="/superadmin/customers/{{ shop.id }}/plan">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <span class="lbl">Plan</span>
+        <select name="plan">
+          <option value="Basic" {% if sub and sub.plan == 'Basic' %}selected{% endif %}>Basic ₹499</option>
+          <option value="Premium" {% if sub and sub.plan == 'Premium' %}selected{% endif %}>Premium ₹999</option>
+        </select>
+        <button class="btn" type="submit">Change plan</button>
+      </form>
+
+      <div class="sep"></div>
+
+      <form class="act" method="POST" action="/superadmin/customers/{{ shop.id }}/extend">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <span class="lbl">Extend by</span>
+        <input type="number" name="days" value="30" min="1" max="3650">
+        <span class="lbl">days</span>
+        <span class="lbl" style="margin-left:6px">Paid ₹</span>
+        <input type="number" name="amount" min="0" step="1" placeholder="optional" style="width:100px">
+        <select name="method">
+          <option>Cash</option><option>UPI</option><option>Bank Transfer</option><option>Other</option>
+        </select>
+        <input type="text" name="note" maxlength="255" placeholder="Note (optional)">
+        <button class="btn btn-ok" type="submit">➕ Extend</button>
+      </form>
+      <div class="hint">Expiry innum irundha, current expiry-lirundhu add aagum. Expire aagiruntha indha naal-lirundhu aagum.</div>
+    </div>
+
+    <div class="card">
+      <h3>Account control</h3>
+
+      {% if state == 'suspended' %}
+        <form class="act" method="POST" action="/superadmin/customers/{{ shop.id }}/activate">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button class="btn btn-ok" type="submit">✅ Activate account</button>
+          <span class="muted">Login marubadi work aagum.</span>
+        </form>
+      {% else %}
+        <form class="act" method="POST" action="/superadmin/customers/{{ shop.id }}/suspend"
+              onsubmit="return confirm('Indha shop-a suspend pannanuma? Avanga login panna mudiyaadhu.');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <input type="text" name="reason" maxlength="255" placeholder="Suspend reason (optional)">
+          <button class="btn btn-no" type="submit">⛔ Suspend</button>
+        </form>
+      {% endif %}
+
+      <div class="sep"></div>
+
+      <form class="act" method="POST" action="/superadmin/customers/{{ shop.id }}/reset_password"
+            onsubmit="return confirm('Pudhu temporary password create pannanuma? Pazhaya password work aagaadhu.');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button class="btn btn-gray" type="submit">🔑 Reset password</button>
+        <span class="muted">Temporary password oru thadavai kaattum.</span>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3>Recent activity</h3>
+      {% if not logs %}
+        <div class="none">Activity illa.</div>
+      {% else %}
+      <div class="wrap">
+        <table>
+          <thead><tr><th>When (UTC)</th><th>Action</th><th>Details</th></tr></thead>
+          <tbody>
+          {% for l in logs %}
+            <tr>
+              <td class="muted">{{ l.created_at.strftime('%d-%m %H:%M') if l.created_at else '-' }}</td>
+              <td><strong>{{ l.action }}</strong></td>
+              <td>{{ l.details or '-' }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock %}

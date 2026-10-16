@@ -149,30 +149,35 @@ def register():
             phone=phone,
             shop_type=shop_type,
             username=username,
-            password=generate_password_hash(password)
+            password=generate_password_hash(password),
+            approval_status="PENDING"
         )
 
         db.session.add(new_shop)
         db.session.flush()
 
-        today = datetime.now().date()
-
+        # Plan and expiry are set by ANFIA when the account is approved
         new_subscription = Subscription(
             shop_id=new_shop.id,
             plan="Basic",
-            start_date=today,
-            expiry_date=today + timedelta(days=30),
-            status="Active",
+            start_date=None,
+            expiry_date=None,
+            status="Pending",
             reminder_sent=False
         )
 
         db.session.add(new_subscription)
         db.session.commit()
 
+        # No auto login. Shop must be approved by ANFIA first.
         session.clear()
-        session["shop_id"] = new_shop.id
 
-        return redirect("/")
+        return render_template(
+            "pending_approval.html",
+            status="PENDING",
+            shop_name=new_shop.shop_name,
+            just_registered=True
+        )
 
     except Exception as e:
         db.session.rollback()
@@ -211,6 +216,18 @@ def login():
     shop = Shop.query.filter_by(username=username).first()
 
     if shop and check_password_hash(shop.password, password):
+
+        approval = shop.approval_status or "APPROVED"
+
+        if approval != "APPROVED":
+            reset_login_attempts(username)
+            return render_template(
+                "pending_approval.html",
+                status=approval,
+                shop_name=shop.shop_name,
+                reason=shop.rejection_reason,
+                just_registered=False
+            )
 
         ok, status = check_subscription(shop.id)
 

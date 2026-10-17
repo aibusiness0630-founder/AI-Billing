@@ -1,0 +1,275 @@
+{% extends "superadmin_base.html" %}
+
+{% block title %}Revenue{% endblock %}
+{% block heading %}💳 Revenue{% endblock %}
+
+{% block css %}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:18px}
+  .kpi{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:15px 16px;border-top:4px solid #2563eb}
+  .kpi small{display:block;font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px}
+  .kpi b{display:block;margin-top:5px;font-size:25px;color:#0f172a}
+  .kpi span{display:block;margin-top:3px;font-size:12px;color:#64748b}
+  .kpi.g{border-top-color:#16a34a}.kpi.p{border-top-color:#7c3aed}.kpi.a{border-top-color:#f59e0b}
+  .up{color:#16a34a!important;font-weight:700}.down{color:#dc2626!important;font-weight:700}
+
+  .two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:16px}
+  @media(max-width:1000px){.two{grid-template-columns:1fr}}
+  .card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:18px 20px;margin-bottom:16px;box-shadow:0 2px 10px rgba(15,23,42,.04)}
+  .two .card{margin-bottom:0}
+  .card h3{font-size:14px;color:#0f172a;margin-bottom:4px}
+  .card .sub{font-size:12px;color:#94a3b8;margin-bottom:14px}
+
+  .bars{display:flex;align-items:flex-end;gap:10px;height:190px;padding-top:6px}
+  .col{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;min-width:0}
+  .col .v{font-size:11px;font-weight:700;color:#334155;margin-bottom:4px;white-space:nowrap}
+  .col .fill{width:100%;max-width:46px;border-radius:8px 8px 0 0;background:linear-gradient(180deg,#4f46e5,#2563eb)}
+  .col .fill.green{background:linear-gradient(180deg,#22c55e,#16a34a)}
+  .col .fill.zero{background:#e2e8f0;height:3px!important}
+  .col .l{margin-top:7px;font-size:11px;color:#64748b;white-space:nowrap}
+
+  .split{display:grid;gap:12px}
+  .split .row{display:grid;grid-template-columns:90px 1fr 70px;gap:10px;align-items:center;font-size:13px}
+  .split .track{height:12px;border-radius:20px;background:#eef2f7;overflow:hidden}
+  .split .fillbar{height:100%;border-radius:20px}
+  .split .n{text-align:right;font-weight:800;color:#0f172a}
+
+  .wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;min-width:520px}
+  th{padding:10px 12px;text-align:left;font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.4px;background:#f8fafc;border-bottom:1px solid #e2e8f0}
+  td{padding:11px 12px;font-size:13px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+  tr:last-child td{border-bottom:0}
+  .nm{font-weight:700;color:#0f172a}
+  .muted{color:#94a3b8;font-size:12px}
+  .none{padding:22px;text-align:center;color:#94a3b8;font-size:13px}
+  .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:800;white-space:nowrap}
+  .d-warn{background:#fffbeb;color:#b45309}.d-bad{background:#fef2f2;color:#b91c1c}.d-ok{background:#f0fdf4;color:#15803d}
+  .go{display:inline-block;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:800;text-decoration:none;margin-right:6px}
+  .go.m{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+  .go.w{background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0}
+  .soon{color:#94a3b8;font-style:italic}
+  .plan-Premium{color:#7c3aed;font-weight:800}
+{% endblock %}
+
+{% block body %}
+
+<div class="kpis">
+  <div class="kpi p">
+    <small>Est. monthly revenue (MRR)</small>
+    <b>₹{{ "{:,.0f}".format(mrr) }}</b>
+    <span>{{ active_shops }} active shops</span>
+  </div>
+  <div class="kpi g">
+    <small>Received this month</small>
+    <b>₹{{ "{:,.0f}".format(received_this) }}</b>
+    <span>
+      {% if delta is not none %}
+        <span class="{% if delta >= 0 %}up{% else %}down{% endif %}" style="display:inline">{{ '+' if delta >= 0 else '' }}{{ delta }}%</span> last month-ah vida
+      {% else %}last month: ₹{{ "{:,.0f}".format(received_last) }}{% endif %}
+    </span>
+  </div>
+  <div class="kpi">
+    <small>All-time received</small>
+    <b>₹{{ "{:,.0f}".format(total_received) }}</b>
+    <span>subscription payments</span>
+  </div>
+  <div class="kpi a">
+    <small>Renewals due (30 days)</small>
+    <b>{{ renewals|length }}</b>
+    <span>≈ ₹{{ "{:,.0f}".format(renewals_value) }} varalaam</span>
+  </div>
+  <div class="kpi">
+    <small>New shops this month</small>
+    <b>{{ signups_this }}</b>
+    <span>{{ pending_total }} approval-ku wait</span>
+  </div>
+</div>
+
+<div class="two">
+  <div class="card">
+    <h3>Money received</h3>
+    <div class="sub">Last 6 months (₹)</div>
+    <div class="bars">
+      {% for b in pay_bars %}
+        <div class="col">
+          <div class="v">{% if b.value %}₹{{ "{:,.0f}".format(b.value) }}{% endif %}</div>
+          <div class="fill {% if not b.value %}zero{% endif %}" style="height:{{ b.pct }}%"></div>
+          <div class="l">{{ b.label }}</div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>New shops</h3>
+    <div class="sub">Last 6 months</div>
+    <div class="bars">
+      {% for b in signup_bars %}
+        <div class="col">
+          <div class="v">{% if b.value %}{{ b.value }}{% endif %}</div>
+          <div class="fill green {% if not b.value %}zero{% endif %}" style="height:{{ b.pct }}%"></div>
+          <div class="l">{{ b.label }}</div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="two">
+  <div class="card">
+    <h3>Products</h3>
+    <div class="sub">Product-wise summary</div>
+    <div class="wrap">
+      <table style="min-width:380px">
+        <thead><tr><th>Product</th><th>Active shops</th><th>MRR</th><th>Received</th></tr></thead>
+        <tbody>
+        {% for p in products %}
+          {% if p.live %}
+            <tr>
+              <td class="nm">{{ p.name }}</td>
+              <td>{{ p.active }}</td>
+              <td>₹{{ "{:,.0f}".format(p.mrr) }}</td>
+              <td>₹{{ "{:,.0f}".format(p.received) }}</td>
+            </tr>
+          {% else %}
+            <tr><td class="nm">{{ p.name }}</td><td colspan="3" class="soon">Coming soon</td></tr>
+          {% endif %}
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Plan split</h3>
+    <div class="sub">Active shops per plan</div>
+    {% set total_plans = (plan_count.Basic + plan_count.Premium) or 1 %}
+    <div class="split">
+      <div class="row">
+        <span>Basic ₹{{ plan_prices.Basic }}</span>
+        <div class="track"><div class="fillbar" style="width:{{ (plan_count.Basic / total_plans * 100)|round|int }}%;background:#2563eb"></div></div>
+        <span class="n">{{ plan_count.Basic }}</span>
+      </div>
+      <div class="row">
+        <span>Premium ₹{{ plan_prices.Premium }}</span>
+        <div class="track"><div class="fillbar" style="width:{{ (plan_count.Premium / total_plans * 100)|round|int }}%;background:#7c3aed"></div></div>
+        <span class="n">{{ plan_count.Premium }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h3>⏰ Renewals due (next 30 days)</h3>
+  <div class="sub">WhatsApp button click panna reminder message ready-ah open aagum. Neenga Send click pannanum.</div>
+  {% if not renewals %}
+    <div class="none">Next 30 days-la expire aagura shops illa. 🎉</div>
+  {% else %}
+  <div class="wrap">
+    <table>
+      <thead><tr><th>Shop</th><th>Plan</th><th>Expires</th><th>Amount</th><th></th></tr></thead>
+      <tbody>
+      {% for r in renewals %}
+        <tr>
+          <td><div class="nm">{{ r.shop.shop_name }}</div><div class="muted">{{ r.shop.phone or '-' }}</div></td>
+          <td><span class="plan-{{ r.plan }}">{{ r.plan }}</span></td>
+          <td>
+            {{ r.expiry }}
+            <span class="badge {% if r.days_left <= 3 %}d-bad{% elif r.days_left <= 7 %}d-warn{% else %}d-ok{% endif %}">
+              {% if r.days_left == 0 %}innaikku{% else %}{{ r.days_left }} days{% endif %}
+            </span>
+          </td>
+          <td>₹{{ r.price }}</td>
+          <td>
+            {% if r.wa %}<a class="go w" href="{{ r.wa }}" target="_blank" rel="noopener">📱 WhatsApp</a>{% endif %}
+            <a class="go m" href="/superadmin/customers/{{ r.shop.id }}">Manage</a>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h3>⚠️ Recently expired (last 30 days)</h3>
+  <div class="sub">Win-back: marubadiyum renew panna solla.</div>
+  {% if not lapsed %}
+    <div class="none">Recent-ah expire aana shops illa.</div>
+  {% else %}
+  <div class="wrap">
+    <table>
+      <thead><tr><th>Shop</th><th>Plan</th><th>Expired</th><th>Amount</th><th></th></tr></thead>
+      <tbody>
+      {% for r in lapsed %}
+        <tr>
+          <td><div class="nm">{{ r.shop.shop_name }}</div><div class="muted">{{ r.shop.phone or '-' }}</div></td>
+          <td><span class="plan-{{ r.plan }}">{{ r.plan }}</span></td>
+          <td>{{ r.expiry }} <span class="badge d-bad">{{ -r.days_left }} days munnadi</span></td>
+          <td>₹{{ r.price }}</td>
+          <td>
+            {% if r.wa %}<a class="go w" href="{{ r.wa }}" target="_blank" rel="noopener">📱 WhatsApp</a>{% endif %}
+            <a class="go m" href="/superadmin/customers/{{ r.shop.id }}">Manage</a>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+
+<div class="two">
+  <div class="card">
+    <h3>Recent payments</h3>
+    <div class="sub">Last 10</div>
+    {% if not recent %}
+      <div class="none">Payment record illa. Approve / Extend-la "Paid ₹" kudunga.</div>
+    {% else %}
+    <div class="wrap">
+      <table style="min-width:380px">
+        <thead><tr><th>Date</th><th>Shop</th><th>Amount</th><th>Method</th></tr></thead>
+        <tbody>
+        {% for p in recent %}
+          <tr>
+            <td class="muted">{{ p.created_at.strftime('%d-%m-%Y') if p.created_at else '-' }}</td>
+            <td class="nm">
+              {% if pay_shops.get(p.shop_id) %}
+                <a href="/superadmin/customers/{{ p.shop_id }}" style="color:inherit;text-decoration:none">{{ pay_shops[p.shop_id].shop_name }}</a>
+              {% else %}-{% endif %}
+            </td>
+            <td><strong>₹{{ "{:,.0f}".format(p.amount) }}</strong></td>
+            <td>{{ p.method or '-' }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h3>Top shops by billing</h3>
+    <div class="sub">Yaaru adhigama use panraanga</div>
+    {% if not top_shops %}
+      <div class="none">Innum bills illa.</div>
+    {% else %}
+    <div class="wrap">
+      <table style="min-width:380px">
+        <thead><tr><th>Shop</th><th>Bills</th><th>Billed</th></tr></thead>
+        <tbody>
+        {% for t in top_shops %}
+          <tr>
+            <td class="nm"><a href="/superadmin/customers/{{ t.shop.id }}" style="color:inherit;text-decoration:none">{{ t.shop.shop_name }}</a></td>
+            <td>{{ t.bills }}</td>
+            <td><strong>₹{{ "{:,.0f}".format(t.billed) }}</strong></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

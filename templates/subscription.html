@@ -1,1471 +1,199 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Subscription - AI Billing</title>
-
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='style.css') }}">
-
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
-            background: #f4f7ff;
-            color: #172033;
-        }
-
-        .dashboard {
-            min-height: 100vh;
-            display: flex;
-        }
-
-        /* ================= SIDEBAR ================= */
-
-        .sidebar {
-            width: 250px;
-            min-height: 100vh;
-            background: linear-gradient(180deg, #071a3d 0%, #0b2a63 55%, #123c86 100%);
-            color: white;
-            padding: 22px 14px;
-            position: fixed;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            z-index: 100;
-            box-shadow: 5px 0 25px rgba(15, 23, 42, .12);
-        }
-
-        .logo {
-            padding: 10px 12px 25px;
-            border-bottom: 1px solid rgba(255,255,255,.10);
-            margin-bottom: 18px;
-        }
-
-        .logo h2 {
-            margin: 0;
-            font-size: 22px;
-            letter-spacing: .3px;
-        }
-
-        .logo span {
-            display: block;
-            margin-top: 5px;
-            color: #a9c7ff;
-            font-size: 12px;
-        }
-
-        .sidebar ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .sidebar li {
-            margin-bottom: 6px;
-        }
-
-        .sidebar li a {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 13px;
-            color: #dbeafe;
-            text-decoration: none;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            transition: .2s ease;
-        }
-
-        .sidebar li a:hover {
-            background: rgba(255,255,255,.09);
-            color: white;
-            transform: translateX(2px);
-        }
-
-        .sidebar li.active a {
-            background: linear-gradient(135deg, #0066cc, #4f46e5);
-            color: white;
-            box-shadow: 0 6px 15px rgba(37,99,235,.25);
-        }
-
-        /* ================= MAIN ================= */
-
-        .main-content {
-            margin-left: 250px;
-            width: calc(100% - 250px);
-            min-height: 100vh;
-            padding: 25px;
-        }
-
-        /* ================= TOP HEADER ================= */
-
-        .top-header {
-            background: white;
-            border: 1px solid #e3e8f2;
-            border-radius: 18px;
-            padding: 20px 24px;
-            margin-bottom: 22px;
-
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 20px;
-            flex-wrap: wrap;
-
-            box-shadow: 0 8px 25px rgba(15,23,42,.06);
-        }
-
-        .header-left h1 {
-            margin: 0;
-            color: #172033;
-            font-size: 25px;
-        }
-
-        .header-left p {
-            margin: 6px 0 0;
-            color: #64748b;
-            font-size: 13px;
-        }
-
-        .profile-box {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: #f8fafc;
-            border: 1px solid #e5eaf2;
-            padding: 8px 12px;
-            border-radius: 12px;
-        }
-
-        .profile-icon {
-            width: 38px;
-            height: 38px;
-            border-radius: 10px;
-            background: #eaf2ff;
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            font-size: 18px;
-        }
-
-        .profile-box h4 {
-            margin: 0;
-            font-size: 13px;
-            color: #1e293b;
-        }
-
-        .profile-box small {
-            color: #64748b;
-            font-size: 11px;
-        }
-
-        /* ================= CURRENT SUBSCRIPTION ================= */
-
-        .subscription-page-card {
-            background: white;
-            border: 1px solid #e1e7f0;
-            border-radius: 20px;
-            padding: 26px;
-            margin-bottom: 22px;
-
-            box-shadow: 0 12px 30px rgba(15,23,42,.07);
-        }
-
-        .subscription-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        .subscription-label {
-            color: #64748b;
-            font-size: 11px;
-            font-weight: 800;
-            letter-spacing: .8px;
-        }
-
-        .subscription-header h2 {
-            margin: 6px 0 0;
-            font-size: 28px;
-            color: #172033;
-        }
-
-        .subscription-status {
-            padding: 8px 14px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-        }
-
-        .active-status {
-            color: #15803d;
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-        }
-
-        .expired-status {
-            color: #dc2626;
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-        }
-
-        .pending-status {
-            color: #a16207;
-            background: #fffbeb;
-            border: 1px solid #fde68a;
-        }
-
-        /* ================= PRICE ================= */
-
-        .subscription-price {
-            margin-top: 22px;
-
-            font-size: 46px;
-            font-weight: 800;
-
-            color: #1d4ed8;
-        }
-
-        .subscription-price span {
-            font-size: 25px;
-            vertical-align: top;
-        }
-
-        .subscription-price small {
-            font-size: 14px;
-            font-weight: 600;
-            color: #64748b;
-        }
-
-        /* ================= DETAILS ================= */
-
-        .subscription-details {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            margin-top: 24px;
-        }
-
-        .subscription-detail-item {
-            background: #f8fafc;
-            border: 1px solid #e7ebf2;
-            border-radius: 12px;
-            padding: 14px;
-        }
-
-        .subscription-detail-item span {
-            display: block;
-            color: #64748b;
-            font-size: 12px;
-            margin-bottom: 7px;
-        }
-
-        .subscription-detail-item strong {
-            color: #1e293b;
-            font-size: 14px;
-        }
-
-        /* ================= PROGRESS ================= */
-
-        .subscription-progress-box {
-            margin-top: 24px;
-            padding: 18px;
-            background: #f8faff;
-            border: 1px solid #dbeafe;
-            border-radius: 14px;
-        }
-
-        .progress-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .progress-header span {
-            color: #475569;
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .progress-header strong {
-            color: #2563eb;
-            font-size: 13px;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 10px;
-            background: #e2e8f0;
-            border-radius: 20px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            width: 0;
-            height: 100%;
-            border-radius: 20px;
-            background: linear-gradient(90deg, #0066cc, #4f46e5);
-            transition: width .6s ease;
-        }
-
-        /* ================= BUTTON ================= */
-
-        .subscription-btn {
-            display: inline-block;
-            border: none;
-            cursor: pointer;
-            font-weight: 700;
-            border-radius: 10px;
-            text-decoration: none;
-            transition: .2s ease;
-        }
-
-        .renew-btn {
-            background: linear-gradient(135deg, #16a34a, #15803d);
-            color: white;
-            padding: 12px 25px;
-            box-shadow: 0 6px 15px rgba(22,163,74,.20);
-        }
-
-        .renew-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 18px rgba(22,163,74,.25);
-        }
-
-        /* ================= PLAN SELECTION ================= */
-
-        .dashboard-box {
-            background: white;
-            border: 1px solid #e1e7f0;
-            border-radius: 20px;
-            padding: 25px;
-            margin-bottom: 22px;
-            box-shadow: 0 10px 28px rgba(15,23,42,.06);
-        }
-
-        .box-header {
-            margin-bottom: 20px;
-        }
-
-        .box-header h2 {
-            margin: 0;
-            font-size: 19px;
-            color: #172033;
-        }
-
-        .box-header p {
-            margin: 5px 0 0;
-            color: #64748b;
-            font-size: 13px;
-        }
-
-        .plan-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 18px;
-        }
-
-        .plan-card {
-            position: relative;
-            display: block;
-            cursor: pointer;
-        }
-
-        .plan-card > input {
-            position: absolute;
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .plan-card-content {
-            height: 100%;
-            padding: 22px;
-            border-radius: 17px;
-
-            background: #fff;
-            border: 2px solid #e2e8f0;
-
-            transition: .2s ease;
-        }
-
-        .plan-card:hover .plan-card-content {
-            border-color: #93c5fd;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(37,99,235,.08);
-        }
-
-        .plan-card > input:checked + .plan-card-content {
-            border-color: #2563eb;
-            background: linear-gradient(180deg,#f8fbff,#ffffff);
-            box-shadow: 0 10px 28px rgba(37,99,235,.13);
-        }
-
-        .premium-plan > input:checked + .plan-card-content {
-            border-color: #4f46e5;
-            box-shadow: 0 12px 30px rgba(79,70,229,.16);
-        }
-
-        .plan-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 15px;
-        }
-
-        .plan-badge {
-            display: inline-block;
-            padding: 5px 9px;
-            border-radius: 7px;
-            font-size: 10px;
-            font-weight: 800;
-            letter-spacing: .6px;
-        }
-
-        .basic-badge {
-            background: #eff6ff;
-            color: #2563eb;
-        }
-
-        .premium-badge {
-            background: linear-gradient(135deg,#0066cc,#4f46e5);
-            color: white;
-        }
-
-        .plan-top h3 {
-            margin: 9px 0 0;
-            font-size: 19px;
-            color: #1e293b;
-        }
-
-        .plan-check {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-
-            background: #e2e8f0;
-            color: #94a3b8;
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            font-size: 15px;
-            font-weight: 800;
-        }
-
-        .plan-card > input:checked + .plan-card-content .plan-check {
-            background: #2563eb;
-            color: white;
-        }
-
-        .premium-plan > input:checked + .plan-card-content .plan-check {
-            background: #4f46e5;
-        }
-
-        .plan-price {
-            margin-top: 22px;
-            font-size: 38px;
-            font-weight: 800;
-            color: #1e293b;
-        }
-
-        .plan-price span {
-            font-size: 21px;
-            vertical-align: top;
-        }
-
-        .plan-price small {
-            font-size: 13px;
-            font-weight: 600;
-            color: #64748b;
-        }
-
-        .premium-price {
-            color: #4f46e5;
-        }
-
-        .plan-description {
-            min-height: 38px;
-            color: #64748b;
-            font-size: 13px;
-            line-height: 1.5;
-        }
-
-        .plan-features {
-            list-style: none;
-            padding: 0;
-            margin: 20px 0;
-        }
-
-        .plan-features li {
-            padding: 7px 0;
-            border-bottom: 1px solid #f1f5f9;
-            font-size: 13px;
-            color: #475569;
-        }
-
-        .plan-features li:last-child {
-            border-bottom: none;
-        }
-
-        .plan-select-text {
-            text-align: center;
-            padding: 10px;
-            border-radius: 9px;
-
-            background: #f8fafc;
-            color: #64748b;
-
-            font-size: 13px;
-            font-weight: 700;
-        }
-
-        .plan-card > input:checked + .plan-card-content .plan-select-text {
-            background: #eff6ff;
-            color: #2563eb;
-        }
-
-        .plan-action {
-            text-align: center;
-            margin-top: 22px;
-        }
-
-        .plan-save-btn {
-            background: linear-gradient(135deg,#0066cc,#4f46e5);
-            color: white;
-            padding: 13px 26px;
-            font-size: 14px;
-            box-shadow: 0 7px 17px rgba(37,99,235,.22);
-        }
-
-        .plan-save-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 9px 20px rgba(37,99,235,.28);
-        }
-
-        /* ================= FEATURES ================= */
-
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 14px;
-        }
-
-        .feature-item {
-            display: flex;
-            gap: 12px;
-            align-items: flex-start;
-
-            padding: 15px;
-
-            background: #f8fafc;
-            border: 1px solid #e7ebf2;
-            border-radius: 12px;
-        }
-
-        .feature-item > span {
-            width: 38px;
-            height: 38px;
-            min-width: 38px;
-
-            border-radius: 10px;
-
-            background: #eff6ff;
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            font-size: 18px;
-        }
-
-        .feature-item strong {
-            color: #1e293b;
-            font-size: 13px;
-        }
-
-        .feature-item p {
-            margin: 5px 0 0;
-            color: #64748b;
-            font-size: 12px;
-            line-height: 1.4;
-        }
-
-        /* ================= SECURITY NOTE ================= */
-
-        .subscription-note {
-            padding: 17px 20px;
-
-            background: linear-gradient(135deg,#eff6ff,#eef2ff);
-
-            border: 1px solid #bfdbfe;
-            border-radius: 14px;
-
-            margin-bottom: 22px;
-        }
-
-        .subscription-note strong {
-            color: #1e40af;
-            font-size: 14px;
-        }
-
-        .subscription-note p {
-            margin: 5px 0 0;
-            color: #64748b;
-            font-size: 12px;
-        }
-
-        /* ================= FOOTER ================= */
-
-        .dashboard-footer {
-            text-align: center;
-            padding: 10px 0 20px;
-        }
-
-        .dashboard-footer p {
-            color: #94a3b8;
-            font-size: 12px;
-            margin: 0;
-        }
-
-        /* ================= RESPONSIVE ================= */
-
-        @media(max-width:1100px) {
-
-            .subscription-details {
-                grid-template-columns: repeat(2,1fr);
-            }
-
-            .feature-grid {
-                grid-template-columns: repeat(2,1fr);
-            }
-        }
-
-        @media(max-width:850px) {
-
-            .sidebar {
-                width: 210px;
-            }
-
-            .main-content {
-                margin-left: 210px;
-                width: calc(100% - 210px);
-                padding: 18px;
-            }
-
-            .plan-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media(max-width:650px) {
-
-            .dashboard {
-                display: block;
-            }
-
-            .sidebar {
-                position: relative;
-                width: 100%;
-                min-height: auto;
-                padding: 15px;
-            }
-
-            .logo {
-                padding-bottom: 15px;
-                margin-bottom: 10px;
-            }
-
-            .sidebar ul {
-                display: flex;
-                gap: 6px;
-                overflow-x: auto;
-                padding-bottom: 3px;
-            }
-
-            .sidebar li {
-                flex: 0 0 auto;
-                margin: 0;
-            }
-
-            .sidebar li a {
-                white-space: nowrap;
-                padding: 9px 11px;
-                font-size: 12px;
-            }
-
-            .main-content {
-                margin-left: 0;
-                width: 100%;
-                padding: 12px;
-            }
-
-            .top-header {
-                padding: 17px;
-                border-radius: 15px;
-            }
-
-            .header-left h1 {
-                font-size: 21px;
-            }
-
-            .subscription-page-card,
-            .dashboard-box {
-                padding: 18px;
-                border-radius: 15px;
-            }
-
-            .subscription-header {
-                align-items: flex-start;
-            }
-
-            .subscription-price {
-                font-size: 38px;
-            }
-
-            .subscription-details {
-                grid-template-columns: 1fr;
-            }
-
-            .feature-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .progress-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .profile-box {
-                width: 100%;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Billing | Subscription</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#030b1d;--surface:rgba(8,23,52,.88);--text:#f8fbff;--text-2:#c7d5ed;--muted:#7f94b8;--line:rgba(117,157,219,.18);--blue:#1683ff;--cyan:#12d9ff;--purple:#8b3dff;--green:#00d6a3;--orange:#ffad24;--red:#ff5b6e}
+body{font-family:Inter,sans-serif;background:radial-gradient(circle at 20% 0%,#0a1f4d,var(--bg) 60%);color:var(--text);min-height:100vh}
+.wrap{max-width:1000px;margin:0 auto;padding:24px 18px 60px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;gap:10px;flex-wrap:wrap}
+.top h1{font-size:24px;font-weight:800}
+.nav a{color:var(--text-2);text-decoration:none;font-size:13px;font-weight:600;border:1px solid var(--line);padding:8px 14px;border-radius:10px;margin-left:6px;display:inline-block}
+.nav a:hover{border-color:var(--blue);color:#fff}
+.banner{padding:14px 16px;border-radius:14px;margin-bottom:18px;font-size:14px;font-weight:600}
+.banner.red{background:rgba(255,91,110,.13);border:1px solid rgba(255,91,110,.35);color:#ff9aa6}
+.banner.green{background:rgba(0,214,163,.12);border:1px solid rgba(0,214,163,.35);color:#5ff0c8}
+.banner.orange{background:rgba(255,173,36,.12);border:1px solid rgba(255,173,36,.35);color:#ffc968}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:20px}
+.cur{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+.cur .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+.cur .v{font-size:18px;font-weight:700}
+.pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700}
+.pill.ok{background:rgba(0,214,163,.15);color:#5ff0c8}
+.pill.bad{background:rgba(255,91,110,.15);color:#ff9aa6}
+.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+.plan{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px;display:flex;flex-direction:column}
+.plan.prem{border-color:rgba(139,61,255,.55);box-shadow:0 0 36px rgba(139,61,255,.16)}
+.plan .tag{font-size:12px;color:var(--cyan);font-weight:700}
+.plan h3{font-size:22px;margin:4px 0 8px}
+.price{font-size:34px;font-weight:800;margin-bottom:14px}
+.price small{font-size:13px;color:var(--muted);font-weight:500}
+.plan ul{list-style:none;margin-bottom:20px;flex:1}
+.plan li{font-size:13.5px;color:var(--text-2);padding:5px 0}
+.plan li::before{content:"✓ ";color:var(--green);font-weight:800}
+.btn{border:0;cursor:pointer;width:100%;padding:13px;border-radius:12px;font-weight:700;font-size:14px;color:#fff;background:linear-gradient(135deg,var(--blue),var(--purple));font-family:inherit}
+.btn:hover{filter:brightness(1.1)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-size:11px;text-transform:uppercase}
+h2{font-size:16px;margin-bottom:14px}
+.msg{margin-top:12px;font-size:13px;color:#ff9aa6;min-height:18px}
+@media(max-width:600px){.price{font-size:28px}}
+</style>
 </head>
-
 <body>
-
-<div class="dashboard">
-
-    <!-- ================= SIDEBAR ================= -->
-
-    <aside class="sidebar">
-
-        <div class="logo">
-            <h2>AI Billing</h2>
-            <span>Business Suite</span>
-        </div>
-
-        <ul>
-
-            <li>
-                <a href="/">🧾 Billing</a>
-            </li>
-
-            <li>
-                <a href="/dashboard">📊 Dashboard</a>
-            </li>
-
-            <li>
-                <a href="/products">📦 Products</a>
-            </li>
-
-            <li>
-                <a href="/customers">👥 Customers</a>
-            </li>
-
-            <li>
-                <a href="/history">📜 History</a>
-            </li>
-
-            <li class="active">
-                <a href="/subscription">💳 Subscription</a>
-            </li>
-
-            <li>
-                <a href="/shop">⚙️ Shop Settings</a>
-            </li>
-
-            <li>
-                <a href="/logout">🚪 Logout</a>
-            </li>
-
-        </ul>
-
-    </aside>
-
-
-    <!-- ================= MAIN ================= -->
-
-    <main class="main-content">
-
-        <!-- HEADER -->
-
-        <div class="top-header">
-
-            <div class="header-left">
-
-                <h1>💳 Subscription</h1>
-
-                <p>
-                    Choose the right plan for your business
-                </p>
-
-            </div>
-
-            <div class="header-right">
-
-                <div class="profile-box">
-
-                    <div class="profile-icon">
-                        👤
-                    </div>
-
-                    <div>
-
-                        <h4>Administrator</h4>
-
-                        <small>
-                            Subscription Management
-                        </small>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- ================= CURRENT SUBSCRIPTION ================= -->
-
-        <div class="subscription-page-card">
-
-            <div class="subscription-header">
-
-                <div>
-
-                    <span class="subscription-label">
-                        CURRENT PLAN
-                    </span>
-
-                    <h2>
-                        {{ subscription.plan }}
-                    </h2>
-
-                </div>
-
-
-                {% if subscription.status == "Active" %}
-
-                    <span class="subscription-status active-status">
-                        ● Active
-                    </span>
-
-                {% elif subscription.status == "Expired" %}
-
-                    <span class="subscription-status expired-status">
-                        ● Expired
-                    </span>
-
-                {% else %}
-
-                    <span class="subscription-status pending-status">
-                        ● {{ subscription.status }}
-                    </span>
-
-                {% endif %}
-
-            </div>
-
-
-            <!-- CURRENT PRICE -->
-
-            <div class="subscription-price">
-
-                {% if subscription.plan == "Premium" %}
-
-                    <span>₹</span>999
-
-                {% else %}
-
-                    <span>₹</span>499
-
-                {% endif %}
-
-                <small>
-                    / month
-                </small>
-
-            </div>
-
-
-            <!-- DETAILS -->
-
-            <div class="subscription-details">
-
-                <div class="subscription-detail-item">
-
-                    <span>
-                        📅 Start Date
-                    </span>
-
-                    <strong>
-                        {{ subscription.start_date }}
-                    </strong>
-
-                </div>
-
-
-                <div class="subscription-detail-item">
-
-                    <span>
-                        📅 Expiry Date
-                    </span>
-
-                    <strong>
-
-                        {% if subscription.expiry_date %}
-
-                            {{ subscription.expiry_date }}
-
-                        {% else %}
-
-                            Not Set
-
-                        {% endif %}
-
-                    </strong>
-
-                </div>
-
-
-                <div class="subscription-detail-item">
-
-                    <span>
-                        ⏳ Remaining
-                    </span>
-
-                    <strong>
-                        {{ remaining_days }} Days
-                    </strong>
-
-                </div>
-
-
-                <div class="subscription-detail-item">
-
-                    <span>
-                        💰 Plan Price
-                    </span>
-
-                    <strong>
-
-                        {% if subscription.plan == "Premium" %}
-
-                            ₹999 / Month
-
-                        {% else %}
-
-                            ₹499 / Month
-
-                        {% endif %}
-
-                    </strong>
-
-                </div>
-
-            </div>
-
-
-            <!-- ================= PROGRESS ================= -->
-
-            {% if subscription.status == "Active" %}
-
-                {% set progress = (remaining_days * 100 / 30) %}
-
-                {% if progress > 100 %}
-
-                    {% set progress = 100 %}
-
-                {% endif %}
-
-                {% if progress < 0 %}
-
-                    {% set progress = 0 %}
-
-                {% endif %}
-
-
-                <div class="subscription-progress-box">
-
-                    <div class="progress-header">
-
-                        <span>
-                            Subscription Status
-                        </span>
-
-                        <strong>
-                            {{ remaining_days }} Days Remaining
-                        </strong>
-
-                    </div>
-
-
-                    <div class="progress-bar">
-
-                        <div
-                            class="progress-fill"
-                            data-progress="{{ progress }}">
-                        </div>
-
-                    </div>
-
-                </div>
-
-            {% endif %}
-
-
-            <!-- ================= RENEW BUTTON ================= -->
-
-            <div style="margin-top:20px; text-align:center;">
-
-                <a
-                    href="/renew_subscription"
-                    class="subscription-btn renew-btn"
-                    onclick="return confirm('Renew subscription for 30 more days?')">
-
-                    🔄 Renew Subscription (+30 Days)
-
-                </a>
-
-            </div>
-
-        </div>
-
-
-        <!-- ================= SELECT PLAN ================= -->
-
-        <div class="dashboard-box plan-selection-box">
-
-            <div class="box-header">
-
-                <div>
-
-                    <h2>
-                        🚀 Choose Your Plan
-                    </h2>
-
-                    <p>
-                        Select a plan that fits your business
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <form
-                method="POST"
-                action="/select_plan"
-                id="planForm">
-
-                <input
-                    type="hidden"
-                    name="csrf_token"
-                    value="{{ csrf_token }}">
-
-
-                <div class="plan-grid">
-
-
-                    <!-- ================= BASIC ================= -->
-
-                    <label class="plan-card">
-
-                        <input
-                            type="radio"
-                            name="plan"
-                            value="Basic"
-                            {% if subscription.plan != "Premium" %}
-                                checked
-                            {% endif %}
-                        >
-
-                        <div class="plan-card-content">
-
-                            <div class="plan-top">
-
-                                <div>
-
-                                    <span class="plan-badge basic-badge">
-                                        BASIC
-                                    </span>
-
-                                    <h3>
-                                        Essential
-                                    </h3>
-
-                                </div>
-
-                                <div class="plan-check">
-                                    ✓
-                                </div>
-
-                            </div>
-
-
-                            <div class="plan-price">
-
-                                <span>₹</span>499
-
-                                <small>
-                                    / month
-                                </small>
-
-                            </div>
-
-
-                            <p class="plan-description">
-                                Essential billing tools
-                                for small businesses.
-                            </p>
-
-
-                            <ul class="plan-features">
-
-                                <li>✅ Smart Billing</li>
-                                <li>✅ Product & Stock Management</li>
-                                <li>✅ Customer Management</li>
-                                <li>✅ Bill History</li>
-                                <li>✅ Basic Dashboard</li>
-                                <li>❌ Advanced Reports</li>
-                                <li>❌ WhatsApp / SMS</li>
-                                <li>❌ Owner Android App</li>
-
-                            </ul>
-
-
-                            <div class="plan-select-text">
-                                Select Basic
-                            </div>
-
-                        </div>
-
-                    </label>
-
-
-                    <!-- ================= PREMIUM ================= -->
-
-                    <label class="plan-card premium-plan">
-
-                        <input
-                            type="radio"
-                            name="plan"
-                            value="Premium"
-                            {% if subscription.plan == "Premium" %}
-                                checked
-                            {% endif %}
-                        >
-
-                        <div class="plan-card-content">
-
-                            <div class="plan-top">
-
-                                <div>
-
-                                    <span class="plan-badge premium-badge">
-                                        PREMIUM
-                                    </span>
-
-                                    <h3>
-                                        Business Suite
-                                    </h3>
-
-                                </div>
-
-                                <div class="plan-check">
-                                    ✓
-                                </div>
-
-                            </div>
-
-
-                            <div class="plan-price premium-price">
-
-                                <span>₹</span>999
-
-                                <small>
-                                    / month
-                                </small>
-
-                            </div>
-
-
-                            <p class="plan-description">
-                                Complete business management
-                                solution with advanced features.
-                            </p>
-
-
-                            <ul class="plan-features">
-
-                                <li>✅ Everything in Basic</li>
-                                <li>✅ Advanced Dashboard</li>
-                                <li>✅ Sales Reports</li>
-                                <li>✅ WhatsApp / SMS</li>
-                                <li>✅ AI Business Insights</li>
-                                <li>✅ Advanced Alerts</li>
-                                <li>✅ Backup & Restore</li>
-                                <li>✅ Owner Android App</li>
-
-                            </ul>
-
-
-                            <div class="plan-select-text">
-                                Select Premium
-                            </div>
-
-                        </div>
-
-                    </label>
-
-                </div>
-
-
-                <!-- SAVE -->
-
-                <div class="plan-action">
-
-                    <button
-                        type="submit"
-                        class="subscription-btn plan-save-btn">
-
-                        💾 Save Selected Plan
-
-                    </button>
-
-                </div>
-
-            </form>
-
-        </div>
-
-
-        <!-- ================= FEATURES ================= -->
-
-        <div class="dashboard-box subscription-features">
-
-            <div class="box-header">
-
-                <h2>
-                    ✨ Included Features
-                </h2>
-
-            </div>
-
-
-            <div class="feature-grid">
-
-
-                <div class="feature-item">
-
-                    <span>🧾</span>
-
-                    <div>
-
-                        <strong>
-                            Smart Billing
-                        </strong>
-
-                        <p>
-                            Create professional bills quickly.
-                        </p>
-
-                    </div>
-
-                </div>
-
-
-                <div class="feature-item">
-
-                    <span>📦</span>
-
-                    <div>
-
-                        <strong>
-                            Inventory Management
-                        </strong>
-
-                        <p>
-                            Track products and stock levels.
-                        </p>
-
-                    </div>
-
-                </div>
-
-
-                <div class="feature-item">
-
-                    <span>👥</span>
-
-                    <div>
-
-                        <strong>
-                            Customer Management
-                        </strong>
-
-                        <p>
-                            Manage customer billing history.
-                        </p>
-
-                    </div>
-
-                </div>
-
-
-                <div class="feature-item">
-
-                    <span>📊</span>
-
-                    <div>
-
-                        <strong>
-                            Business Dashboard
-                        </strong>
-
-                        <p>
-                            Monitor sales and business activity.
-                        </p>
-
-                    </div>
-
-                </div>
-
-
-                <div class="feature-item">
-
-                    <span>📱</span>
-
-                    <div>
-
-                        <strong>
-                            Business Notifications
-                        </strong>
-
-                        <p>
-                            Available with Premium plan.
-                        </p>
-
-                    </div>
-
-                </div>
-
-
-                <div class="feature-item">
-
-                    <span>🔐</span>
-
-                    <div>
-
-                        <strong>
-                            Secure Business Data
-                        </strong>
-
-                        <p>
-                            Protected shop and billing data.
-                        </p>
-
-                    </div>
-
-                </div>
-
-
-            </div>
-
-        </div>
-
-
-        <!-- ================= SECURITY NOTE ================= -->
-
-        <div class="subscription-note">
-
-            <strong>
-                🔒 Secure Subscription
-            </strong>
-
-            <p>
-                Payment processing will be securely
-                integrated with Razorpay.
-            </p>
-
-        </div>
-
-
-        <!-- ================= FOOTER ================= -->
-
-        <footer class="dashboard-footer">
-
-            <p>
-                © 2026 AI Billing System
-            </p>
-
-        </footer>
-
-
-    </main>
+<div class="wrap">
+
+<div class="top">
+  <h1>Subscription</h1>
+  <div class="nav">
+    {% if not expired %}<a href="/">Dashboard</a>{% endif %}
+    <a href="/logout">Logout</a>
+  </div>
+</div>
+
+{% if paid %}
+<div class="banner green">✅ Payment successful! Your plan is active now.</div>
+{% endif %}
+
+{% if expired %}
+<div class="banner red">⚠️ Your subscription has expired. Pay below to continue using AI Billing.</div>
+{% elif remaining_days <= 7 %}
+<div class="banner orange">⏰ Only {{ remaining_days }} day(s) left. Renew now to avoid interruption.</div>
+{% endif %}
+
+{% if not razorpay_ready %}
+<div class="banner orange">Online payment is not set up yet. Please contact support.</div>
+{% endif %}
+
+<div class="card">
+  <div class="cur">
+    <div><div class="k">Current Plan</div><div class="v">{{ subscription.plan }}</div></div>
+    <div><div class="k">Status</div><div class="v">{% if expired %}<span class="pill bad">Expired</span>{% else %}<span class="pill ok">Active</span>{% endif %}</div></div>
+    <div><div class="k">Expiry Date</div><div class="v">{{ subscription.expiry_date.strftime('%d %b %Y') if subscription.expiry_date else '-' }}</div></div>
+    <div><div class="k">Days Left</div><div class="v">{{ remaining_days }}</div></div>
+  </div>
+</div>
+
+<div class="plans">
+  <div class="plan">
+    <div class="tag">Essential</div>
+    <h3>Basic</h3>
+    <div class="price">₹{{ prices['Basic'] }} <small>/ 30 days</small></div>
+    <ul>
+      <li>Smart billing &amp; invoices</li>
+      <li>Products, stock &amp; customers</li>
+      <li>Suppliers &amp; purchases</li>
+      <li>WhatsApp bill sharing</li>
+    </ul>
+    <button class="btn" data-plan="Basic" {% if not razorpay_ready or (subscription.plan == 'Premium' and not expired) %}disabled{% endif %}>
+      {% if subscription.plan == 'Basic' %}{{ 'Renew' if (expired or remaining_days <= 7) else 'Extend' }}{% else %}Pay{% endif %} ₹{{ prices['Basic'] }} with Razorpay
+    </button>
+  </div>
+
+  <div class="plan prem">
+    <div class="tag">Business Suite</div>
+    <h3>Premium</h3>
+    <div class="price">₹{{ prices['Premium'] }} <small>/ 30 days</small></div>
+    <ul>
+      <li>Everything in Basic</li>
+      <li>AI Assistant &amp; insights</li>
+      <li>Voice &amp; scan billing</li>
+      <li>Advanced reports</li>
+    </ul>
+    <button class="btn" data-plan="Premium" {% if not razorpay_ready %}disabled{% endif %}>
+      {% if subscription.plan == 'Premium' %}{{ 'Renew' if (expired or remaining_days <= 7) else 'Extend' }}{% else %}Upgrade for{% endif %} ₹{{ prices['Premium'] }} with Razorpay
+    </button>
+  </div>
+</div>
+<div class="msg" id="msg"></div>
+
+<div class="card" style="margin-top:20px">
+  <h2>Payment History</h2>
+  {% if payments %}
+  <table>
+    <tr><th>Date</th><th>Plan</th><th>Amount</th><th>Method</th></tr>
+    {% for p in payments %}
+    <tr>
+      <td>{{ p.created_at.strftime('%d %b %Y') if p.created_at else '-' }}</td>
+      <td>{{ p.plan or '-' }}</td>
+      <td>₹{{ '%g'|format(p.amount) }}</td>
+      <td>{{ p.method or '-' }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <div style="color:var(--muted);font-size:13px">No payments yet.</div>
+  {% endif %}
+</div>
 
 </div>
 
-
-<!-- ================= PROGRESS BAR SCRIPT ================= -->
-
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
+(function(){
+  var CSRF = "{{ csrf_token }}";
+  var msg = document.getElementById("msg");
+  var buttons = document.querySelectorAll("button[data-plan]");
 
-document.addEventListener("DOMContentLoaded", function () {
+  function say(t){ msg.textContent = t || ""; }
+  function lock(v){ buttons.forEach(function(b){ b.disabled = v; }); }
 
-    const progressBars =
-        document.querySelectorAll(".progress-fill");
-
-    progressBars.forEach(function (bar) {
-
-        const progress =
-            parseFloat(bar.dataset.progress);
-
-        if (!isNaN(progress)) {
-
-            const safeProgress =
-                Math.max(0, Math.min(progress, 100));
-
-            bar.style.width =
-                safeProgress + "%";
-        }
-
+  function post(url, body){
+    return fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Requested-With": "XMLHttpRequest",
+        "X-CSRF-Token": CSRF
+      },
+      body: JSON.stringify(body)
+    }).then(function(r){
+      return r.json().catch(function(){ return {ok:false, error:"Server error. Try again."}; });
     });
+  }
 
-});
+  buttons.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      say(""); lock(true);
 
+      post("/payment/create_order", {plan: btn.dataset.plan}).then(function(d){
+        if(!d.ok){ say(d.error || "Could not start payment."); lock(false); return; }
+
+        var rz = new Razorpay({
+          key: d.key_id,
+          amount: d.amount,
+          currency: d.currency,
+          name: d.name,
+          description: d.description,
+          order_id: d.order_id,
+          prefill: d.prefill,
+          theme: {color: "#1683ff"},
+          handler: function(resp){
+            say("Verifying payment...");
+            post("/payment/verify", resp).then(function(v){
+              if(v.ok){ window.location = "/subscription?paid=1"; }
+              else { say(v.error || "Verification failed. If money was deducted, it will activate automatically."); lock(false); }
+            });
+          },
+          modal: { ondismiss: function(){ lock(false); } }
+        });
+
+        rz.on("payment.failed", function(){
+          say("Payment failed. Please try again.");
+          lock(false);
+        });
+
+        rz.open();
+      }).catch(function(){ say("Network error. Try again."); lock(false); });
+    });
+  });
+})();
 </script>
-
-
 </body>
 </html>
-```

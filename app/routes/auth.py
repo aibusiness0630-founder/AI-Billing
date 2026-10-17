@@ -231,14 +231,15 @@ def login():
 
         ok, status = check_subscription(shop.id)
 
-        if not ok:
-            return "❌ Your subscription has expired. Please renew."
-
+        # always log in; expired shops land on the Subscription page to pay
         session.clear()
         session["shop_id"] = shop.id
         session["csrf_token"] = os.urandom(32).hex()
 
         reset_login_attempts(username)
+
+        if not ok:
+            return redirect("/subscription")
 
         return redirect("/")
 

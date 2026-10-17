@@ -13,6 +13,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from datetime import datetime, timedelta
 import os
 import secrets
+from urllib.parse import quote
 
 from app import db
 from app.models import (
@@ -31,6 +32,9 @@ superadmin_bp = Blueprint("superadmin", __name__, url_prefix="/superadmin")
 
 STATUSES = ("PENDING", "APPROVED", "REJECTED")
 PLANS = ("Basic", "Premium")
+PLAN_PRICES = {"Basic": 499, "Premium": 999}
+MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+               "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 PAY_METHODS = ("Cash", "UPI", "Bank Transfer", "Other")
 FILTERS = ("all", "active", "expiring", "expired", "suspended")
 SA_ATTEMPTS = {}
@@ -636,3 +640,207 @@ def reset_password(shop_id):
         "ok"
     )
     return _back(shop.id)
+
+
+# ---------------------------------------------------------------
+# revenue
+# ---------------------------------------------------------------
+
+def _ist(dt):
+    return dt + timedelta(hours=5, minutes=30)
+
+
+def _month_keys(n=6):
+    now = _ist(datetime.utcnow())
+    year, month = now.year, now.month
+    keys = []
+    for _ in range(n):
+        keys.append((year, month))
+        month -= 1
+        if month == 0:
+            month = 12
+            year -= 1
+    return list(reversed(keys))
+
+
+def _bars(keys, bucket):
+    values = [bucket.get(k, 0) for k in keys]
+    top = max(values) or 1
+    return [
+        {
+            "label": f"{MONTH_NAMES[m - 1]} {str(y)[2:]}",
+            "value": v,
+            "pct": max(round(v / top * 100), 4) if v > 0 else 0
+        }
+        for (y, m), v in zip(keys, values)
+    ]
+
+
+def _wa_link(shop, text):
+    digits = "".join(c for c in (shop.phone or "") if c.isdigit())
+    if len(digits) == 10:
+        digits = "91" + digits
+    elif len(digits) < 10:
+        return None
+    return f"https://wa.me/{digits}?text={quote(text)}"
+
+
+@superadmin_bp.route("/revenue")
+@superadmin_required
+def revenue():
+
+    today = _today()
+    keys = _month_keys(6)
+    this_key, last_key = keys[-1], keys[-2]
+
+    start_utc = datetime(keys[0][0], keys[0][1], 1) - timedelta(hours=5, minutes=30)
+
+    # ---- money received + signups, bucketed per month (IST) ----
+    pay_bucket = {}
+    for p in SubscriptionPayment.query.filter(
+        SubscriptionPayment.created_at >= start_utc
+    ).all():
+        if p.created_at:
+            d = _ist(p.created_at)
+            pay_bucket[(d.year, d.month)] = pay_bucket.get((d.year, d.month), 0) + (p.amount or 0)
+
+    signup_bucket = {}
+    for s in Shop.query.filter(
+        Shop.created_at >= start_utc,
+        Shop.approval_status != "REJECTED"
+    ).all():
+        if s.created_at:
+            d = _ist(s.created_at)
+            signup_bucket[(d.year, d.month)] = signup_bucket.get((d.year, d.month), 0) + 1
+
+    received_this = pay_bucket.get(this_key, 0)
+    received_last = pay_bucket.get(last_key, 0)
+    delta = None
+    if received_last > 0:
+        delta = round((received_this - received_last) / received_last * 100)
+
+    total_received = float(
+        db.session.query(func.coalesce(func.sum(SubscriptionPayment.amount), 0)).scalar() or 0
+    )
+
+    # ---- subscriptions: MRR, plan split, renewals ----
+    shops = Shop.query.filter(Shop.approval_status.in_(("APPROVED", "SUSPENDED"))).all()
+    subs = {}
+    if shops:
+        for sub in Subscription.query.filter(
+            Subscription.shop_id.in_([s.id for s in shops])
+        ).all():
+            subs[sub.shop_id] = sub
+
+    mrr = 0
+    active_shops = 0
+    plan_count = {"Basic": 0, "Premium": 0}
+    renewals = []
+    lapsed = []
+
+    for shop in shops:
+        sub = subs.get(shop.id)
+        state, days_left = _shop_state(shop, sub, today)
+
+        if state in ("active", "expiring"):
+            active_shops += 1
+            if sub:
+                plan = sub.plan if sub.plan in PLAN_PRICES else "Basic"
+                plan_count[plan] += 1
+                mrr += PLAN_PRICES[plan]
+
+        if sub and days_left is not None:
+            plan = sub.plan if sub.plan in PLAN_PRICES else "Basic"
+            exp = sub.expiry_date.strftime("%d-%m-%Y")
+
+            if state in ("active", "expiring") and days_left <= 30:
+                text = (f"Vanakkam! Unga {shop.shop_name} AI Billing {plan} plan "
+                        f"{exp} anru expire aagum. Renew panna ippove reply pannunga. "
+                        f"- ANFIA Technology")
+                renewals.append({
+                    "shop": shop, "plan": plan, "days_left": days_left,
+                    "expiry": exp, "price": PLAN_PRICES[plan],
+                    "wa": _wa_link(shop, text)
+                })
+
+            elif state == "expired" and days_left >= -30:
+                text = (f"Vanakkam! Unga {shop.shop_name} AI Billing {plan} plan "
+                        f"{exp} anru expire aagiduchu. Marubadiyum use panna reply "
+                        f"pannunga. - ANFIA Technology")
+                lapsed.append({
+                    "shop": shop, "plan": plan, "days_left": days_left,
+                    "expiry": exp, "price": PLAN_PRICES[plan],
+                    "wa": _wa_link(shop, text)
+                })
+
+    renewals.sort(key=lambda r: r["days_left"])
+    lapsed.sort(key=lambda r: -r["days_left"])
+
+    renewals_value = sum(r["price"] for r in renewals)
+
+    # ---- recent payments ----
+    recent = (
+        SubscriptionPayment.query
+        .order_by(SubscriptionPayment.created_at.desc())
+        .limit(10)
+        .all()
+    )
+    pay_shops = {}
+    if recent:
+        for s in Shop.query.filter(Shop.id.in_([p.shop_id for p in recent])).all():
+            pay_shops[s.id] = s
+
+    # ---- top shops by billing volume ----
+    top_rows = (
+        db.session.query(
+            Invoice.shop_id,
+            func.coalesce(func.sum(Invoice.total_amount), 0),
+            func.count(Invoice.id)
+        )
+        .filter(_not_cancelled())
+        .group_by(Invoice.shop_id)
+        .order_by(func.sum(Invoice.total_amount).desc())
+        .limit(5)
+        .all()
+    )
+    top_shops = []
+    if top_rows:
+        names = {
+            s.id: s for s in
+            Shop.query.filter(Shop.id.in_([r[0] for r in top_rows])).all()
+        }
+        for shop_id, total, cnt in top_rows:
+            if shop_id in names:
+                top_shops.append({"shop": names[shop_id], "billed": float(total or 0), "bills": cnt})
+
+    pending_total = Shop.query.filter(Shop.approval_status == "PENDING").count()
+
+    products = [
+        {"name": "AI Billing", "live": True, "active": active_shops,
+         "mrr": mrr, "received": total_received},
+        {"name": "HELIOGRID", "live": False},
+    ]
+
+    return render_template(
+        "superadmin_revenue.html",
+        active="revenue",
+        received_this=received_this,
+        received_last=received_last,
+        delta=delta,
+        total_received=total_received,
+        mrr=mrr,
+        active_shops=active_shops,
+        signups_this=signup_bucket.get(this_key, 0),
+        pending_total=pending_total,
+        pay_bars=_bars(keys, pay_bucket),
+        signup_bars=_bars(keys, signup_bucket),
+        plan_count=plan_count,
+        plan_prices=PLAN_PRICES,
+        renewals=renewals,
+        renewals_value=renewals_value,
+        lapsed=lapsed,
+        recent=recent,
+        pay_shops=pay_shops,
+        top_shops=top_shops,
+        products=products
+    )

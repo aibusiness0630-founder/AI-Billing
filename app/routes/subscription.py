@@ -1,96 +1,73 @@
-from flask import (
-    Blueprint,
-    render_template,
-    request,
-    redirect,
-    session
-)
+from datetime import datetime
 
-from datetime import datetime, timedelta
+from flask import Blueprint, render_template, session, redirect, request
 
 from app import db
-from app.models import Subscription
+from app.models import Subscription, SubscriptionPayment
+from app.utils.decorators import shop_session_required
+from app.utils.plans import PLAN_PRICES
+from app.utils import razorpay_utils as rzp
 
-subscription_bp = Blueprint('subscription', __name__)
+subscription_bp = Blueprint("subscription", __name__)
 
 
 @subscription_bp.route("/subscription")
-def subscription():
-
-    if "shop_id" not in session:
-        return redirect("/login")
+@shop_session_required
+def subscription_page():
 
     shop_id = session["shop_id"]
-
-    sub = Subscription.query.filter_by(shop_id=shop_id).first()
-
-    if not sub:
-        return "Subscription not found"
-
     today = datetime.now().date()
 
-    if sub.expiry_date:
-        remaining_days = (sub.expiry_date - today).days
-    else:
-        remaining_days = 0
+    subscription = Subscription.query.filter_by(shop_id=shop_id).first()
 
-    if remaining_days < 0:
-        sub.status = "Expired"
+    if not subscription:
+        subscription = Subscription(
+            shop_id=shop_id,
+            plan="Basic",
+            status="Expired",
+            start_date=today,
+            expiry_date=today
+        )
+        db.session.add(subscription)
         db.session.commit()
+
+    remaining_days = 0
+    if subscription.expiry_date:
+        remaining_days = (subscription.expiry_date - today).days
+
+    expired = remaining_days < 0
+
+    if expired and subscription.status != "Expired":
+        subscription.status = "Expired"
+        db.session.commit()
+
+    payments = (
+        SubscriptionPayment.query
+        .filter_by(shop_id=shop_id)
+        .order_by(SubscriptionPayment.created_at.desc())
+        .limit(10)
+        .all()
+    )
+
+    if "csrf_token" not in session:
+        import os
+        session["csrf_token"] = os.urandom(32).hex()
 
     return render_template(
         "subscription.html",
-        subscription=sub,
-        remaining_days=max(remaining_days, 0)
+        subscription=subscription,
+        remaining_days=max(remaining_days, 0),
+        expired=expired,
+        payments=payments,
+        csrf_token=session["csrf_token"],
+        razorpay_ready=rzp.is_configured(),
+        paid=request.args.get("paid") == "1",
+        prices=PLAN_PRICES
     )
 
 
-@subscription_bp.route("/select_plan", methods=["POST"])
-def select_plan():
-
-    if "shop_id" not in session:
-        return redirect("/login")
-
-    shop_id = session["shop_id"]
-
-    selected_plan = request.form.get("plan")
-
-    plan_prices = {"Basic": 499, "Premium": 999}
-
-    if selected_plan not in plan_prices:
-        return redirect("/subscription")
-
-    sub = Subscription.query.filter_by(shop_id=shop_id).first()
-
-    if not sub:
-        return "Subscription not found"
-
-    sub.plan = selected_plan
-    db.session.commit()
-
+# Old free-change routes are disabled: plans are now paid online only.
+@subscription_bp.route("/select_plan", methods=["GET", "POST"])
+@subscription_bp.route("/renew_subscription", methods=["GET", "POST"])
+def disabled_free_routes():
     return redirect("/subscription")
-
-
-@subscription_bp.route("/renew_subscription")
-def renew_subscription():
-
-    if "shop_id" not in session:
-        return redirect("/login")
-
-    shop_id = session["shop_id"]
-
-    sub = Subscription.query.filter_by(shop_id=shop_id).first()
-
-    if not sub:
-        return "❌ Subscription not found"
-
-    today = datetime.now().date()
-
-    sub.start_date = today
-    sub.expiry_date = today + timedelta(days=30)
-    sub.status = "Active"
-    sub.reminder_sent = False
-
-    db.session.commit()
-
-    return redirect("/dashboard")

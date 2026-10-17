@@ -54,6 +54,7 @@ def create_app():
         from app.routes.reports import reports_bp
         from app.routes.assistant import assistant_bp
         from app.routes.superadmin import superadmin_bp
+        from app.routes.payments import payments_bp
 
         app.register_blueprint(auth_bp)
         app.register_blueprint(products_bp)
@@ -68,6 +69,7 @@ def create_app():
         app.register_blueprint(reports_bp)
         app.register_blueprint(assistant_bp)
         app.register_blueprint(superadmin_bp)
+        app.register_blueprint(payments_bp)
 
     @app.errorhandler(404)
     def not_found_error(error):

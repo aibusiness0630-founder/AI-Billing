@@ -1,0 +1,42 @@
+{% extends "legal_base.html" %}
+{% block title %}Privacy Policy{% endblock %}
+{% block body %}
+<h1>Privacy Policy</h1>
+<div class="upd">Last updated: {{ c.updated }}</div>
+
+<p>This policy explains what information {{ c.name }} collects through {{ c.product }} and how we use it.</p>
+
+<h2>1. Information we collect</h2>
+<ul>
+  <li><b>Account details:</b> shop name, owner name, mobile number, email, username and a password (stored only as a secure hash).</li>
+  <li><b>Business data you enter:</b> products, stock, bills, customers, suppliers and purchases.</li>
+  <li><b>Subscription records:</b> plan, dates, amount paid, and the Razorpay payment reference.</li>
+  <li><b>Technical data:</b> basic logs such as IP address and login activity, used for security.</li>
+</ul>
+
+<h2>2. Payments</h2>
+<p>Payments are handled by Razorpay. Your card, UPI or bank details are entered on Razorpay's secure page and are never stored on our servers. Razorpay's own privacy policy applies to that information.</p>
+
+<h2>3. How we use information</h2>
+<ul>
+  <li>To run your account and provide the service.</li>
+  <li>To process subscriptions and confirm payments.</li>
+  <li>To keep the service secure and prevent misuse.</li>
+  <li>To contact you about your account, such as plan expiry or support.</li>
+</ul>
+
+<h2>4. Data isolation and sharing</h2>
+<p>Each shop's business data is kept separate from other shops. We do not sell your data. We share information only with service providers needed to run the service (such as our hosting provider and Razorpay), or when the law requires it.</p>
+
+<h2>5. Security</h2>
+<p>We use reasonable measures to protect your data, including hashed passwords and encrypted connections. No online service can be guaranteed to be completely secure.</p>
+
+<h2>6. Your choices</h2>
+<p>You can ask us to correct or delete your account and data by contacting us. Some payment records may be kept as required for accounting and legal reasons.</p>
+
+<h2>7. Changes</h2>
+<p>We may update this policy and will show the new date above.</p>
+
+<h2>8. Contact</h2>
+<p><a href="mailto:{{ c.email }}">{{ c.email }}</a> &middot; {{ c.phone }}</p>
+{% endblock %}

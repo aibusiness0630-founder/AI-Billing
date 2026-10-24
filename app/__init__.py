@@ -21,14 +21,10 @@ def create_app():
         "AI_BILLING_SECRET_2026"
     )
 
-    uri = os.environ.get("DATABASE_URL") or os.environ.get(
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
         "DATABASE_URI",
         "sqlite:///billing.db"
     )
-    if uri.startswith("postgres://"):
-        uri = uri.replace("postgres://", "postgresql://", 1)
-
-    app.config["SQLALCHEMY_DATABASE_URI"] = uri
 
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
@@ -59,6 +55,7 @@ def create_app():
         from app.routes.assistant import assistant_bp
         from app.routes.superadmin import superadmin_bp
         from app.routes.payments import payments_bp
+        from app.routes.legal import legal_bp
 
         app.register_blueprint(auth_bp)
         app.register_blueprint(products_bp)
@@ -74,6 +71,7 @@ def create_app():
         app.register_blueprint(assistant_bp)
         app.register_blueprint(superadmin_bp)
         app.register_blueprint(payments_bp)
+        app.register_blueprint(legal_bp)
 
     @app.errorhandler(404)
     def not_found_error(error):

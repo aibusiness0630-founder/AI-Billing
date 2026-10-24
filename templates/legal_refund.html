@@ -1,0 +1,20 @@
+{% extends "legal_base.html" %}
+{% block title %}Refund Policy{% endblock %}
+{% block body %}
+<h1>Cancellation &amp; Refund Policy</h1>
+<div class="upd">Last updated: {{ c.updated }}</div>
+
+<p>{{ c.product }} is a digital software subscription. Please read this policy before you pay.</p>
+
+<h2>1. No refunds</h2>
+<p>All subscription payments (Basic &#8377;499, Premium &#8377;999) are <b>final and non-refundable</b> once the payment is successful and your plan is activated. We do not offer refunds for unused days, early cancellation or change of mind.</p>
+
+<h2>2. Cancellation</h2>
+<p>Plans do not renew automatically, so there is nothing to cancel. If you do not pay again, your plan simply ends on its expiry date.</p>
+
+<h2>3. Payment errors</h2>
+<p>If you were charged more than once for the same plan, or money was deducted but your plan was not activated, contact us within 7 days with your payment reference. After we verify the error we will either activate your plan or refund the extra amount to the original payment method. Refunds approved this way usually reach your account in 5-7 working days, depending on your bank.</p>
+
+<h2>4. Contact</h2>
+<p>Email <a href="mailto:{{ c.email }}">{{ c.email }}</a> or call {{ c.phone }}.</p>
+{% endblock %}

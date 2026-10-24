@@ -1,0 +1,25 @@
+{% extends "legal_base.html" %}
+{% block title %}Contact Us{% endblock %}
+{% block body %}
+<h1>Contact Us</h1>
+<div class="upd">We usually reply within 1-2 working days.</div>
+
+<p>For support, billing questions or payment issues with {{ c.product }}, reach {{ c.name }} here:</p>
+
+<h2>Business</h2>
+<p>{{ c.name }}</p>
+
+<h2>Email</h2>
+<p><a href="mailto:{{ c.email }}">{{ c.email }}</a></p>
+
+<h2>Phone</h2>
+<p><a href="tel:{{ c.phone|replace(' ', '') }}">{{ c.phone }}</a></p>
+
+{% if c.address %}
+<h2>Address</h2>
+<p>{{ c.address }}</p>
+{% endif %}
+
+<h2>Payment problems</h2>
+<p>If your payment was deducted but your plan is not active, email us your Razorpay payment ID and your shop name.</p>
+{% endblock %}

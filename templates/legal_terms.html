@@ -1,0 +1,45 @@
+{% extends "legal_base.html" %}
+{% block title %}Terms &amp; Conditions{% endblock %}
+{% block body %}
+<h1>Terms &amp; Conditions</h1>
+<div class="upd">Last updated: {{ c.updated }}</div>
+
+<p>{{ c.product }} is a billing and shop management software service provided by {{ c.name }} ("we", "us"). By creating an account or using the service you agree to these terms.</p>
+
+<h2>1. The service</h2>
+<p>{{ c.product }} lets shop owners create bills, manage products, stock, customers, suppliers and reports online. Features depend on the plan you subscribe to (Basic or Premium).</p>
+
+<h2>2. Accounts and approval</h2>
+<ul>
+  <li>You must give correct shop details when you register.</li>
+  <li>New accounts may need our approval before you can log in.</li>
+  <li>You are responsible for keeping your username and password safe and for all activity under your account.</li>
+</ul>
+
+<h2>3. Subscription and payment</h2>
+<ul>
+  <li>Plans: Basic at &#8377;499 and Premium at &#8377;999, each for 30 days. Prices may change; the price shown on the Subscription page at the time you pay applies.</li>
+  <li>Payment is made online through Razorpay. We do not see or store your card, UPI or bank details.</li>
+  <li>Your plan is activated or extended automatically after a successful payment.</li>
+  <li>Plans do not renew automatically. When a plan expires you must pay again to continue using the service.</li>
+  <li>Payments are non-refundable, as described in our <a href="/refund-policy">Refund Policy</a>.</li>
+</ul>
+
+<h2>4. Your data</h2>
+<p>The business data you enter (products, bills, customers and so on) belongs to you. We process it only to run the service for you. See our <a href="/privacy">Privacy Policy</a>.</p>
+
+<h2>5. Acceptable use</h2>
+<p>You agree not to misuse the service, try to access other shops' data, interfere with its working, or use it for anything unlawful. We may suspend an account that breaks these terms.</p>
+
+<h2>6. Availability</h2>
+<p>We work to keep the service running but do not promise it will be uninterrupted or error free. We may update or change features from time to time.</p>
+
+<h2>7. Limitation of liability</h2>
+<p>The service is provided "as is". To the extent allowed by law, {{ c.name }} is not liable for indirect losses, lost profits or lost data. You are responsible for checking the bills and figures you issue to your customers.</p>
+
+<h2>8. Changes and governing law</h2>
+<p>We may update these terms and will show the new date above. Continued use means you accept the changes. These terms are governed by the laws of India.</p>
+
+<h2>9. Contact</h2>
+<p>Questions: <a href="mailto:{{ c.email }}">{{ c.email }}</a> or {{ c.phone }}.</p>
+{% endblock %}

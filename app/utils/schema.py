@@ -12,7 +12,7 @@ seed_superadmin()  -> creates the first Super Admin from environment
 import os
 
 from sqlalchemy import inspect, text
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 
 
 def ensure_schema(db):
@@ -62,11 +62,35 @@ def seed_superadmin(db):
         if not username or not password:
             return
 
-        if SuperAdmin.query.first():
-            return
-
         if len(password) < 8:
             print("[superadmin] SUPERADMIN_PASSWORD must be 8+ characters")
+            return
+
+        existing = SuperAdmin.query.first()
+
+        if existing:
+            # .env / Render environment is the source of truth:
+            # change the values there + restart = login changes.
+            changed = False
+
+            if existing.username != username:
+                taken = SuperAdmin.query.filter(
+                    SuperAdmin.username == username,
+                    SuperAdmin.id != existing.id
+                ).first()
+                if taken:
+                    print("[superadmin] username already used by another admin")
+                    return
+                existing.username = username
+                changed = True
+
+            if not check_password_hash(existing.password, password):
+                existing.password = generate_password_hash(password)
+                changed = True
+
+            if changed:
+                db.session.commit()
+                print("[superadmin] login updated from environment:", username)
             return
 
         db.session.add(SuperAdmin(

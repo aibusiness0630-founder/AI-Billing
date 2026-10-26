@@ -1,26 +1,23 @@
-from io import BytesIO
-
 from flask import (
     Blueprint,
     render_template,
     request,
     redirect,
-    send_file,
     session
 )
 
+from app import db
+from app.models import Invoice, Customer, InvoiceItem
+from app.utils.decorators import login_required
+from io import BytesIO
+from datetime import datetime
+
+from flask import send_file
 from reportlab.pdfgen import canvas
 
-from app import db
-from app.models import (
-    Invoice,
-    InvoiceItem,
-    Customer,
-    Product,
-    Shop,
-    AuditLog
-)
-from app.utils.decorators import login_required
+from app.models import Shop, Product
+
+from app.utils.timeutil import to_ist
 
 history_bp = Blueprint('history', __name__)
 
@@ -120,6 +117,8 @@ def view_invoice(id):
         invoice_id=invoice.id
     ).all()
 
+    from app.models import Product
+
     items_with_product = []
 
     for item in items:
@@ -137,6 +136,7 @@ def view_invoice(id):
         items=items_with_product
     )
 
+    from app.models import AuditLog
 
 @history_bp.route("/delete_invoice/<int:id>")
 @login_required
@@ -152,24 +152,24 @@ def delete_invoice(id):
     invoice_number = invoice.invoice_number
     total_amount = invoice.total_amount
 
+    # Log the deletion BEFORE deleting
     audit_log = AuditLog(
         shop_id=shop_id,
         action="DELETE",
         entity_type="INVOICE",
         entity_id=invoice.id,
-        details=f"Deleted invoice {invoice_number} worth Rs.{total_amount:.2f}"
+        details=f"Deleted invoice {invoice_number} worth ₹{total_amount:.2f}"
     )
 
     db.session.add(audit_log)
 
+    # Delete related invoice items
     InvoiceItem.query.filter_by(invoice_id=invoice.id).delete()
 
     db.session.delete(invoice)
     db.session.commit()
 
     return redirect("/history")
-
-
 @history_bp.route("/download_bill/<int:id>")
 @login_required
 def download_bill(id):
@@ -204,7 +204,7 @@ def download_bill(id):
     c.setFont("Helvetica-Bold", 12)
     c.drawString(50, 725, f"Invoice No : {invoice.invoice_number}")
 
-    date_text = invoice.created_at.strftime("%d-%m-%Y %I:%M %p") if invoice.created_at else ""
+    date_text = to_ist(invoice.created_at).strftime("%d-%m-%Y %I:%M %p") if invoice.created_at else ""
     c.drawString(330, 725, date_text)
 
     c.drawString(50, 700, f"Customer : {customer.name if customer else 'Walk-in Customer'}")

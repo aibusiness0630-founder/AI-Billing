@@ -67,7 +67,7 @@
       <h3>🏪 {{ shop.shop_name }}</h3>
       <span class="badge b-{{ status|lower }}">{{ status }}</span>
     </div>
-    <span class="when">Registered: {{ shop.created_at.strftime('%d-%m-%Y %I:%M %p') if shop.created_at else '-' }} (UTC)</span>
+    <span class="when">Registered: {{ shop.created_at.strftime('%d-%m-%Y %I:%M %p') if shop.created_at else '-' }}</span>
   </div>
 
   <div class="info">

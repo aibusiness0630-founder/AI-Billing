@@ -1,6 +1,7 @@
 from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 import os
+import time
 import dotenv
 
 dotenv.load_dotenv()
@@ -10,11 +11,21 @@ db = SQLAlchemy()
 
 def create_app():
 
+    # run the server clock in India time (datetime.now() = IST)
+    os.environ["TZ"] = "Asia/Kolkata"
+    if hasattr(time, "tzset"):
+        time.tzset()
+
+    from app.utils.timeutil import IstEnvironment
+
     app = Flask(
         __name__,
         template_folder="../templates",
         static_folder="../static"
     )
+
+    # templates show stored UTC datetimes as India time
+    app.jinja_environment = IstEnvironment
 
     app.secret_key = os.environ.get(
         "SECRET_KEY",

@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Adjust Stock</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+<style>
+  .qty-wrap{display:flex;gap:6px}
+  .qty-wrap input{flex:1;min-width:0}
+  .qty-wrap select{width:90px;flex:none}
+</style>
 </head>
 <body>
 {% set active_page = 'stock' %}
@@ -21,9 +26,9 @@
         <div class="form-grid">
           <div class="field">
             <label>Product</label>
-            <select name="product_id" required>
+            <select name="product_id" id="productSel" required>
               {% for p in products %}
-                <option value="{{ p.id }}">{{ p.name }} (Stock: {{ p.stock }})</option>
+                <option value="{{ p.id }}" data-unit="{{ p.unit or 'pcs' }}">{{ p.name }} (Stock: {{ p.stock|qty_unit(p.unit or 'pcs') }})</option>
               {% endfor %}
             </select>
           </div>
@@ -36,7 +41,10 @@
           </div>
           <div class="field">
             <label>Quantity</label>
-            <input type="number" name="quantity" min="1" required>
+            <div class="qty-wrap">
+              <input type="number" name="quantity" id="qtyInput" min="1" step="1" required>
+              <select name="unit" id="unitSel"><option value="pcs">pcs</option></select>
+            </div>
           </div>
           <div class="field" style="grid-column:1/-1">
             <label>Notes</label>
@@ -48,5 +56,30 @@
     </div>
   </section>
 </main>
+<script>
+var UNIT_RULES = {
+    pcs: {entry:["pcs"], whole:true}, dozen: {entry:["dozen"], whole:false},
+    packet: {entry:["packet"], whole:true},
+    kg: {entry:["kg","g"], whole:false}, litre: {entry:["litre","ml"], whole:false}
+};
+var sel = document.getElementById("productSel");
+var unitSel = document.getElementById("unitSel");
+var qty = document.getElementById("qtyInput");
+
+function applyUnit() {
+    var opt = sel.options[sel.selectedIndex];
+    var base = (opt && opt.getAttribute("data-unit")) || "pcs";
+    var rule = UNIT_RULES[base] || UNIT_RULES.pcs;
+    unitSel.innerHTML = "";
+    rule.entry.forEach(function (u) {
+        var o = document.createElement("option"); o.value = u; o.textContent = u; unitSel.appendChild(o);
+    });
+    unitSel.style.display = rule.entry.length > 1 ? "" : "none";
+    qty.step = rule.whole ? "1" : "any";
+    qty.min = rule.whole ? "1" : "0.001";
+}
+sel.addEventListener("change", applyUnit);
+applyUnit();
+</script>
 </body>
 </html>

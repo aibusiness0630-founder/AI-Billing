@@ -30,12 +30,12 @@
             <tr>
               <td class="name">{{ m.product_name }}</td>
               <td class="{{ 'pos' if m.quantity_change > 0 else 'neg' }}">
-                {{ '+' if m.quantity_change > 0 }}{{ m.quantity_change }}
+                {{ m.quantity_text }}
               </td>
               <td><span class="badge {{ 'badge-in' if m.quantity_change > 0 else 'badge-outm' }}">{{ m.reason }}</span></td>
               <td class="muted">{{ m.reference_id or '-' }}</td>
               <td class="muted">{{ m.notes or '-' }}</td>
-              <td class="muted">{{ m.created_at|string|truncate(16, True, '') }}</td>
+              <td class="muted">{{ m.created_at.strftime("%Y-%m-%d %H:%M") if m.created_at else '' }}</td>
             </tr>
           {% endfor %}
           </tbody>

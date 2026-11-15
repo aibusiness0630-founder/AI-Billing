@@ -35,14 +35,23 @@
             <input type="text" id="productName" name="product_name" value="{{ product.name }}" required>
           </div>
 
+          <div class="field" style="grid-column:1/-1">
+            <label for="unit">Unit <span class="muted">(kg, litre = decimal allowed)</span></label>
+            <select id="unit" name="unit">
+              {% for key, label in units %}
+              <option value="{{ key }}" {% if (product.unit or 'pcs') == key %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
           <div class="field">
-            <label for="price">Price (₹)</label>
+            <label for="price" id="priceLabel">Price (₹)</label>
             <input type="number" id="price" name="price" value="{{ product.price_sell }}" step="0.01" min="0.01" required>
           </div>
 
           <div class="field">
-            <label for="stock">Stock</label>
-            <input type="number" id="stock" name="stock" value="{{ product.stock }}" min="0" required>
+            <label for="stock" id="stockLabel">Stock</label>
+            <input type="number" id="stock" name="stock" value="{{ product.stock|qty }}" min="0" step="1" required>
           </div>
 
           <div class="field" style="grid-column:1/-1">
@@ -111,6 +120,17 @@ document.getElementById("closeScannerBtn").addEventListener("click", function ()
         });
     }
 });
+/* unit -> stock step (pcs / packet whole only) + price label */
+var WHOLE = {pcs: true, packet: true};
+function syncUnit() {
+    var u = document.getElementById("unit").value;
+    var stock = document.getElementById("stock");
+    stock.step = WHOLE[u] ? "1" : "0.001";
+    document.getElementById("priceLabel").textContent = "Price per " + u + " (₹)";
+    document.getElementById("stockLabel").textContent = "Stock (" + u + ")";
+}
+document.getElementById("unit").addEventListener("change", syncUnit);
+syncUnit();
 </script>
 </body>
 </html>

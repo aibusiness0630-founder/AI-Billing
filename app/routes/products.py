@@ -13,8 +13,32 @@ import pandas as pd
 from app import db
 from app.models import Product
 from app.utils.decorators import login_required
+from app.utils.units import (
+    UNITS, normalize_unit, unit_choices, entry_units, fmt_qty, fmt_qty_unit
+)
 
 products_bp = Blueprint('products', __name__)
+
+
+# Jinja filters usable in ALL templates:  {{ item.quantity|qty_unit(item.unit) }}
+@products_bp.app_template_filter("qty")
+def _qty_filter(q):
+    return fmt_qty(q)
+
+
+@products_bp.app_template_filter("qty_unit")
+def _qty_unit_filter(q, unit):
+    return fmt_qty_unit(q, unit)
+
+
+def parse_stock(raw, unit):
+    """Stock text -> float. pcs / packet must be whole numbers, others may be decimal."""
+    stock = round(float(raw), 3)
+    if stock != stock or stock < 0 or stock > 1000000:
+        raise ValueError("Stock must be 0 or more")
+    if UNITS[unit]["whole_only"] and stock != int(stock):
+        raise ValueError("%s stock must be a whole number" % UNITS[unit]["label"])
+    return stock
 
 
 @products_bp.route("/add_product", methods=["GET", "POST"])
@@ -33,15 +57,19 @@ def add_product():
         price = request.form.get("price")
         stock = request.form.get("stock")
         barcode = request.form.get("barcode", "").strip()
+        unit = normalize_unit(request.form.get("unit"))
 
         if not product_name or not price or not stock:
             return "All fields required"
 
         try:
             price = float(price)
-            stock = int(stock)
-        except ValueError:
-            return "❌ Invalid price or stock"
+            stock = parse_stock(stock, unit)
+        except ValueError as e:
+            return "❌ Invalid price or stock: %s" % e
+
+        if price < 0:
+            return "❌ Price cannot be negative"
 
         existing = Product.query.filter_by(
             name=product_name,
@@ -65,6 +93,7 @@ def add_product():
             name=product_name,
             price_sell=price,
             stock=stock,
+            unit=unit,
             barcode=barcode if barcode else None,
             shop_id=shop_id
         )
@@ -78,6 +107,7 @@ def add_product():
 
     return render_template(
         "add_product.html",
+        units=unit_choices(),
         csrf_token=session.get("csrf_token")
     )
 
@@ -145,8 +175,9 @@ def import_products():
                     return f"❌ Missing Column : {column}"
 
             has_barcode_column = "Barcode" in df.columns
+            has_unit_column = "Unit" in df.columns
 
-            keep_columns = required_columns + (["Barcode"] if has_barcode_column else [])
+            keep_columns = required_columns + (["Barcode"] if has_barcode_column else []) + (["Unit"] if has_unit_column else [])
 
             df = df[keep_columns]
             df = df.dropna(subset=required_columns)
@@ -172,11 +203,20 @@ def import_products():
                 if has_barcode_column and pd.notna(row.get("Barcode")):
                     barcode_value = str(row["Barcode"]).strip()
 
+                unit_value = normalize_unit(row.get("Unit")) if has_unit_column and pd.notna(row.get("Unit")) else "pcs"
+
+                try:
+                    stock_value = parse_stock(row["Stock"], unit_value)
+                except ValueError:
+                    skipped_count += 1
+                    continue
+
                 product = Product(
                     shop_id=shop_id,
                     name=product_name,
                     price_sell=float(row["Price"]),
-                    stock=int(row["Stock"]),
+                    stock=stock_value,
+                    unit=unit_value,
                     barcode=barcode_value
                 )
 
@@ -212,7 +252,14 @@ def get_price(product_id):
         shop_id=session["shop_id"]
     ).first_or_404()
 
-    return jsonify({"price": product.price_sell})
+    unit = normalize_unit(product.unit)
+
+    return jsonify({
+        "price": product.price_sell,
+        "unit": unit,
+        "entry_units": entry_units(unit),
+        "stock": product.stock
+    })
 
 
 @products_bp.route("/search_products")
@@ -228,7 +275,7 @@ def search_products():
     ).all()
 
     return jsonify([
-        {"id": p.id, "name": p.name, "price": p.price_sell}
+        {"id": p.id, "name": p.name, "price": p.price_sell, "unit": normalize_unit(p.unit)}
         for p in products
     ])
 
@@ -252,7 +299,8 @@ def get_product_by_barcode(barcode):
         "id": product.id,
         "name": product.name,
         "price": product.price_sell,
-        "stock": product.stock
+        "stock": product.stock,
+        "unit": normalize_unit(product.unit)
     })
 
 
@@ -277,15 +325,19 @@ def edit_product(id):
         price = request.form.get("price")
         stock = request.form.get("stock")
         barcode = request.form.get("barcode", "").strip()
+        unit = normalize_unit(request.form.get("unit"))
 
         if not product_name or not price or not stock:
             return "All fields required"
 
         try:
             price = float(price)
-            stock = int(stock)
-        except ValueError:
-            return "❌ Invalid price or stock"
+            stock = parse_stock(stock, unit)
+        except ValueError as e:
+            return "❌ Invalid price or stock: %s" % e
+
+        if price < 0:
+            return "❌ Price cannot be negative"
 
         if barcode:
 
@@ -301,6 +353,7 @@ def edit_product(id):
         product.name = product_name
         product.price_sell = price
         product.stock = stock
+        product.unit = unit
         product.barcode = barcode if barcode else None
 
         db.session.commit()
@@ -312,6 +365,7 @@ def edit_product(id):
     return render_template(
         "edit_product.html",
         product=product,
+        units=unit_choices(),
         csrf_token=session.get("csrf_token")
     )
 

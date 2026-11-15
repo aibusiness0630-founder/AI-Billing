@@ -103,9 +103,15 @@ class InvoiceItem(db.Model):
     )
     
     quantity = db.Column(
-        db.Integer,
+        db.Float,
         nullable=False
     )
+    # in the product's unit (0.75 = 750 g when unit is kg)
+    
+    unit = db.Column(
+        db.String(20)
+    )
+    # copy of the product unit at billing time
     
     price = db.Column(
         db.Float,

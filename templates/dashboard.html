@@ -965,7 +965,7 @@
                                 <tr>
                                     <td class="product-name">{{ product.name }}</td>
                                     <td class="{% if product.stock <= 5 %}stock-danger{% else %}stock-warning{% endif %}">
-                                        {{ product.stock }}
+                                        {{ product.stock|qty_unit(product.unit or 'pcs') }}
                                     </td>
                                 </tr>
                             {% else %}

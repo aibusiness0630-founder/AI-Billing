@@ -75,7 +75,7 @@
           {% for product in product_sales_list %}
             <tr>
               <td class="name">{{ product.name }}</td>
-              <td>{{ product.qty }}</td>
+              <td>{{ product.qty_text }}</td>
               <td class="pos">₹{{ "%.2f"|format(product.revenue) }}</td>
             </tr>
           {% else %}

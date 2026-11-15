@@ -15,7 +15,8 @@ from datetime import datetime
 from flask import send_file
 from reportlab.pdfgen import canvas
 
-from app.models import Shop, Product
+from app.models import Shop, Product, AuditLog
+from app.utils.units import normalize_unit, fmt_qty_unit
 
 from app.utils.timeutil import to_ist
 
@@ -123,9 +124,13 @@ def view_invoice(id):
 
     for item in items:
         product = Product.query.get(item.product_id)
+        unit = normalize_unit(item.unit or (product.unit if product else None))
+        qty_text = fmt_qty_unit(item.quantity, unit)
         items_with_product.append({
             "product_name": product.name if product else "N/A",
-            "quantity": item.quantity,
+            "quantity": qty_text,          # "750 g" - templates just print it
+            "quantity_text": qty_text,
+            "unit": unit,
             "price": item.price,
             "total": item.total
         })
@@ -236,8 +241,10 @@ def download_bill(id):
         name = (product.name if product else "N/A")[:32]
 
         c.drawString(50, y, name)
-        c.drawString(280, y, str(item.quantity))
-        c.drawString(350, y, f"Rs.{item.price:.2f}")
+        unit = normalize_unit(item.unit or (product.unit if product else None))
+        c.drawString(280, y, fmt_qty_unit(item.quantity, unit))
+        price_text = f"Rs.{item.price:.2f}" + (f"/{unit}" if unit != "pcs" else "")
+        c.drawString(350, y, price_text)
         c.drawString(450, y, f"Rs.{item.total:.2f}")
 
         y -= 22

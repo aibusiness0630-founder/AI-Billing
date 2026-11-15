@@ -12,6 +12,7 @@ import os
 from app import db
 from app.models import Purchase, PurchaseItem, Supplier, Product, StockMovement, Payment
 from app.utils.decorators import login_required, premium_required
+from app.utils.units import normalize_unit, convert_to_base, fmt_qty_unit
 
 purchases_bp = Blueprint('purchases', __name__)
 
@@ -108,25 +109,39 @@ def add_purchase():
         product_ids = request.form.getlist("product_id[]")
         quantities = request.form.getlist("quantity[]")
         cost_prices = request.form.getlist("cost_price[]")
+        entry_units_form = request.form.getlist("unit[]")
+
+        while len(entry_units_form) < len(product_ids):
+            entry_units_form.append("")
 
         grand_total = 0
         items = []
 
-        for pid, qty, price in zip(product_ids, quantities, cost_prices):
+        for pid, qty, price, entry_unit in zip(product_ids, quantities, cost_prices, entry_units_form):
 
             if not pid or not qty or not price:
                 continue
 
             try:
-                qty = int(qty)
                 price = float(price)
             except ValueError:
                 return "❌ Invalid quantity or price"
 
-            if qty <= 0:
-                return "❌ Quantity must be greater than 0"
+            if price < 0:
+                return "❌ Invalid price"
 
-            total = qty * price
+            prod = Product.query.filter_by(id=int(pid), shop_id=shop_id).first()
+
+            if not prod:
+                return "❌ Product not found"
+
+            try:
+                # cost price is per BASE unit (per kg / per litre / per pcs)
+                qty = convert_to_base(qty, entry_unit or prod.unit, normalize_unit(prod.unit))
+            except ValueError as e:
+                return f"❌ {prod.name}: {e}"
+
+            total = round(qty * price, 2)
 
             items.append({
                 "product_id": int(pid),
@@ -182,7 +197,7 @@ def add_purchase():
 
             if product:
 
-                product.stock = (product.stock or 0) + item["quantity"]
+                product.stock = round((product.stock or 0) + item["quantity"], 3)
 
                 if item["cost_price"]:
                     product.price_cost = item["cost_price"]
@@ -255,9 +270,13 @@ def view_purchase(id):
 
     for item in items:
         product = Product.query.get(item.product_id)
+        unit = normalize_unit(product.unit if product else None)
+        qty_text = fmt_qty_unit(item.quantity, unit)
         items_with_product.append({
             "product_name": product.name if product else "N/A",
-            "quantity": item.quantity,
+            "quantity": qty_text,          # "2.5 kg"
+            "quantity_text": qty_text,
+            "unit": unit,
             "cost_price": item.cost_price,
             "total": item.total
         })

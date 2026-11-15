@@ -11,6 +11,7 @@ import os
 from app import db
 from app.models import StockMovement, Product
 from app.utils.decorators import login_required, premium_required
+from app.utils.units import normalize_unit, convert_to_base, fmt_qty_unit, entry_units
 
 stock_bp = Blueprint('stock', __name__)
 
@@ -33,11 +34,16 @@ def stock_history():
     for m in movements:
 
         product = Product.query.get(m.product_id)
+        unit = normalize_unit(product.unit) if product else "pcs"
+        change = m.quantity_change or 0
 
         movement_list.append({
             "id": m.id,
             "product_name": product.name if product else "Unknown",
-            "quantity_change": m.quantity_change,
+            # number kept for + / - colours, text for display ("+750 g", "-2 pcs")
+            "quantity_change": change,
+            "unit": unit,
+            "quantity_text": ("+" if change > 0 else "-" if change < 0 else "") + fmt_qty_unit(abs(change), unit),
             "reason": m.reason,
             "reference_id": m.reference_id,
             "notes": m.notes,
@@ -68,36 +74,36 @@ def adjust_stock():
         product_id = request.form.get("product_id")
         adjustment_type = request.form.get("adjustment_type")
         quantity = request.form.get("quantity")
+        entry_unit = request.form.get("unit", "")
         reason_note = request.form.get("notes", "").strip()
 
         if not product_id or not quantity:
             return "❌ Product and quantity are required"
-
-        try:
-            quantity = int(quantity)
-        except ValueError:
-            return "❌ Invalid quantity"
-
-        if quantity <= 0:
-            return "❌ Quantity must be greater than 0"
 
         product = Product.query.filter_by(
             id=product_id,
             shop_id=shop_id
         ).first_or_404()
 
+        base_unit = normalize_unit(product.unit)
+
+        try:
+            quantity = convert_to_base(quantity, entry_unit or base_unit, base_unit)
+        except ValueError as e:
+            return f"❌ {e}"
+
         if adjustment_type == "ADD":
 
-            product.stock = (product.stock or 0) + quantity
+            product.stock = round((product.stock or 0) + quantity, 3)
             quantity_change = quantity
             reason = "ADJUSTMENT"
 
         elif adjustment_type == "REMOVE":
 
-            if product.stock < quantity:
-                return f"❌ Not enough stock. Available: {product.stock}"
+            if (product.stock or 0) < quantity:
+                return f"❌ Not enough stock. Available: {fmt_qty_unit(product.stock or 0, base_unit)}"
 
-            product.stock = product.stock - quantity
+            product.stock = round(product.stock - quantity, 3)
             quantity_change = -quantity
             reason = "DAMAGE" if "damage" in reason_note.lower() else "ADJUSTMENT"
 

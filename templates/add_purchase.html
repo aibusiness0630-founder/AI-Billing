@@ -6,7 +6,8 @@
 <title>New Purchase</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
 <style>
-  .product-row{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:12px;align-items:end;margin-bottom:12px;padding:14px;background:#f8faff;border:1px solid #e2e8f0;border-radius:12px}
+  .qty-wrap{display:flex;gap:6px}.qty-wrap input{flex:1;min-width:0}.qty-wrap select{width:78px;flex:none}
+  .product-row{display:grid;grid-template-columns:2fr 1.4fr 1fr auto;gap:12px;align-items:end;margin-bottom:12px;padding:14px;background:#f8faff;border:1px solid #e2e8f0;border-radius:12px}
   .pay-box{background:#eff6ff;border:1px solid #dbeafe;border-radius:12px;padding:16px}
   h3.sec{margin:22px 0 12px;font-size:15px;color:#0f172a}
   @media(max-width:700px){.product-row{grid-template-columns:1fr}}
@@ -39,22 +40,25 @@
 
         <h3 class="sec">📦 Products</h3>
         <div id="productRows">
-          <div class="product-row">
+          <div class="product-row prod-row">
             <div class="field">
               <label>Product</label>
-              <select name="product_id[]" required>
+              <select name="product_id[]" class="prod-select" required>
                 <option value="">Select Product</option>
                 {% for product in products %}
-                <option value="{{ product.id }}">{{ product.name }}</option>
+                <option value="{{ product.id }}" data-unit="{{ product.unit or 'pcs' }}">{{ product.name }}</option>
                 {% endfor %}
               </select>
             </div>
             <div class="field">
               <label>Quantity</label>
-              <input type="number" name="quantity[]" min="1" required>
+              <div class="qty-wrap">
+                <input type="number" name="quantity[]" class="qty-input" min="1" step="1" required>
+                <select name="unit[]" class="unit-select"><option value="pcs">pcs</option></select>
+              </div>
             </div>
             <div class="field">
-              <label>Cost Price</label>
+              <label class="price-label">Cost Price</label>
               <input type="number" name="cost_price[]" step="0.01" min="0" required>
             </div>
             <button type="button" class="btn btn-del" onclick="removeRow(this)">❌</button>
@@ -98,29 +102,64 @@ function removeRow(btn) {
 
 function addRow() {
     const row = document.createElement("div");
-    row.className = "product-row";
+    row.className = "product-row prod-row";
     row.innerHTML = `
         <div class="field">
             <label>Product</label>
-            <select name="product_id[]" required>
+            <select name="product_id[]" class="prod-select" required>
                 <option value="">Select Product</option>
                 {% for product in products %}
-                <option value="{{ product.id }}">{{ product.name }}</option>
+                <option value="{{ product.id }}" data-unit="{{ product.unit or 'pcs' }}">{{ product.name }}</option>
                 {% endfor %}
             </select>
         </div>
         <div class="field">
             <label>Quantity</label>
-            <input type="number" name="quantity[]" min="1" required>
+            <div class="qty-wrap">
+                <input type="number" name="quantity[]" class="qty-input" min="1" step="1" required>
+                <select name="unit[]" class="unit-select"><option value="pcs">pcs</option></select>
+            </div>
         </div>
         <div class="field">
-            <label>Cost Price</label>
+            <label class="price-label">Cost Price</label>
             <input type="number" name="cost_price[]" step="0.01" min="0" required>
         </div>
         <button type="button" class="btn btn-del" onclick="removeRow(this)">❌</button>
     `;
     document.getElementById("productRows").appendChild(row);
+    applyUnit(row);
 }
+
+var UNIT_RULES = {
+    pcs: {entry:["pcs"], whole:true}, dozen: {entry:["dozen"], whole:false},
+    packet: {entry:["packet"], whole:true},
+    kg: {entry:["kg","g"], whole:false}, litre: {entry:["litre","ml"], whole:false}
+};
+/* product chosen -> unit switch (kg|g, litre|ml) + whole-number rule */
+function applyUnit(row) {
+    var sel = row.querySelector(".prod-select");
+    var unitSel = row.querySelector(".unit-select");
+    var qty = row.querySelector(".qty-input");
+    var opt = sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex] : null;
+    var base = (opt && opt.getAttribute("data-unit")) || "pcs";
+    var rule = UNIT_RULES[base] || UNIT_RULES.pcs;
+    if (row.dataset.base !== base) {
+        unitSel.innerHTML = "";
+        rule.entry.forEach(function (u) {
+            var o = document.createElement("option"); o.value = u; o.textContent = u; unitSel.appendChild(o);
+        });
+        row.dataset.base = base;
+    }
+    unitSel.style.display = rule.entry.length > 1 ? "" : "none";
+    qty.step = rule.whole ? "1" : "any";
+    qty.min = rule.whole ? "1" : "0.001";
+    var lbl = row.querySelector(".price-label");
+    if (lbl) lbl.textContent = (opt && opt.value) ? "Cost Price / " + base : "Cost Price";
+}
+document.addEventListener("change", function (e) {
+    if (e.target.classList && e.target.classList.contains("prod-select")) applyUnit(e.target.closest(".prod-row"));
+});
+document.querySelectorAll(".prod-row").forEach(applyUnit);
 </script>
 </body>
 </html>

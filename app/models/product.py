@@ -38,23 +38,31 @@ class Product(db.Model):
         db.Float,
         nullable=False
     )
+    # price for ONE unit (e.g. Rs.220 per kg)
     
     price_cost = db.Column(
         db.Float
     )
     
+    unit = db.Column(
+        db.String(20),
+        default='pcs'
+    )
+    # pcs, dozen, packet, kg, litre
+    
     stock = db.Column(
-        db.Integer,
+        db.Float,
         default=0
     )
+    # in the product's unit (e.g. 12.5 kg)
     
     min_stock = db.Column(
-        db.Integer,
+        db.Float,
         default=10
     )
     
     max_stock = db.Column(
-        db.Integer
+        db.Float
     )
     
     is_active = db.Column(

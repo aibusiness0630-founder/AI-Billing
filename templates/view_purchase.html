@@ -43,7 +43,7 @@
             <tr>
               <td class="name">{{ item.product_name }}</td>
               <td>{{ item.quantity }}</td>
-              <td>₹{{ "%.2f"|format(item.cost_price) }}</td>
+              <td>₹{{ "%.2f"|format(item.cost_price) }}{% if item.unit != 'pcs' %} / {{ item.unit }}{% endif %}</td>
               <td>₹{{ "%.2f"|format(item.total) }}</td>
             </tr>
           {% endfor %}

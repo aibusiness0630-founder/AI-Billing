@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 
 from app.models import Invoice, InvoiceItem, Product, Customer, Purchase
 from app.utils.decorators import login_required, premium_required
+from app.utils.units import normalize_unit, fmt_qty_unit
 
 reports_bp = Blueprint('reports', __name__)
 
@@ -70,29 +71,40 @@ def reports():
     ).all() if invoice_ids else []
 
     product_sales = {}
+    total_cost = 0
 
     for item in items:
         product = Product.query.get(item.product_id)
         pname = product.name if product else "Unknown"
 
         if pname not in product_sales:
-            product_sales[pname] = {"qty": 0, "revenue": 0}
+            product_sales[pname] = {
+                "qty": 0,
+                "revenue": 0,
+                "unit": normalize_unit(item.unit or (product.unit if product else None))
+            }
 
-        product_sales[pname]["qty"] += item.quantity
+        product_sales[pname]["qty"] += item.quantity or 0
         product_sales[pname]["revenue"] += item.total or 0
 
+        # cost price is per base unit, quantity is in base unit
+        if product and product.price_cost:
+            total_cost += (product.price_cost * (item.quantity or 0))
+
     product_sales_list = sorted(
-        [{"name": k, "qty": v["qty"], "revenue": v["revenue"]} for k, v in product_sales.items()],
+        [
+            {
+                "name": k,
+                "qty": round(v["qty"], 3),
+                "unit": v["unit"],
+                "qty_text": fmt_qty_unit(v["qty"], v["unit"]),   # "12.5 kg"
+                "revenue": v["revenue"]
+            }
+            for k, v in product_sales.items()
+        ],
         key=lambda x: x["revenue"],
         reverse=True
     )
-
-    total_cost = 0
-
-    for item in items:
-        product = Product.query.get(item.product_id)
-        if product and product.price_cost:
-            total_cost += (product.price_cost * item.quantity)
 
     estimated_profit = total_sales - total_cost
 

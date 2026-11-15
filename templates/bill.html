@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -590,7 +589,7 @@ button:active{
             class="bill-item-row"
             data-product="{{ products[i] }}"
             data-qty="{{ quantities[i] }}"
-            data-amount="{{ '%.2f'|format((quantities[i]|int) * (prices[i]|float)) }}"
+            data-amount="{{ '%.2f'|format(items[i].total|float) }}"
         >
 
             <td>{{ i + 1 }}</td>
@@ -604,11 +603,11 @@ button:active{
             </td>
 
             <td>
-                ₹{{ "%.2f"|format(prices[i]|float) }}
+                ₹{{ "%.2f"|format(prices[i]|float) }}{% if items[i].unit and items[i].unit != 'pcs' %} / {{ items[i].unit }}{% endif %}
             </td>
 
             <td>
-                ₹{{ "%.2f"|format((quantities[i]|int) * (prices[i]|float)) }}
+                ₹{{ "%.2f"|format(items[i].total|float) }}
             </td>
 
         </tr>

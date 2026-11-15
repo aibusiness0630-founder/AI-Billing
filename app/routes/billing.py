@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 from app import db
 from app.models import Product, Customer, Invoice, InvoiceItem, Subscription, StockMovement, AuditLog
 from app.utils.decorators import login_required
+from app.utils.units import normalize_unit, convert_to_base, fmt_qty, fmt_qty_unit, line_total
 
 billing_bp = Blueprint('billing', __name__)
 
@@ -60,23 +61,28 @@ def home():
         products = request.form.getlist("product[]")
         quantities = request.form.getlist("quantity[]")
         prices = request.form.getlist("price[]")
+        entry_units_form = request.form.getlist("unit[]")
+
+        # older pages may not send unit[] -> use each product's own unit
+        while len(entry_units_form) < len(products):
+            entry_units_form.append("")
 
         subtotal = 0
         bill_items = []
+        used_stock = {}
 
-        for product, quantity, price in zip(products, quantities, prices):
+        for product, quantity, price, entry_unit in zip(products, quantities, prices, entry_units_form):
 
             if not product or not quantity or not price:
                 continue
 
             try:
-                quantity = int(quantity)
                 price = float(price)
             except ValueError:
                 return "❌ Invalid quantity or price"
 
-            if quantity <= 0:
-                return "❌ Quantity must be greater than 0"
+            if price < 0:
+                return "❌ Invalid price"
 
             product_data = Product.query.filter_by(
                 name=product,
@@ -90,19 +96,34 @@ def home():
                 <a href='/'>Back</a>
                 """
 
-            if product_data.stock < quantity:
+            base_unit = normalize_unit(product_data.unit)
+
+            try:
+                quantity = convert_to_base(quantity, entry_unit or base_unit, base_unit)
+            except ValueError as e:
                 return f"""
-                <h2 style='color:red'>❌ Not enough stock for {product}</h2>
-                <h3>Available Stock: {product_data.stock}</h3>
+                <h2 style='color:red'>❌ {product}: {e}</h2>
                 <a href='/'>Back</a>
                 """
 
-            total = quantity * price
+            # same product in 2 rows -> check the combined quantity
+            already = used_stock.get(product_data.id, 0)
+            used_stock[product_data.id] = round(already + quantity, 3)
+
+            if (product_data.stock or 0) < used_stock[product_data.id]:
+                return f"""
+                <h2 style='color:red'>❌ Not enough stock for {product}</h2>
+                <h3>Available Stock: {fmt_qty_unit(product_data.stock or 0, base_unit)}</h3>
+                <a href='/'>Back</a>
+                """
+
+            total = line_total(quantity, price)
 
             bill_items.append({
                 "product_id": product_data.id,
                 "product": product,
                 "quantity": quantity,
+                "unit": base_unit,
                 "price": price,
                 "total": total
             })
@@ -172,6 +193,7 @@ def home():
                 invoice_id=new_invoice.id,
                 product_id=item["product_id"],
                 quantity=item["quantity"],
+                unit=item["unit"],
                 price=item["price"],
                 total=item["total"]
             )
@@ -182,7 +204,7 @@ def home():
 
             if product_data:
 
-                product_data.stock -= item["quantity"]
+                product_data.stock = round((product_data.stock or 0) - item["quantity"], 3)
 
                 stock_movement = StockMovement(
                     product_id=product_data.id,
@@ -202,14 +224,20 @@ def home():
 
         current_time = datetime.now().strftime("%d-%m-%Y %I:%M %p")
 
+        # what the bill / WhatsApp message shows: "750 g", "2 pcs", "1.5 kg"
+        bill_products = [i["product"] for i in bill_items]
+        bill_quantities = [fmt_qty_unit(i["quantity"], i["unit"]) for i in bill_items]
+        bill_prices = [i["price"] for i in bill_items]
+
         return render_template(
             "bill.html",
             shop=shop,
             customer_name=customer_name,
             mobile=mobile,
-            products=products,
-            quantities=quantities,
-            prices=prices,
+            products=bill_products,
+            quantities=bill_quantities,
+            prices=bill_prices,
+            items=bill_items,
             subtotal=subtotal,
             discount_percent=discount_percent,
             discount_amount=discount_amount,
@@ -281,12 +309,16 @@ def dashboard():
     items = InvoiceItem.query.join(Invoice).filter(Invoice.shop_id == shop_id).all()
 
     best_products = {}
+    best_units = {}
     for item in items:
         product = Product.query.get(item.product_id)
         if product:
-            best_products[product.name] = best_products.get(product.name, 0) + item.quantity
+            best_products[product.name] = best_products.get(product.name, 0) + (item.quantity or 0)
+            best_units[product.name] = normalize_unit(product.unit)
 
     best_products = sorted(best_products.items(), key=lambda x: x[1], reverse=True)
+    # (name, "12.5 kg") - dashboard just prints the text
+    best_products = [(n, fmt_qty_unit(q, best_units[n])) for n, q in best_products]
 
     customers = Customer.query.filter_by(shop_id=shop_id).order_by(
         Customer.total_spent.desc()

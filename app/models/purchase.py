@@ -73,7 +73,7 @@ class PurchaseItem(db.Model):
     )
     
     quantity = db.Column(
-        db.Integer,
+        db.Float,
         nullable=False
     )
     

@@ -46,19 +46,20 @@
                     </thead>
                     <tbody>
                     {% for product in products %}
+                        {% set u = product.unit or 'pcs' %}
                         <tr>
                             <td class="name">{{ product.name }}</td>
                             <td>
                                 {% if product.barcode %}{{ product.barcode }}{% else %}<span class="muted">No barcode</span>{% endif %}
                             </td>
-                            <td>₹ {{ "%.2f"|format(product.price_sell) }}</td>
+                            <td>₹ {{ "%.2f"|format(product.price_sell) }} <span class="muted">/ {{ u }}</span></td>
                             <td>
                                 {% if product.stock <= 0 %}
                                     <span class="badge badge-out">Out of stock</span>
-                                {% elif product.stock <= 10 %}
-                                    <span class="badge badge-low">{{ product.stock }} left</span>
+                                {% elif product.stock <= (product.min_stock if product.min_stock is not none else 10) %}
+                                    <span class="badge badge-low">{{ product.stock|qty_unit(u) }} left</span>
                                 {% else %}
-                                    <span class="badge badge-ok">{{ product.stock }}</span>
+                                    <span class="badge badge-ok">{{ product.stock|qty_unit(u) }}</span>
                                 {% endif %}
                             </td>
                             <td>

@@ -19,7 +19,7 @@ class StockMovement(db.Model):
     )
     
     quantity_change = db.Column(
-        db.Integer,
+        db.Float,
         nullable=False
     )
     
